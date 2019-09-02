@@ -10,9 +10,12 @@
 
 #### 1.1.1 Installing Virtual Environment
 
-1. Install `virtualenvwrapper` to manage virtual environments
+1. Install the virtual environment, and `virtualenvwrapper` to manage the virtual environments
 
-   `~$ pip3 install virtualenvwrapper`
+   ```
+   ~$ pip3 install virtualenv
+   ~$ pip3 install virtualenvwrapper
+   ```
 
 2. Create a file to store all virtual environments in the same place
 
