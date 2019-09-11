@@ -19,7 +19,8 @@ before_script:
 
 # run tests
 script:
-  - coverage run --source='.' manage.py test
+  # - coverage run --source='.' manage.py test
+  - python manage.py test
 
 # send coverage report to coveralls
 after_success:
