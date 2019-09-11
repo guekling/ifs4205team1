@@ -1,5 +1,6 @@
 bcrypt==3.1.7
 cffi==1.12.3
+coverage==4.5.4
 Django==2.2.5
 gunicorn==19.9.0
 Pillow==6.1.0
