@@ -1,0 +1,44 @@
+[
+  {
+    "model": "core.user",
+    "pk": "testpatient",
+    "fields": {
+      "username": "testpatient",
+      "password": "1234",
+      "first_name": "John",
+      "last_name": "Lennon",
+      "email": "john_lennon@gmail.com",
+      "gender": "M",
+      "dob": "1987-05-06",
+      "address": "669D Jurong West Street 64 04-50",
+      "postalcode": "644669",
+      "contactnumber": "67909773"
+    }
+  },
+  {
+    "model": "core.patient",
+    "pk": "testpatient",
+    "fields": {}
+  },
+  {
+    "model": "core.user",
+    "pk": "testhealthcare",
+    "fields": {
+      "username": "testhealthcare",
+      "password": "1234",
+      "first_name": "Johnathan",
+      "last_name": "Lam",
+      "email": "johnathan_lam@yahoo.com",
+      "gender": "M",
+      "dob": "1995-05-07",
+      "address": "511 Guillemard Road #02-12 Grandlink Square",
+      "postalcode": 399849,
+      "contactnumber": 67449185
+    }
+  },
+  {
+    "model": "core.healthcare",
+    "pk": "testhealthcare",
+    "fields": {}
+  }
+]
