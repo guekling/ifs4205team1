@@ -48,7 +48,7 @@
 
 The database used is PostgreSQL v10.10.
 
-1. Create a `.env` file in the same folder as the `settings.py` file.
+1. Create a `.env` file in the `ifs4205team1/config/settings` folder.
 
 2. Add the following into the `.env` file:
 
@@ -65,7 +65,16 @@ The database used is PostgreSQL v10.10.
    ~$ python manage.py migrate
    ```
 
-#### 1.1.3 Starting Django
+#### 1.1.3 Adding Sample Data into Database   
+
+1. Run the following commands
+
+   ```
+   $ python manage.py initusers
+   $ python manage.py initrecords --mode=refresh
+   ```
+
+#### 1.1.4 Starting Django
 
 1. Start Django
 
@@ -75,4 +84,4 @@ The database used is PostgreSQL v10.10.
 
 1. Start the virtual environment before working on the project
 
-   `~$ workon ifs4205team1`
+   `~$ workon ifs4205team1env`
