@@ -8,6 +8,9 @@ services:
 env:
   - DJANGO=2.2.5 DB=postgres
 
+before_install:
+  - export DJANGO_SETTINGS_MODULE=ifs4205team1.config.settings.testing
+
 # install dependencies
 install:
   - pip install -r requirements.txt
@@ -19,8 +22,8 @@ before_script:
 
 # run tests
 script:
-  # - coverage run --source='.' manage.py test
-  - python manage.py test
+  - coverage run --source='.' manage.py test
+  # - python manage.py test
 
 # send coverage report to coveralls
 after_success:
