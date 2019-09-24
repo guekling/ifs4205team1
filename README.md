@@ -48,7 +48,7 @@
 
 The database used is PostgreSQL v10.10.
 
-1. Create a `.env` file in the same folder as the `settings.py` file.
+1. Create a `.env` file in the `ifs4205team1/config/settings` folder.
 
 2. Add the following into the `.env` file:
 
@@ -75,4 +75,4 @@ The database used is PostgreSQL v10.10.
 
 1. Start the virtual environment before working on the project
 
-   `~$ workon ifs4205team1`
+   `~$ workon ifs4205team1env`
