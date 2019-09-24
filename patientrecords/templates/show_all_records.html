@@ -12,6 +12,7 @@
 	  <th scope="col">Data Type</th>
 	  <th scope="col">Type</th>
 	  <th scope="col">Data</th>
+    <th scope="col"></th>
 	</tr>
   </thead>
   <tbody>
@@ -21,6 +22,7 @@
     <th>{{ result | to_model_name }}</th>
 	  <th>{{ result.type }}</th>
 	  <th>{{ result.data }}</th>
+    <th><a href="{% url 'show_record' patient_id=result.patient_id.id record_id=result.id %}">More Details</a></th>
 	</tr>
 	{% endfor %}
   </tbody>
