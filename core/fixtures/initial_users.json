@@ -39,6 +39,31 @@
   {
     "model": "core.healthcare",
     "pk": "testhealthcare",
-    "fields": {}
+    "fields": {
+      "license": 234567
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "testhealthcare2",
+    "fields": {
+      "username": "testhealthcare2",
+      "password": "1234",
+      "first_name": "Percy",
+      "last_name": "Jackson",
+      "email": "percy_jackson@hotmail.com",
+      "gender": "M",
+      "dob": "1987-04-02",
+      "address": "148 Ang Mo Kio Avenue 2",
+      "postalcode": 309826,
+      "contactnumber": 91820563
+    }
+  },
+  {
+    "model": "core.healthcare",
+    "pk": "testhealthcare2",
+    "fields": {
+      "license": 123456
+    }
   }
 ]

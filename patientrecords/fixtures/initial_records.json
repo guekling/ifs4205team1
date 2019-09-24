@@ -3,7 +3,7 @@
     "model": "patientrecords.readings",
     "pk": "3218f20d-db07-4770-b67b-8be6422d0b20",
     "fields": {
-      "type": "temperature",
+      "type": "Temperature",
       "owner_id": "testpatient",
       "patient_id": "testpatient",
       "timestamp": "2019-09-10T15:27:35.221Z",
@@ -22,10 +22,21 @@
     }
   },
   {
+    "model": "patientrecords.readingsperm",
+    "pk": 1,
+    "fields": {
+      "readings_id": "3218f20d-db07-4770-b67b-8be6422d0b20",
+      "username": "testhealthcare2",
+      "given_by": "testpatient",
+      "timestamp": "2019-09-10T15:27:35.221Z",
+      "perm_value": 3
+    }
+  },
+  {
     "model": "patientrecords.readings",
     "pk": "85d56bed-045d-46e8-9405-db6c35309bc3",
     "fields": {
-      "type": "temperature",
+      "type": "Temperature",
       "owner_id": "testpatient",
       "patient_id": "testpatient",
       "timestamp": "2019-09-10T15:27:35.221Z",
