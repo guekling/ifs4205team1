@@ -65,7 +65,16 @@ The database used is PostgreSQL v10.10.
    ~$ python manage.py migrate
    ```
 
-#### 1.1.3 Starting Django
+#### 1.1.3 Adding Sample Data into Database   
+
+1. Run the following commands
+
+   ```
+   $ python manage.py initusers
+   $ python manage.py initrecords --mode=refresh
+   ```
+
+#### 1.1.4 Starting Django
 
 1. Start Django
 
