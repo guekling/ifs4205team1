@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 
 		# APPS
 		'core',
+    'patientlogin',
 		'patientrecords',
 ]
 
