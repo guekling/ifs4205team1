@@ -25,7 +25,7 @@
 <table class="table text-center">
   <thead>
   <tr>
-    <th scope="col">Full Name</th>
+    <th scope="col">Given To</th>
     <th scope="col">Given By</th>
     <th scope="col">Given On</th>
     <th scope="col">Permission</th>
@@ -39,7 +39,7 @@
     <th>{{ perm.given_by | get_full_name }}</th>
     <th>{{ perm.timestamp | get_datetime }}</th>
     <th>{{ perm.perm_value | get_perm }}</th>
-    <th><a href="">Edit Permission</a></th>
+    <th><a href="{% url 'edit_permission' patient_id=perm.readings_id.patient_id.id record_id=perm.readings_id.id perm_id=perm.id %}">Edit Permission</a></th>
   </tr>
   {% endfor %}
   </tbody>
