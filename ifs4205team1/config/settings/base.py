@@ -38,6 +38,9 @@ INSTALLED_APPS = [
 		'django.contrib.messages',
 		'django.contrib.staticfiles',
 
+    # THIRD-PARTY APPS
+    'widget_tweaks',
+
 		# APPS
 		'core',
 		'patientrecords',
