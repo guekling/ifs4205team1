@@ -9,7 +9,6 @@
   <thead>
 	<tr>
 	  <th scope="col">Timestamp</th>
-	  <th scope="col">Data Type</th>
 	  <th scope="col">Type</th>
 	  <th scope="col">Data</th>
     <th scope="col"></th>
@@ -18,8 +17,7 @@
   <tbody>
 	{% for result in results %}
 	<tr>
-	  <th scope="row">{{ result.timestamp }}</th>
-    <th>{{ result | to_model_name }}</th>
+	  <th scope="row">{{ result.timestamp | get_datetime }}</th>
 	  <th>{{ result.type }}</th>
 	  <th>{{ result.data }}</th>
     <th><a href="{% url 'show_record' patient_id=result.patient_id.id record_id=result.id %}">More Details</a></th>
