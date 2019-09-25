@@ -5,7 +5,7 @@ from django.contrib.auth import (
 )
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, LogoutView
 
 from core.models import Patient
 from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
@@ -37,6 +37,12 @@ class PatientLogin(LoginView):
       }
 
       return render(self.request, 'patient_login.html', context)
+
+class PatientLogout(LogoutView):
+  """
+  Custom patient logout view that extends from Django's LogoutView
+  """
+  next_page = '/patient/login'
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient, login_url='/patient/login/')
