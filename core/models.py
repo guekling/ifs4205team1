@@ -17,6 +17,20 @@ class User(AbstractUser):
 
   USERNAME_FIELD = 'username'
 
+  def is_patient(self):
+    """
+    Checks if user is a patient.
+    """
+    try:
+      patient = self.patient
+    except Patient.DoesNotExist:
+      patient = None
+
+    if patient is not None:
+      return True
+    else:
+      return False
+
 class Admin(models.Model):
   username = models.OneToOneField( # one admin to one user
     User,
