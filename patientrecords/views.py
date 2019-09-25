@@ -1,4 +1,4 @@
-from django.http import Http404 # TODO: Remove when not in use
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
 
 from patientrecords.forms import ReadingsPermissionEditForm
@@ -8,12 +8,13 @@ from patientrecords.models import Readings, TimeSeries, Documents, Images, Video
 
 from itertools import chain
 
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient, login_url='/patient/login/')
 def show_all_records(request, patient_id):
   """
   List all medical records belonging to the patient
   """
-
-  patient = check_patient_exists(patient_id)
+  patient = Patient.objects.get(id=patient_id)
 
   readings = Readings.objects.filter(patient_id=patient)
   timeseries = TimeSeries.objects.filter(patient_id=patient)
@@ -24,17 +25,19 @@ def show_all_records(request, patient_id):
   results = list(chain(readings, timeseries, documents, images, videos))
 
   context = {
+    'patient': patient,
     'results': results
   }
 
   return render(request, 'show_all_records.html', context)
 
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient, login_url='/patient/login/')
 def show_record(request, patient_id, record_id):
   """
   Show information of a single medical record
   """
-
-  patient = check_patient_exists(patient_id)
+  patient = Patient.objects.get(id=patient_id)
 
   try:
     record = get_record(record_id)
@@ -58,18 +61,20 @@ def show_record(request, patient_id, record_id):
     permissions = ReadingsPerm.objects.none()
 
   context = {
+    'patient': patient,
     'record': record,
     'permissions': permissions
   }
 
   return render(request, 'show_record.html', context)
 
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient, login_url='/patient/login/')
 def edit_permission(request, patient_id, record_id, perm_id):
   """
   Edit a permission of a single medical record
   """
-
-  patient = check_patient_exists(patient_id)
+  patient = Patient.objects.get(id=patient_id)
 
   try:
     record = get_record(record_id)
@@ -169,12 +174,6 @@ def edit_permission(request, patient_id, record_id, perm_id):
 ##########################################
 ############ Helper Functions ############
 ##########################################
-
-def check_patient_exists(patient_id):
-  try:
-    return Patient.objects.get(id=patient_id)
-  except Patient.DoesNotExist:
-    raise Http404("Patient does not exist") # TODO: Redirects to login page
 
 def get_record(record_id):
   readings = Readings.objects.filter(id=record_id)
