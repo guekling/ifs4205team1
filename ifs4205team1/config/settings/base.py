@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 # Load environment variables
-dotenv_path = os.path.join(BASE_DIR, 'ifs4205team1', '.env')
+dotenv_path = os.path.join(BASE_DIR, 'ifs4205team1', 'config', 'settings', '.env')
 load_dotenv(dotenv_path)
 
 # Quick-start development settings - unsuitable for production
