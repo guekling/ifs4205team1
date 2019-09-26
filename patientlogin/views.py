@@ -72,7 +72,7 @@ class PatientChangePasswordComplete(PasswordChangeDoneView):
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient, login_url='/patient/login/')
 def patient_settings(request, patient_id):
-  patient = Patient.objects.get(id=patient_id)
+  patient = patient_does_not_exists(patient_id)
   user = patient.username
 
   context = {
@@ -85,7 +85,7 @@ def patient_settings(request, patient_id):
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient, login_url='/patient/login/')
 def patient_edit_settings(request, patient_id):
-  patient = Patient.objects.get(id=patient_id)
+  patient = patient_does_not_exists(patient_id)
   user = patient.username
   form = UserEditForm(request.POST or None, instance=user)
 
@@ -112,7 +112,7 @@ def patient_edit_settings(request, patient_id):
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient, login_url='/patient/login/')
 def patient_change_password(request, patient_id):
-  patient = Patient.objects.get(id=patient_id)
+  patient = patient_does_not_exists(patient_id)
 
   change_password = PatientChangePassword.as_view(
     extra_context={'patient': patient}
@@ -123,7 +123,7 @@ def patient_change_password(request, patient_id):
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient, login_url='/patient/login/')
 def patient_change_password_complete(request, patient_id):
-  patient = Patient.objects.get(id=patient_id)
+  patient = patient_does_not_exists(patient_id)
 
   change_password_complete = PatientChangePasswordComplete.as_view(
     extra_context={'patient': patient}
@@ -134,10 +134,23 @@ def patient_change_password_complete(request, patient_id):
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient, login_url='/patient/login/')
 def patient_dashboard(request, patient_id):
-  patient = Patient.objects.get(id=patient_id)
+  patient = patient_does_not_exists(patient_id)
 
   context = {
     'patient': patient,
   }
 
   return render(request, 'patient_dashboard.html', context)
+
+##########################################
+############ Helper Functions ############
+##########################################
+
+def patient_does_not_exists(patient_id):
+  """
+  Redirects to login/dashboard if patient_id is invalid
+  """
+  try:
+    return Patient.objects.get(id=patient_id)
+  except Patient.DoesNotExist:
+    redirect('patient_login')

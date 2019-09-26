@@ -14,7 +14,7 @@ def show_all_records(request, patient_id):
   """
   List all medical records belonging to the patient
   """
-  patient = Patient.objects.get(id=patient_id)
+  patient = patient_does_not_exists(patient_id)
 
   readings = Readings.objects.filter(patient_id=patient)
   timeseries = TimeSeries.objects.filter(patient_id=patient)
@@ -37,7 +37,7 @@ def show_record(request, patient_id, record_id):
   """
   Show information of a single medical record
   """
-  patient = Patient.objects.get(id=patient_id)
+  patient = patient_does_not_exists(patient_id)
 
   try:
     record = get_record(record_id)
@@ -74,7 +74,7 @@ def edit_permission(request, patient_id, record_id, perm_id):
   """
   Edit a permission of a single medical record
   """
-  patient = Patient.objects.get(id=patient_id)
+  patient = patient_does_not_exists(patient_id)
 
   try:
     record = get_record(record_id)
@@ -174,6 +174,15 @@ def edit_permission(request, patient_id, record_id, perm_id):
 ##########################################
 ############ Helper Functions ############
 ##########################################
+
+def patient_does_not_exists(patient_id):
+  """
+  Redirects to login/dashboard if patient_id is invalid
+  """
+  try:
+    return Patient.objects.get(id=patient_id)
+  except Patient.DoesNotExist:
+    redirect('patient_login')
 
 def get_record(record_id):
   readings = Readings.objects.filter(id=record_id)
