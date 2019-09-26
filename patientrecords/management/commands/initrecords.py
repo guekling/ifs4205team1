@@ -1,10 +1,10 @@
 from django.core.management import BaseCommand, call_command
 from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, Diagnosis
 
-""" Clear all data and creates new users """
+""" Clear all data and creates new records """
 MODE_REFRESH = 'refresh'
 
-""" Does not clear data and creates new users """
+""" Does not clear data and creates new records """
 MODE_NONE = 'none'
 
 class Command(BaseCommand):

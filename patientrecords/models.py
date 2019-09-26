@@ -106,13 +106,15 @@ class DocumentsPerm(models.Model):
     on_delete=models.CASCADE
   )
   username = models.ForeignKey(
-    Healthcare,
-    on_delete=models.CASCADE
+    User,
+    on_delete=models.CASCADE,
+    related_name='get_users'
   )
   timestamp = models.DateTimeField(auto_now=True)
   given_by = models.ForeignKey(
     User,
-    on_delete=models.PROTECT
+    on_delete=models.PROTECT,
+    related_name='get_given_by'
   )
   perm_value = models.PositiveSmallIntegerField(choices=PERMISSION_CHOICES)
   (('docs_id', 'username'),)
