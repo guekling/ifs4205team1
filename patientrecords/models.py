@@ -92,6 +92,18 @@ class Documents(models.Model):
     on_delete=models.CASCADE)
   data = models.FileField(upload_to='media/documents/')
 
+  def has_permission(self, user):
+    """
+    Checks if a user has permissions to view the document.
+    """
+
+    document = DocumentsPerm.objects.filter(docs_id = self, username=user)
+
+    if (document.count() == 0):
+      return False
+    else:
+      return True
+
 class DocumentsPerm(models.Model):
   PERMISSION_CHOICES = [
     (1, 'No Access'),
