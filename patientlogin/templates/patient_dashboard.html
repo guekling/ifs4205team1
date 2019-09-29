@@ -18,7 +18,7 @@
     </div>
 
     <div class="col-sm-3">
-      <a href="/">
+      <a href="{% url 'show_all_notes' patient_id=patient.id %}">
         <div class="card text-white bg-info mb-3" style="max-width: 18rem;">
           <div class="card-body">
             <h5 class="card-title">Healthcare Professional Notes</h5>
@@ -29,7 +29,7 @@
     </div>
 
     <div class="col-sm-3">
-      <a href="/">
+      <a href="{% url 'patient_settings' patient_id=patient.id %}">
         <div class="card text-white bg-info mb-3" style="max-width: 18rem;">
           <div class="card-body">
             <h5 class="card-title">Settings</h5>
