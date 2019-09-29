@@ -1,0 +1,32 @@
+{% extends "patient_base.html" %}
+
+{% load app_filters %}
+
+{% block content %}
+<h1>Healthcare Professional Notes</h1>
+
+<table class="table text-center">
+  <thead>
+  <tr>
+    <th scope="col">Timestamp</th>
+    <th scope="col">Title</th>
+    <th scope="col">Written By</th>
+    <th scope="col">Data</th>
+    <th scope="col"></th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for note in notes %}
+  <tr>
+    <th scope="row">{{ note.timestamp | get_datetime }}</th>
+    <th>{{ note.title }}</th>
+    <th>{{ note.owner_id | get_full_name }}</th>
+    <th>
+      <a href="{{ note.data }}">View Note</a>
+    </th>
+    <th><a href="{% url 'show_note' patient_id=note.patient_id.id note_id=note.id %}">More Details</a></th>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "patient_base.html" %}
+
+{% load app_filters %}
+
+{% block content %}
+<h1>{{ note.title }}</h1>
+
+<table class="table text-center">
+  <tr>
+    <th>Date</th>
+    <th>{{ note.timestamp | get_date }}</th>
+  </tr>
+  <tr>
+    <th>Time</th>
+    <th>{{ note.timestamp | get_time }}</th>
+  </tr>
+  <tr>
+    <th>Written By</th>
+    <th>{{ note.owner_id | get_full_name }}</th>
+  </tr>
+  <tr>
+    <th>Note</th>
+    <th><a href="{{ note.data }}">View Note</a></th>
+  </tr>
+</table>
+
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "patient_base.html" %}
+
+{% block content %}
+<h1>Patient Dashboard</h1>
+
+<div class="container-fluid">
+  <div class="row">
+
+    <div class="col-sm-3">
+      <a href="{% url 'show_all_records' patient_id=patient.id %}">
+        <div class="card text-white bg-info mb-3" style="max-width: 18rem;">
+          <div class="card-body">
+            <h5 class="card-title">Medical Records</h5>
+            <p class="card-text">asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-sm-3">
+      <a href="{% url 'show_all_notes' patient_id=patient.id %}">
+        <div class="card text-white bg-info mb-3" style="max-width: 18rem;">
+          <div class="card-body">
+            <h5 class="card-title">Healthcare Professional Notes</h5>
+            <p class="card-text">asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-sm-3">
+      <a href="{% url 'patient_settings' patient_id=patient.id %}">
+        <div class="card text-white bg-info mb-3" style="max-width: 18rem;">
+          <div class="card-body">
+            <h5 class="card-title">Settings</h5>
+            <p class="card-text">asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

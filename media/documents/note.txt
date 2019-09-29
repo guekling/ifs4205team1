@@ -1,0 +1,5 @@
+Healthcare Professional Note.
+
+This is a test document.
+
+Written for testpatient by testhealthcare.
