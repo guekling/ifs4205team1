@@ -16,10 +16,17 @@
   </thead>
   <tbody>
 	{% for result in results %}
+  {% to_model_name result as to_model_name_result %}
 	<tr>
 	  <th scope="row">{{ result.timestamp | get_datetime }}</th>
 	  <th>{{ result.type }}</th>
-	  <th>{{ result.data }}</th>
+	  <th>
+      {% if to_model_name_result == 'Documents' or to_model_name_result == 'Images' %}
+        <a href="{{ result.data }}">View Data</a>
+      {% else %}
+        {{ result.data }}
+      {% endif %}
+    </th>
     <th><a href="{% url 'show_record' patient_id=result.patient_id.id record_id=result.id %}">More Details</a></th>
 	</tr>
 	{% endfor %}
