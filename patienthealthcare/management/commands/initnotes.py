@@ -1,10 +1,10 @@
 from django.core.management import BaseCommand, call_command
-from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, Diagnosis
+from patientrecords.models import Documents
 
-""" Clear all data and creates new records """
+""" Clear all data and creates new notes """
 MODE_REFRESH = 'refresh'
 
-""" Does not clear data and creates new records """
+""" Does not clear data and creates new notes """
 MODE_NONE = 'none'
 
 class Command(BaseCommand):
@@ -18,16 +18,11 @@ class Command(BaseCommand):
         
 # Deletes all data from User table and their corresponding tables
 def clear_data():
-  Readings.objects.all().delete()
-  TimeSeries.objects.all().delete()
   Documents.objects.all().delete()
-  Images.objects.all().delete()
-  Videos.objects.all().delete()
-  Diagnosis.objects.all().delete()
 
 # Seed database based on mode
 def run_seed(self, mode):
   if mode == MODE_REFRESH:
     clear_data()
 
-  call_command('loaddata','initial_records') # Load JSON file to create records
+  call_command('loaddata','initial_notes') # Load JSON file to create records

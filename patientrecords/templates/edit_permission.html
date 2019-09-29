@@ -1,0 +1,57 @@
+{% extends "patient_base.html" %}
+
+{% load app_filters %}
+{% load widget_tweaks %}
+
+{% block content %}
+<h1> Edit Permission </h1>
+
+<div>
+  <label>Record Type: {{ record.type }}</label>
+</div>
+
+<div>
+  <label>Record Data: {{ record.data }}</label>
+</div>
+
+<div>
+  <label>Permission Given To: {{ permission.username.username | get_full_name }}</label>
+</div>
+
+<div>
+  <label>Permission Given By: {{ permission.given_by | get_full_name }}</label>
+</div>
+
+<form action="{% url 'edit_permission' patient_id=patient.id record_id=record.id perm_id=permission.id %}" method="post">
+  {% csrf_token %}
+
+  {% for field in form.visible_fields %}
+    <div class="form-group">
+      {{ field.label_tag }}
+
+      {% if form.is_bound %}
+        {% if field.errors %}
+          {% render_field field class="form-control is-invalid" %}
+          {% for error in field.errors %}
+            <div class="invalid-feedback">
+              {{ error }}
+            </div>
+          {% endfor %}
+        {% else %}
+          {% render_field field class="form-control is-valid" %}
+        {% endif %}
+      {% else %}
+        {% render_field field class="form-control" %}
+      {% endif %}
+
+      {% if field.help_text %}
+        <small class="form-text text-muted">{{ field.help_text }}</small>
+      {% endif %}
+    </div>
+  {% endfor %}
+
+  <button type="submit" class="btn btn-primary">Submit</button>
+  <a href="{% url 'show_record' patient_id=patient.id record_id=record.id %}"><button type="buton" class="btn btn-secondary">Back</button></a>
+</form>
+
+{% endblock %}

@@ -71,7 +71,8 @@ The database used is PostgreSQL v10.10.
 
    ```
    $ python manage.py initusers
-   $ python manage.py initrecords --mode=refresh
+   $ python manage.py initrecords
+   $ python manage.py initnotes
    ```
 
 #### 1.1.4 Starting Django

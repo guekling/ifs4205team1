@@ -1,0 +1,59 @@
+[
+  {
+    "model": "patientrecords.documents",
+    "pk": "34d62b18-cec4-4dd9-b2be-14ea5f7fc67c",
+    "fields": {
+      "title": "Test Note 1",
+      "type": "Healthcare Professional Note",
+      "owner_id": "testhealthcare",
+      "patient_id": "testpatient",
+      "timestamp": "2019-09-10T15:27:35.221Z",
+      "data": "media/documents/note_JAvj7bZ.txt"
+    }
+  },
+  {
+    "model": "patientrecords.documentsperm",
+    "pk": "c00e18d1-409e-4c9b-980d-0bb0f3641553",
+    "fields": {
+      "docs_id": "34d62b18-cec4-4dd9-b2be-14ea5f7fc67c",
+      "username": "testpatient",
+      "timestamp": "2019-09-26T03:55:51.296Z",
+      "given_by": "testhealthcare",
+      "perm_value": 2
+    }
+  },
+  {
+    "model": "patientrecords.documentsperm",
+    "pk": "88ff495c-3e35-497d-b5be-aa5b5a418e6a",
+    "fields": {
+      "docs_id": "34d62b18-cec4-4dd9-b2be-14ea5f7fc67c",
+      "username": "testhealthcare2",
+      "timestamp": "2019-09-26T03:55:51.296Z",
+      "given_by": "testhealthcare",
+      "perm_value": 2
+    }
+  },
+  {
+    "model": "patientrecords.documents",
+    "pk": "658e4dbd-c7c2-440f-95aa-349e55d39e19",
+    "fields": {
+      "title": "Test Note 2",
+      "type": "Healthcare Professional Note",
+      "timestamp": "2019-09-26T04:03:45.139Z",
+      "owner_id": "testhealthcare2",
+      "patient_id": "testpatient",
+      "data": "media/documents/note2_C6aEgIS.pdf"
+    }
+  },
+  {
+    "model": "patientrecords.documentsperm",
+    "pk": "658e4dbd-c7c2-440f-95aa-349e55d39e19",
+    "fields": {
+      "docs_id": "34d62b18-cec4-4dd9-b2be-14ea5f7fc67c",
+      "username": "testpatient",
+      "timestamp": "2019-09-26T03:55:51.296Z",
+      "given_by": "testhealthcare2",
+      "perm_value": 2
+    }
+  }
+]

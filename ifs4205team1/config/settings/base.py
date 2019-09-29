@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 # Load environment variables
-dotenv_path = os.path.join(BASE_DIR, 'ifs4205team1', '.env')
+dotenv_path = os.path.join(BASE_DIR, 'ifs4205team1', 'config', 'settings', '.env')
 load_dotenv(dotenv_path)
 
 # Quick-start development settings - unsuitable for production
@@ -26,7 +26,6 @@ load_dotenv(dotenv_path)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'nu32dq^3q)4eza_c8_585)6a*5n&8o3q=96^v!&36ac#+2)a5v'
-
 
 # Application definition
 
@@ -38,9 +37,14 @@ INSTALLED_APPS = [
 		'django.contrib.messages',
 		'django.contrib.staticfiles',
 
+    # THIRD-PARTY APPS
+    'widget_tweaks',
+
 		# APPS
 		'core',
+    'patientlogin',
 		'patientrecords',
+    'patienthealthcare',
 ]
 
 # Extending User Model
