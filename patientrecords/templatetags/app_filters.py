@@ -2,7 +2,7 @@ from django import template
 
 register = template.Library()
 
-@register.filter
+@register.simple_tag
 def to_model_name(value):
   return value._meta.object_name
 
