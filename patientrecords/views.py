@@ -177,7 +177,7 @@ def edit_permission(request, patient_id, record_id, perm_id):
 
 def patient_does_not_exists(patient_id):
   """
-  Redirects to login/dashboard if patient_id is invalid
+  Redirects to login if patient_id is invalid
   """
   try:
     return Patient.objects.get(id=patient_id)

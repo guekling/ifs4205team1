@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 		'patientrecords',
     'patienthealthcare',
     'healthcarelogin',
+    'healthcarepatients',
 ]
 
 # Extending User Model
