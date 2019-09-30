@@ -66,6 +66,7 @@ class Healthcare(models.Model):
     primary_key=True)
   id = models.UUIDField(default=uuid.uuid4, editable=False)
   license = models.CharField(max_length=16, unique=True)
+  patients = models.ManyToManyField(Patient)
   
 class Researcher(models.Model):
   username = models.OneToOneField(
