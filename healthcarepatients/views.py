@@ -3,7 +3,6 @@ from django.shortcuts import render, redirect
 
 from core.models import Healthcare
 
-"""
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare, login_url='/healthcare/login/')
 def show_all_patients(request, healthcare_id):
@@ -12,15 +11,14 @@ def show_all_patients(request, healthcare_id):
   
   healthcare = healthcare_does_not_exists(healthcare_id)
 
-  patients = Healthcare.objects.filter()
+  patients = healthcare.patients.all()
 
   context = {
     'healthcare': healthcare,
-    'results': results
+    'patients': patients
   }
 
   return render(request, 'show_all_patients.html', context)
-"""
 
 ##########################################
 ############ Helper Functions ############
