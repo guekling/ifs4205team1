@@ -57,11 +57,8 @@ class PatientChangePassword(PasswordChangeView):
 
   def get_success_url(self):
     user = self.request.user
-    print(user)
     url = reverse_lazy('patient_change_password_complete', kwargs={'patient_id': user.patient.id})
     return url
-  #   url = self.get_redirect_url()
-  #   return url or resolve_url(settings.LOGIN_REDIRECT_URL)
 
 class PatientChangePasswordComplete(PasswordChangeDoneView):
   """
@@ -148,7 +145,7 @@ def patient_dashboard(request, patient_id):
 
 def patient_does_not_exists(patient_id):
   """
-  Redirects to login/dashboard if patient_id is invalid
+  Redirects to login if patient_id is invalid
   """
   try:
     return Patient.objects.get(id=patient_id)

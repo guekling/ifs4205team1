@@ -8,8 +8,10 @@ class Command(BaseCommand):
     call_command('loaddata','initial_users') # Load JSON file to create users
     fix_passwords()
 
-# Hash the passwords of fixtures
 def fix_passwords():
+  """
+  Hash the passwords of fixtures
+  """
   for user in User.objects.all():
     user.set_password(user.password)
     user.save()

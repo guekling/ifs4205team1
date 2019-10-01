@@ -51,7 +51,7 @@ class TimeSeries(models.Model):
   patient_id = models.ForeignKey(
     Patient,
     on_delete=models.CASCADE)
-  data = models.FileField(upload_to='media/timeseries/') # txt files
+  data = models.FileField(upload_to='timeseries/') # txt files
 
 class TimeSeriesPerm(models.Model):
   PERMISSION_CHOICES = [
@@ -90,7 +90,7 @@ class Documents(models.Model):
   patient_id = models.ForeignKey(
     Patient,
     on_delete=models.CASCADE)
-  data = models.FileField(upload_to='media/documents/')
+  data = models.FileField(upload_to='documents/')
 
   def has_permission(self, user):
     """
@@ -143,7 +143,7 @@ class Videos(models.Model):
   patient_id = models.ForeignKey(
     Patient,
     on_delete=models.CASCADE)
-  data = models.FileField(upload_to='media/videos/')
+  data = models.FileField(upload_to='videos/')
 
 class VideosPerm(models.Model):
   PERMISSION_CHOICES = [
@@ -182,7 +182,7 @@ class Images(models.Model):
   patient_id = models.ForeignKey(
     Patient,
     on_delete=models.CASCADE)
-  data = models.ImageField(upload_to='media/images/')
+  data = models.ImageField(upload_to='images/')
 
 class ImagesPerm(models.Model):
   PERMISSION_CHOICES = [
