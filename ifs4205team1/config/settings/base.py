@@ -14,6 +14,8 @@ import os
 from os.path import join, dirname
 from dotenv import load_dotenv
 
+from django.core.management.utils import get_random_secret_key
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
@@ -23,9 +25,6 @@ load_dotenv(dotenv_path)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'nu32dq^3q)4eza_c8_585)6a*5n&8o3q=96^v!&36ac#+2)a5v'
 
 # Application definition
 
@@ -45,6 +44,8 @@ INSTALLED_APPS = [
     'patientlogin',
 		'patientrecords',
     'patienthealthcare',
+    'healthcarelogin',
+    'healthcarepatients',
 ]
 
 # Extending User Model

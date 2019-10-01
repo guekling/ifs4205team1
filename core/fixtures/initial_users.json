@@ -22,6 +22,27 @@
   },
   {
     "model": "core.user",
+    "pk": "testpatient2",
+    "fields": {
+      "username": "testpatient2",
+      "password": "1234",
+      "first_name": "Daniel",
+      "last_name": "Hwakings",
+      "email": "daniel_hawkings@gmail.com",
+      "gender": "M",
+      "dob": "1987-08-02",
+      "address": "68 Toa Payoh Street 12",
+      "postalcode": "120988",
+      "contactnumber": "90192837"
+    }
+  },
+  {
+    "model": "core.patient",
+    "pk": "testpatient2",
+    "fields": {}
+  },
+  {
+    "model": "core.user",
     "pk": "testhealthcare",
     "fields": {
       "username": "testhealthcare",
@@ -40,7 +61,11 @@
     "model": "core.healthcare",
     "pk": "testhealthcare",
     "fields": {
-      "license": 234567
+      "license": 234567,
+      "patients": [
+        "testpatient",
+        "testpatient2"
+      ]
     }
   },
   {
@@ -63,7 +88,10 @@
     "model": "core.healthcare",
     "pk": "testhealthcare2",
     "fields": {
-      "license": 123456
+      "license": 123456,
+      "patients": [
+        "testpatient"
+      ]
     }
   }
 ]
