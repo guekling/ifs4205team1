@@ -167,6 +167,7 @@ The database used is PostgreSQL v10.10.
    export DB_NAME = 'YOUR_DB_NAME'
    export DB_USER = 'YOUR_DB_USER'
    export DB_PASS = 'YOUR_DB_PASS'
+   export DB_HOST = 'localhost'
    ```
 
 3. Make migrations
@@ -196,9 +197,17 @@ The database used is PostgreSQL v10.10.
   $ python manage.py load_csv --csvpath="<PATH/TO/CSV>/ifs4205team1/core/management/files/test_users.csv"
   ```
   
-  Note: A `test_users_less.csv` with only two rows of data exists in the same directory for testing purposes.
+  Note: A `test_users_less.csv` with only a few rows of data exists in the same directory for testing purposes.
 
-#### 1.1.4 Starting Django
+#### 1.1.4 Populating `.env` File
+
+1. Add on the following into the `.env` file:
+
+   ```
+   export MEDIA_URL = 'MEDIA_URL'
+   ```
+
+#### 1.1.5 Starting Django
 
 1. Start Django
 
