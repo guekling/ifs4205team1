@@ -1,0 +1,46 @@
+{% extends "healthcare_base.html" %}
+
+{% load app_filters %}
+
+{% block content %}
+<h1>{{ patient.username | get_full_name }}'s {{ record.type }} Record</h1>
+
+<table class="table text-center">
+  <tr>
+    <th>Date</th>
+    <th>{{ record.timestamp | get_date }}</th>
+  </tr>
+  <tr>
+    <th>Time</th>
+    <th>{{ record.timestamp | get_time }}</th>
+  </tr>
+  <tr>
+    <th>Data</th>
+    <th>{{ record.data }}</th>
+  </tr>
+</table>
+
+<h1>Permissions</h1>
+
+<table class="table text-center">
+  <thead>
+  <tr>
+    <th scope="col">Given To</th>
+    <th scope="col">Given By</th>
+    <th scope="col">Given On</th>
+    <th scope="col">Permission</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for perm in permissions %}
+  <tr>
+    <th scope="row">{{ perm.username.username | get_full_name }}</th>
+    <th>{{ perm.given_by | get_full_name }}</th>
+    <th>{{ perm.timestamp | get_datetime }}</th>
+    <th>{{ perm.perm_value | get_perm }}</th>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

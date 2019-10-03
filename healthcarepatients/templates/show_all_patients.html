@@ -5,4 +5,27 @@
 {% block content %}
 <h1>Patients</h1>
 
+<table class="table text-center">
+  <thead>
+  <tr>
+    <th scope="col">Name</th>
+    <th scope="col">Gender</th>
+    <th scope="col">Date of Birth</th>
+    <th scope="col">Contact Number</th>
+    <th scope="col"></th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for patient in patients %}
+  <tr>
+    <th scope="row">{{ patient.username | get_full_name }}</th>
+    <th>{{ patient.username.gender }}</th>
+    <th>{{ patient.username.dob }}</th>
+    <th>{{ patient.username.contactnumber }}</th>
+    <th><a href="{% url 'show_patient' patient_id=patient.id healthcare_id=healthcare.id %}">More Details</a></th>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
 {% endblock %}

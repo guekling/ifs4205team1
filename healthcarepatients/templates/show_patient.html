@@ -1,0 +1,44 @@
+{% extends "healthcare_base.html" %}
+
+{% load app_filters %}
+
+{% block content %}
+<h1>{{ patient.username | get_full_name }}</h1>
+
+<table class="table text-center">
+  <tr>
+    <th>First Name</th>
+    <th>{{ patient.username.first_name }}</th>
+  </tr>
+  <tr>
+    <th>Last Name</th>
+    <th>{{ patient.username.last_name }}</th>
+  </tr>
+  <tr>
+    <th>Email</th>
+    <th>{{ patient.username.email }}</th>
+  </tr>
+  <tr>
+    <th>Date of Birth</th>
+    <th>{{ patient.username.dob }}</th>
+  </tr>
+  <tr>
+    <th>Address</th>
+    <th>{{ patient.username.address }}</th>
+  </tr>
+  <tr>
+    <th>Postal Code</th>
+    <th>{{ patient.username.postalcode }}</th>
+  </tr>
+  <tr>
+    <th>Contact Number</th>
+    <th>{{ patient.username.contactnumber }}</th>
+  </tr>
+  <tr>
+</table>
+
+<a href="{% url 'show_patient_records' healthcare_id=healthcare.id patient_id=patient.id %}"><button type="buton" class="btn btn-primary">View Medical Records</button></a>
+<a href="{% url 'transfer_patient' healthcare_id=healthcare.id patient_id=patient.id %}"><button type="buton" class="btn btn-primary">Transfer Patient</button></a>
+<a href="{% url 'show_all_patients' healthcare_id=healthcare.id %}"><button type="buton" class="btn btn-secondary">Back</button></a>
+
+{% endblock %}
