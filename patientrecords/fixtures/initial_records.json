@@ -1,57 +1,123 @@
 [
-  {
-    "model": "patientrecords.readings",
-    "pk": "3218f20d-db07-4770-b67b-8be6422d0b20",
-    "fields": {
-      "type": "Temperature",
-      "owner_id": "testpatient",
-      "patient_id": "testpatient",
-      "timestamp": "2019-09-10T15:27:35.221Z",
-      "data": "37.2"
-    }
-  },
-  {
-    "model": "patientrecords.readingsperm",
-    "pk": "87474348-1732-48d4-b49a-fd1e2be17b4b",
-    "fields": {
-      "readings_id": "3218f20d-db07-4770-b67b-8be6422d0b20",
-      "username": "testhealthcare",
-      "given_by": "testpatient",
-      "timestamp": "2019-09-10T15:27:35.221Z",
-      "perm_value": 3
-    }
-  },
-  {
-    "model": "patientrecords.readingsperm",
-    "pk": "7328acf7-6e42-4596-a14f-2f414931e565",
-    "fields": {
-      "readings_id": "3218f20d-db07-4770-b67b-8be6422d0b20",
-      "username": "testhealthcare2",
-      "given_by": "testpatient",
-      "timestamp": "2019-09-10T15:27:35.221Z",
-      "perm_value": 3
-    }
-  },
-  {
-    "model": "patientrecords.readings",
-    "pk": "85d56bed-045d-46e8-9405-db6c35309bc3",
-    "fields": {
-      "type": "Temperature",
-      "owner_id": "testpatient",
-      "patient_id": "testpatient",
-      "timestamp": "2019-09-10T15:27:35.221Z",
-      "data": "36"
-    }
-  },
-  {
-    "model": "patientrecords.readingsperm",
-    "pk": "09fcd59c-180b-4edf-9dd7-54831bb69dcd",
-    "fields": {
-      "readings_id": "85d56bed-045d-46e8-9405-db6c35309bc3",
-      "username": "testhealthcare",
-      "given_by": "testpatient",
-      "timestamp": "2019-09-10T15:27:35.221Z",
-      "perm_value": 3
-    }
+{
+  "model": "patientrecords.readings",
+  "pk": "b784a747-f906-4ec4-8546-88e6df5c7ad6",
+  "fields": {
+    "type": "Temperature",
+    "timestamp": "2019-10-02T11:23:00Z",
+    "owner_id": "1David",
+    "patient_id": "1David",
+    "data": "37.20"
   }
+},
+{
+  "model": "patientrecords.readingsperm",
+  "pk": "4d4e16c4-63bd-4a87-a784-b3f343af3819",
+  "fields": {
+    "readings_id": "b784a747-f906-4ec4-8546-88e6df5c7ad6",
+    "timestamp": "2019-10-02T11:23:00Z",
+    "username": "6001Angela",
+    "given_by": "1David",
+    "perm_value": 2
+  }
+},
+{
+  "model": "patientrecords.timeseries",
+  "pk": "bb8c1433-8bac-4786-b6a8-d14cbf8e625a",
+  "fields": {
+    "timestamp": "2019-10-02T11:23:00Z",
+    "owner_id": "1David",
+    "patient_id": "1David",
+    "data": "timeseries/TimeSeriesData1.txt"
+  }
+},
+{
+  "model": "patientrecords.timeseriesperm",
+  "pk": "07bd7a2d-7436-4e6c-9afd-902f09d908a8",
+  "fields": {
+    "timeseries_id": "bb8c1433-8bac-4786-b6a8-d14cbf8e625a",
+    "timestamp": "2019-10-02T11:23:00Z",
+    "username": "6001Angela",
+    "given_by": "1David",
+    "perm_value": 2
+  }
+},
+{
+  "model": "patientrecords.videos",
+  "pk": "9301b8d0-1ef2-4988-b17e-7facccc4ef1d",
+  "fields": {
+    "title": "Gait Video",
+    "type": "Gait",
+    "timestamp": "2019-10-02T11:23:00Z",
+    "owner_id": "1David",
+    "patient_id": "1David",
+    "data": "videos/gait_video_1.mp4"
+  }
+},
+{
+  "model": "patientrecords.videosperm",
+  "pk": "3a907704-5682-4332-8138-6844ed31950a",
+  "fields": {
+    "videos_id": "9301b8d0-1ef2-4988-b17e-7facccc4ef1d",
+    "timestamp": "2019-10-02T11:23:00Z",
+    "username": "6001Angela",
+    "given_by": "1David",
+    "perm_value": 2
+  }
+},
+{
+  "model": "patientrecords.images",
+  "pk": "8405ba59-ffe9-4301-acb5-d9b5f9c767da",
+  "fields": {
+    "title": "MRI Image 1",
+    "type": "MRI",
+    "timestamp": "2019-10-02T11:23:00Z",
+    "owner_id": "1David",
+    "patient_id": "1David",
+    "data": "images/MRI_Image_1.jpg"
+  }
+},
+{
+  "model": "patientrecords.imagesperm",
+  "pk": "1c8684e0-ba29-4d38-822d-a4fc8b4e7aec",
+  "fields": {
+    "img_id": "8405ba59-ffe9-4301-acb5-d9b5f9c767da",
+    "timestamp": "2019-10-02T11:23:00Z",
+    "username": "6001Angela",
+    "given_by": "1David",
+    "perm_value": 2
+  }
+},
+{
+  "model": "patientrecords.imagesperm",
+  "pk": "e707dbc9-1c13-48e9-bf85-ad66925727fb",
+  "fields": {
+    "img_id": "8405ba59-ffe9-4301-acb5-d9b5f9c767da",
+    "timestamp": "2019-10-02T11:23:00Z",
+    "username": "6001Angela",
+    "given_by": "1David",
+    "perm_value": 2
+  }
+},
+{
+  "model": "patientrecords.diagnosis",
+  "pk": "95042eba-e8cd-4a3a-97b0-7c1cfc15a5cf",
+  "fields": {
+    "title": "Stomach Cancer",
+    "time_start": "2019-10-02T11:23:00Z",
+    "time_end": "2019-10-02T23:46:00Z",
+    "username": "1David"
+  }
+},
+{
+  "model": "patientrecords.diagnosisperm",
+  "pk": "8a1c0aa7-ebf8-4274-8133-68dd7192568b",
+  "fields": {
+    "diag_id": "95042eba-e8cd-4a3a-97b0-7c1cfc15a5cf",
+    "timestamp": "2019-10-02T11:23:00Z",
+    "username": "6001Angela",
+    "given_by": "1David",
+    "perm_value": 2
+  }
+}
 ]
