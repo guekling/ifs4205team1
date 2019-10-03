@@ -151,8 +151,7 @@ def patient_qr(request, patient_id):
   if form.is_valid():
     cd = form.cleaned_data
     otp = cd.get('otp')
-    if (otp == "1234"):
-    # if user.device_id_hash == recovered_value(user.android_id_hash, nonce, otp):
+    if user.device_id_hash == recovered_value(user.android_id_hash, nonce, otp):
       # give HttpResponse only or render page you need to load on success
       user.sub_id_hash = ""
       user.save()
