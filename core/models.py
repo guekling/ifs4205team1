@@ -65,8 +65,8 @@ class Healthcare(models.Model):
     on_delete=models.CASCADE,
     primary_key=True)
   id = models.UUIDField(default=uuid.uuid4, editable=False)
-  license = models.CharField(max_length=16, unique=True)
-  patients = models.ManyToManyField(Patient)
+  license = models.CharField(max_length=16)
+  patients = models.ManyToManyField(Patient, related_name='healthcare_patients')
   
 class Researcher(models.Model):
   username = models.OneToOneField(
@@ -76,11 +76,11 @@ class Researcher(models.Model):
   id = models.UUIDField(default=uuid.uuid4, editable=False)
   diagnosis = models.BooleanField(default=False)  
   diabetes = models.BooleanField(default=False) 
-  gall_vid = models.BooleanField(default=False) 
+  gait_vid = models.BooleanField(default=False) 
   bp_read = models.BooleanField(default=False) 
   hr_read = models.BooleanField(default=False) 
   temp_read = models.BooleanField(default=False) 
   cancer_img = models.BooleanField(default=False) 
   mri_img = models.BooleanField(default=False) 
-  ultra_img = models.BooleanField(default=False) 
+  ultrasound_img = models.BooleanField(default=False) 
   xray_img = models.BooleanField(default=False) 
