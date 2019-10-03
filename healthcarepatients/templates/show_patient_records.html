@@ -1,0 +1,35 @@
+{% extends "healthcare_base.html" %}
+
+{% load app_filters %}
+
+{% block content %}
+<h1>{{ patient.username | get_full_name }}'s Medical Records</h1>
+
+<table class="table text-center">
+  <thead>
+  <tr>
+    <th scope="col">Timestamp</th>
+    <th scope="col">Type</th>
+    <th scope="col">Data</th>
+    <th scope="col"></th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for record in records %}
+  {% to_model_name record as to_model_name_record %}
+  <tr>
+    <th scope="row">{{ record.timestamp | get_datetime }}</th>
+    <th>{{ record.type }}</th>
+    <th>
+      {% if to_model_name_record == 'Documents' or to_model_name_record == 'Images' or to_model_name_record == 'TimeSeries' or to_model_name_record == 'Videos' %}
+        <a href="{{ record.data }}">View Data</a>
+      {% else %}
+        {{ record.data }}
+      {% endif %}
+    </th>
+    <th><a href="{% url 'show_patient_record' healthcare_id=healthcare.id patient_id=patient.id record_id=record.id %}">More Details</a></th>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

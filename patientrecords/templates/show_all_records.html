@@ -21,7 +21,7 @@
 	  <th scope="row">{{ result.timestamp | get_datetime }}</th>
 	  <th>{{ result.type }}</th>
 	  <th>
-      {% if to_model_name_result == 'Documents' or to_model_name_result == 'Images' %}
+      {% if to_model_name_result == 'Documents' or to_model_name_result == 'Images' or to_model_name_result == 'TimeSeries' or to_model_name_result == 'Videos' %}
         <a href="{{ result.data }}">View Data</a>
       {% else %}
         {{ result.data }}
