@@ -22,7 +22,7 @@ class User(AbstractUser):
     Checks if user is a patient.
     """
     try:
-      patient = self.patient
+      patient = self.patient_username
     except Patient.DoesNotExist:
       patient = None
 
@@ -36,7 +36,7 @@ class User(AbstractUser):
     Checks if user is a healthcare professional
     """
     try:
-      healthcare = self.healthcare
+      healthcare = self.healthcare_username
     except Healthcare.DoesNotExist:
       healthcare = None
 
@@ -49,6 +49,7 @@ class Admin(models.Model):
   username = models.OneToOneField( # one admin to one user
     User,
     on_delete=models.CASCADE,
+    related_name='admin_username',
     primary_key=True)
   id = models.UUIDField(default=uuid.uuid4, editable=False)
 
@@ -56,6 +57,7 @@ class Patient(models.Model):
   username = models.OneToOneField(
     User,
     on_delete=models.CASCADE,
+    related_name='patient_username',
     primary_key=True)
   id = models.UUIDField(default=uuid.uuid4, editable=False)
 
@@ -63,6 +65,7 @@ class Healthcare(models.Model):
   username = models.OneToOneField(
     User,
     on_delete=models.CASCADE,
+    related_name='healthcare_username',
     primary_key=True)
   id = models.UUIDField(default=uuid.uuid4, editable=False)
   license = models.CharField(max_length=16)
@@ -72,6 +75,7 @@ class Researcher(models.Model):
   username = models.OneToOneField(
     User,
     on_delete=models.CASCADE,
+    related_name='researcher_username',
     primary_key=True)
   id = models.UUIDField(default=uuid.uuid4, editable=False)
   diagnosis = models.BooleanField(default=False)  
