@@ -15,7 +15,9 @@
 </div>
 
 <div>
-  <label>Permission Given To: {{ permission.username.username | get_full_name }}</label>
+  {% for name in permission.username.all %}
+     <label>Permission Given To: {{ name.username | get_full_name }}</label>
+  {% endfor %}
 </div>
 
 <div>
