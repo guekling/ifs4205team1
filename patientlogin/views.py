@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.template import RequestContext
 from django.urls import reverse_lazy
 
+from django.utils.crypto import get_random_string
+
 from django.contrib.auth import (
     REDIRECT_FIELD_NAME, get_user_model, login as auth_login
 )
@@ -9,10 +11,12 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordChangeDoneView
 
-from patientlogin.forms import UserEditForm
+from patientlogin.forms import UserEditForm, UserQrForm
 
 from core.models import User, Patient
 from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
+
+import hashlib
 
 class PatientLogin(LoginView):
   """
@@ -32,7 +36,11 @@ class PatientLogin(LoginView):
 
     if patient is not None:
       auth_login(self.request, form.get_user())
-      return redirect('patient_dashboard', patient_id=patient.id)
+      nonce = get_random_string(length=6, allowed_chars=u'abcdefghijklmnopqrstuvwxyz0123456789')
+      user = patient.username
+      user.sub_id_hash = nonce  # change field
+      user.save()  # this will update only
+      return redirect('patient_qr', patient_id=patient.id)
     else:
       form = AuthenticationForm
 
@@ -130,6 +138,37 @@ def patient_change_password_complete(request, patient_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient, login_url='/patient/login/')
+def patient_qr(request, patient_id):
+  patient = patient_does_not_exists(patient_id)
+  user = patient.username
+  if len(user.sub_id_hash) >0:
+    nonce = user.sub_id_hash
+  else:
+    return redirect('patient_login')
+
+  form = UserQrForm(request.POST or None)
+
+  if form.is_valid():
+    cd = form.cleaned_data
+    otp = cd.get('otp')
+    if user.device_id_hash == recovered_value(user.android_id_hash, nonce, otp):
+      # give HttpResponse only or render page you need to load on success
+      user.sub_id_hash = ""
+      user.save()
+      return redirect('patient_dashboard', patient_id=patient.id)
+    else:
+      # if fails, then redirect to custom url/page
+      return redirect('patient_login')
+
+  else:
+    context = {
+      'form': UserQrForm(),
+      'nonce': nonce,
+    }
+    return render(request, "patient_qr.html", context)
+
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient, login_url='/patient/login/')
 def patient_dashboard(request, patient_id):
   patient = patient_does_not_exists(patient_id)
 
@@ -151,3 +190,9 @@ def patient_does_not_exists(patient_id):
     return Patient.objects.get(id=patient_id)
   except Patient.DoesNotExist:
     redirect('patient_login')
+
+def recovered_value(hash_id, nonce, otp):
+  x = hashlib.sha256((hash_id + nonce).encode()).hexdigest()
+  xor = '{:x}'.format(int(x[-6:], 16) ^ int(otp, 16))
+
+  return hashlib.sha256((xor).encode()).hexdigest()
