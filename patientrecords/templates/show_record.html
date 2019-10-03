@@ -34,12 +34,23 @@
   </thead>
   <tbody>
   {% for perm in permissions %}
+  {% to_model_name perm as to_model_name_result %}
   <tr>
     <th scope="row">{{ perm.username.username | get_full_name }}</th>
     <th>{{ perm.given_by | get_full_name }}</th>
     <th>{{ perm.timestamp | get_datetime }}</th>
     <th>{{ perm.perm_value | get_perm }}</th>
-    <th><a href="{% url 'edit_permission' patient_id=perm.readings_id.patient_id.id record_id=perm.readings_id.id perm_id=perm.id %}">Edit Permission</a></th>
+    {% if to_model_name_result == 'ReadingsPerm' %}
+      <th><a href="{% url 'edit_permission' patient_id=perm.readings_id.patient_id.id record_id=perm.readings_id.id perm_id=perm.id %}">Edit Permission</a></th>
+    {% elif to_model_name_result == 'DocumentsPerm' %}
+      <th><a href="{% url 'edit_permission' patient_id=perm.docs_id.patient_id.id record_id=perm.docs_id.id perm_id=perm.id %}">Edit Permission</a></th>
+    {% elif to_model_name_result == 'TimeSeriesPerm' %}
+      <th><a href="{% url 'edit_permission' patient_id=perm.timeseries_id.patient_id.id record_id=perm.timeseries_id.id perm_id=perm.id %}">Edit Permission</a></th>
+    {% elif to_model_name_result == 'VideosPerm' %}
+      <th><a href="{% url 'edit_permission' patient_id=perm.videos_id.patient_id.id record_id=perm.videos_id.id perm_id=perm.id %}">Edit Permission</a></th>
+    {% elif to_model_name_result == 'ImagesPerm' %}
+      <th><a href="{% url 'edit_permission' patient_id=perm.img_id.patient_id.id record_id=perm.img_id.id perm_id=perm.id %}">Edit Permission</a></th>
+    {% endif %}
   </tr>
   {% endfor %}
   </tbody>
