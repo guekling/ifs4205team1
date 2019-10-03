@@ -36,7 +36,11 @@
   {% for perm in permissions %}
   {% to_model_name perm as to_model_name_result %}
   <tr>
-    <th scope="row">{{ perm.username.username | get_full_name }}</th>
+    <th scope="row">
+      {% for name in perm.username.all %}
+        {{ name.username | get_full_name }}
+      {% endfor %}
+    </th>
     <th>{{ perm.given_by | get_full_name }}</th>
     <th>{{ perm.timestamp | get_datetime }}</th>
     <th>{{ perm.perm_value | get_perm }}</th>
