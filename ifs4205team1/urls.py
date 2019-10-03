@@ -28,6 +28,7 @@ urlpatterns = [
     path('patient/', include('patientrecords.urls')),
     path('patient/', include('patienthealthcare.urls')),
     path('healthcare/', include('healthcarelogin.urls')),
+    path('healthcare/', include('healthcarepatients.urls')),
 ] 
 
 if settings.DEBUG:
