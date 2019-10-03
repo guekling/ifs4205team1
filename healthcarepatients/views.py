@@ -152,10 +152,28 @@ def transfer_patient(request, healthcare_id, patient_id):
       transfer_healthcare = form.cleaned_data['healthcare_professional']
       patient.healthcare_patients.add(transfer_healthcare) # Does not do anything even if healthcare professional chosen is already tagged to patient
 
-      # records = get_records(patient)
+      # Set default permissions for patient's medical records for new Healthcare
+      healthcare_user = healthcare.username
+      records = get_records(patient)
 
-      # for record in records:
+      for record in records:
+        model = get_model(record)
         
+      if (model == "Readings"):
+        permission = ReadingsPerm.objects.create(readings_id=record, given_by=healthcare_user, perm_value=2)
+        permission.username.add(transfer_healthcare)
+      elif (model == "TimeSeries"):
+        permission = TimeSeriesPerm.objects.create(timeseries_id=record, given_by=healthcare_user, perm_value=2)
+        permission.username.add(transfer_healthcare)
+      elif (model == "Documents"):
+        permission = DocumentsPerm.objects.create(docs_id=record, given_by=healthcare_user, perm_value=2)
+        permission.username.add(transfer_healthcare.username)
+      elif (model == "Videos"):
+        permission = VideosPerm.objects.create(videos_id=record, given_by=healthcare_user, perm_value=2)
+        permission.username.add(transfer_healthcare)
+      elif (model == "Images"):
+        permission = ImagesPerm.objects.create(img_id=record, given_by=healthcare_user, perm_value=2)
+        permission.username.add(transfer_healthcare)
 
       return redirect('show_patient', healthcare_id=healthcare_id, patient_id=patient_id)
     else:
@@ -173,9 +191,6 @@ def transfer_patient(request, healthcare_id, patient_id):
   }
 
   return render(request, 'transfer_patient.html', context)
-
-
-
 
 ##########################################
 ############ Helper Functions ############
