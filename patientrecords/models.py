@@ -9,11 +9,14 @@ class Readings(models.Model):
   timestamp = models.DateTimeField(auto_now=True)
   owner_id = models.ForeignKey( # many readings related to one user
     User,
-    on_delete=models.PROTECT
-    )
+    on_delete=models.PROTECT,
+    related_name='readings_owner'
+  )
   patient_id = models.ForeignKey( # many readings related to one patient
     Patient,
-    on_delete=models.CASCADE)
+    on_delete=models.CASCADE,
+    related_name='readings_patient'
+  )
   data = models.CharField(max_length=15)
 
 class ReadingsPerm(models.Model):
@@ -26,16 +29,15 @@ class ReadingsPerm(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   readings_id = models.ForeignKey( # many permissions related to one reading
     Readings,
-    on_delete=models.CASCADE
+    on_delete=models.CASCADE,
+    related_name='readingsperm_reading'
   )
-  username = models.ForeignKey(
-    Healthcare,
-    on_delete=models.CASCADE
-  )
+  username = models.ManyToManyField(Healthcare)
   timestamp = models.DateTimeField(auto_now=True)
   given_by = models.ForeignKey(
     User,
-    on_delete=models.PROTECT
+    on_delete=models.PROTECT,
+    related_name='readingsperm_given_by'
   )
   perm_value = models.PositiveSmallIntegerField(choices=PERMISSION_CHOICES)
   (('readings_id', 'username'),)
@@ -45,11 +47,14 @@ class TimeSeries(models.Model):
   timestamp = models.DateTimeField(auto_now=True)
   owner_id = models.ForeignKey(
     User,
-    on_delete=models.PROTECT
+    on_delete=models.PROTECT,
+    related_name='timeseries_owner'
     )
   patient_id = models.ForeignKey(
     Patient,
-    on_delete=models.CASCADE)
+    on_delete=models.CASCADE,
+    related_name='timeseries_patient'
+  )
   data = models.FileField(upload_to='timeseries/') # txt files
 
 class TimeSeriesPerm(models.Model):
@@ -62,16 +67,15 @@ class TimeSeriesPerm(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   timeseries_id = models.ForeignKey(
     TimeSeries,
-    on_delete=models.CASCADE
+    on_delete=models.CASCADE,
+    related_name='timeseriesperm_timeseries'
   )
-  username = models.ForeignKey(
-    Healthcare,
-    on_delete=models.CASCADE
-  )
+  username = models.ManyToManyField(Healthcare)
   timestamp = models.DateTimeField(auto_now=True)
   given_by = models.ForeignKey(
     User,
-    on_delete=models.PROTECT
+    on_delete=models.PROTECT,
+    related_name='timeseriesperm_given_by'
   )
   perm_value = models.PositiveSmallIntegerField(choices=PERMISSION_CHOICES)
   (('timeseries_id', 'username'),)
@@ -83,11 +87,14 @@ class Documents(models.Model):
   timestamp = models.DateTimeField(auto_now=True)
   owner_id = models.ForeignKey(
     User,
-    on_delete=models.PROTECT
+    on_delete=models.PROTECT,
+    related_name='documents_owner'
   )
   patient_id = models.ForeignKey(
     Patient,
-    on_delete=models.CASCADE)
+    on_delete=models.CASCADE,
+    related_name='documents_patient'
+  )
   data = models.FileField(upload_to='documents/')
 
   def has_permission(self, user):
@@ -112,18 +119,15 @@ class DocumentsPerm(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   docs_id = models.ForeignKey(
     Documents,
-    on_delete=models.CASCADE
-  )
-  username = models.ForeignKey(
-    User,
     on_delete=models.CASCADE,
-    related_name='get_users'
+    related_name='documentsperm_documents'
   )
+  username = models.ManyToManyField(User)
   timestamp = models.DateTimeField(auto_now=True)
   given_by = models.ForeignKey(
     User,
     on_delete=models.PROTECT,
-    related_name='get_given_by'
+    related_name='documentsperm_given_by'
   )
   perm_value = models.PositiveSmallIntegerField(choices=PERMISSION_CHOICES)
   (('docs_id', 'username'),)
@@ -135,11 +139,14 @@ class Videos(models.Model):
   timestamp = models.DateTimeField(auto_now=True)
   owner_id = models.ForeignKey(
     User,
-    on_delete=models.PROTECT
-    )
+    on_delete=models.PROTECT,
+    related_name='videos_owner'
+  )
   patient_id = models.ForeignKey(
     Patient,
-    on_delete=models.CASCADE)
+    on_delete=models.CASCADE,
+    related_name='videos_patient'
+  )
   data = models.FileField(upload_to='videos/')
 
 class VideosPerm(models.Model):
@@ -152,16 +159,15 @@ class VideosPerm(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   videos_id = models.ForeignKey(
     Videos,
-    on_delete=models.CASCADE
+    on_delete=models.CASCADE,
+    related_name='videosperm_videos'
   )
-  username = models.ForeignKey(
-    Healthcare,
-    on_delete=models.CASCADE
-  )
+  username = models.ManyToManyField(Healthcare)
   timestamp = models.DateTimeField(auto_now=True)
   given_by = models.ForeignKey(
     User,
-    on_delete=models.PROTECT
+    on_delete=models.PROTECT,
+    related_name='videosperm_given_by'
   )
   perm_value = models.PositiveSmallIntegerField(choices=PERMISSION_CHOICES)
   unique_together = (('videos_id', 'username'),)
@@ -173,11 +179,14 @@ class Images(models.Model):
   timestamp = models.DateTimeField(auto_now=True)
   owner_id = models.ForeignKey(
     User,
-    on_delete=models.PROTECT
-    )
+    on_delete=models.PROTECT,
+    related_name='images_owner'
+  )
   patient_id = models.ForeignKey(
     Patient,
-    on_delete=models.CASCADE)
+    on_delete=models.CASCADE,
+    related_name='images_patient'
+  )
   data = models.ImageField(upload_to='images/')
 
 class ImagesPerm(models.Model):
@@ -190,16 +199,15 @@ class ImagesPerm(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   img_id = models.ForeignKey(
     Images,
-    on_delete=models.CASCADE
+    on_delete=models.CASCADE,
+    related_name='imagesperm_images'
   )
-  username = models.ForeignKey(
-    Healthcare,
-    on_delete=models.CASCADE
-  )
+  username = models.ManyToManyField(Healthcare)
   timestamp = models.DateTimeField(auto_now=True)
   given_by = models.ForeignKey(
     User,
-    on_delete=models.PROTECT
+    on_delete=models.PROTECT,
+    related_name='imagessperm_given_by'
   )
   perm_value = models.PositiveSmallIntegerField(choices=PERMISSION_CHOICES)
   unique_together = (('img_id', 'username'),)
@@ -209,9 +217,10 @@ class Diagnosis(models.Model):
   title = models.CharField(max_length=64)
   time_start = models.DateTimeField(auto_now_add=True)
   time_end = models.DateTimeField(null=True)
-  username = models.ForeignKey(
+  username = models.ManyToManyField(
     Patient,
-    on_delete=models.CASCADE)
+    related_name='diagnosis_username'
+  )
 
 class DiagnosisPerm(models.Model):
   PERMISSION_CHOICES = [
@@ -223,16 +232,15 @@ class DiagnosisPerm(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   diag_id = models.ForeignKey(
     Diagnosis,
-    on_delete=models.CASCADE
+    on_delete=models.CASCADE,
+    related_name='diagnosisperm_diag'
   )
-  username = models.ForeignKey(
-    Healthcare,
-    on_delete=models.CASCADE
-  )
+  username = models.ManyToManyField(Healthcare)
   timestamp = models.DateTimeField(auto_now=True)
   given_by = models.ForeignKey(
     User,
-    on_delete=models.PROTECT
+    on_delete=models.PROTECT,
+    related_name='diagnosisperm_given_by'
   )
   perm_value = models.PositiveSmallIntegerField(choices=PERMISSION_CHOICES)
   unique_together = (('diag_id', 'username'),)
