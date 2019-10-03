@@ -5,7 +5,7 @@ from core.models import Patient, Healthcare
 from patientrecords.models import Documents, DocumentsPerm
 
 @login_required(login_url='/patient/login/')
-@user_passes_test(lambda u: u.is_patient, login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
 def show_all_notes(request, patient_id):
   """
   List all healthcare professional notes written about the patient
@@ -22,7 +22,7 @@ def show_all_notes(request, patient_id):
   return render(request, 'show_all_notes.html', context)
 
 @login_required(login_url='/patient/login/')
-@user_passes_test(lambda u: u.is_patient, login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
 def show_note(request, patient_id, note_id):
   """
   Show information of a single healthcare professional note

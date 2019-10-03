@@ -24,7 +24,7 @@ class HealthcareLogin(LoginView):
     Checks if a user is a healthcare professional
     """
     try:
-      healthcare = form.get_user().healthcare
+      healthcare = form.get_user().healthcare_username
     except Healthcare.DoesNotExist:
       healthcare = None
 
@@ -65,8 +65,12 @@ class HealthcareChangePasswordComplete(PasswordChangeDoneView):
   template_name = 'healthcare_change_password_complete.html'
 
 @login_required(login_url='/healthcare/login/')
-@user_passes_test(lambda u: u.is_healthcare, login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
 def healthcare_settings(request, healthcare_id):
+  # checks if logged in healthcare professional has the same id as in the URL
+  if (request.user.healthcare_username.id != healthcare_id):
+    return redirect('/healthcare/login/')
+
   healthcare = healthcare_does_not_exists(healthcare_id)
   user = healthcare.username
 
@@ -78,8 +82,12 @@ def healthcare_settings(request, healthcare_id):
   return render(request, 'healthcare_settings.html', context)
 
 @login_required(login_url='/healthcare/login/')
-@user_passes_test(lambda u: u.is_healthcare, login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
 def healthcare_edit_settings(request, healthcare_id):
+  # checks if logged in healthcare professional has the same id as in the URL
+  if (request.user.healthcare_username.id != healthcare_id):
+    return redirect('/healthcare/login/')
+
   healthcare = healthcare_does_not_exists(healthcare_id)
   user = healthcare.username
   form = UserEditForm(request.POST or None, instance=user)
@@ -105,8 +113,12 @@ def healthcare_edit_settings(request, healthcare_id):
   return render(request, 'healthcare_edit_settings.html', context)
 
 @login_required(login_url='/healthcare/login/')
-@user_passes_test(lambda u: u.is_healthcare, login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
 def healthcare_change_password(request, healthcare_id):
+  # checks if logged in healthcare professional has the same id as in the URL
+  if (request.user.healthcare_username.id != healthcare_id):
+    return redirect('/healthcare/login/')
+
   healthcare = healthcare_does_not_exists(healthcare_id)
 
   change_password = HealthcareChangePassword.as_view(
@@ -116,8 +128,12 @@ def healthcare_change_password(request, healthcare_id):
   return change_password(request)
 
 @login_required(login_url='/healthcare/login/')
-@user_passes_test(lambda u: u.is_healthcare, login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
 def healthcare_change_password_complete(request, healthcare_id):
+  # checks if logged in healthcare professional has the same id as in the URL
+  if (request.user.healthcare_username.id != healthcare_id):
+    return redirect('/healthcare/login/')
+    
   healthcare = healthcare_does_not_exists(healthcare_id)
 
   change_password_complete = HealthcareChangePasswordComplete.as_view(
@@ -127,8 +143,12 @@ def healthcare_change_password_complete(request, healthcare_id):
   return change_password_complete(request)
 
 @login_required(login_url='/healthcare/login/')
-@user_passes_test(lambda u: u.is_healthcare, login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
 def healthcare_dashboard(request, healthcare_id):
+  # checks if logged in healthcare professional has the same id as in the URL
+  if (request.user.healthcare_username.id != healthcare_id):
+    return redirect('/healthcare/login/')
+    
   healthcare = healthcare_does_not_exists(healthcare_id)
 
   context = {

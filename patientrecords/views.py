@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
 
-from patientrecords.forms import ReadingsPermissionEditForm
+from patientrecords.forms import ReadingsPermissionEditForm, TimeSeriesPermissionEditForm, DocumentsPermissionEditForm, VideosPermissionEditForm, ImagesPermissionEditForm
 
 from core.models import Patient
 from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
@@ -9,7 +9,7 @@ from patientrecords.models import Readings, TimeSeries, Documents, Images, Video
 from itertools import chain
 
 @login_required(login_url='/patient/login/')
-@user_passes_test(lambda u: u.is_patient, login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
 def show_all_records(request, patient_id):
   """
   List all medical records belonging to the patient
@@ -32,10 +32,10 @@ def show_all_records(request, patient_id):
   return render(request, 'show_all_records.html', context)
 
 @login_required(login_url='/patient/login/')
-@user_passes_test(lambda u: u.is_patient, login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
 def show_record(request, patient_id, record_id):
   """
-  Show information of a single medical record
+  Show information of a single medical record, and the permissions of the medical record
   """
   patient = patient_does_not_exists(patient_id)
 
@@ -69,7 +69,7 @@ def show_record(request, patient_id, record_id):
   return render(request, 'show_record.html', context)
 
 @login_required(login_url='/patient/login/')
-@user_passes_test(lambda u: u.is_patient, login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
 def edit_permission(request, patient_id, record_id, perm_id):
   """
   Edit a permission of a single medical record
@@ -100,7 +100,7 @@ def edit_permission(request, patient_id, record_id, perm_id):
         }
         return render(request, 'edit_permission.html', context)
   elif (model == "TimeSeries"):
-    permissions = TimeSeriesPerm.objects.filter(id = perm_id)
+    permission = TimeSeriesPerm.objects.get(id = perm_id)
     form = TimeSeriesPermissionEditForm(request.POST or None, instance=permission)
     if request.method == 'POST':
       if form.is_valid():
@@ -115,7 +115,7 @@ def edit_permission(request, patient_id, record_id, perm_id):
         }
         return render(request, 'edit_permission.html', context)
   elif (model == "Documents"):
-    permissions = DocumentsPerm.objects.filter(id = perm_id)
+    permission = DocumentsPerm.objects.get(id = perm_id)
     form = DocumentsPermissionEditForm(request.POST or None, instance=permission)
     if request.method == 'POST':
       if form.is_valid():
@@ -130,8 +130,8 @@ def edit_permission(request, patient_id, record_id, perm_id):
         }
         return render(request, 'edit_permission.html', context)
   elif (model == "Videos"):
-    permissions = VideosPerm.objects.filter(id = perm_id)
-    form = VideosEditForm(request.POST or None, instance=permission)
+    permission = VideosPerm.objects.get(id = perm_id)
+    form = VideosPermissionEditForm(request.POST or None, instance=permission)
     if request.method == 'POST':
       if form.is_valid():
         permission.save()
@@ -145,8 +145,8 @@ def edit_permission(request, patient_id, record_id, perm_id):
         }
         return render(request, 'edit_permission.html', context)
   elif (model == "Images"):
-    permissions = ImagesPerm.objects.filter(id = perm_id)
-    form = ImagesEditForm(request.POST or None, instance=permission)
+    permission = ImagesPerm.objects.get(id = perm_id)
+    form = ImagesPermissionEditForm(request.POST or None, instance=permission)
     if request.method == 'POST':
       if form.is_valid():
         permission.save()
@@ -160,7 +160,7 @@ def edit_permission(request, patient_id, record_id, perm_id):
         }
         return render(request, 'edit_permission.html', context)
   else:
-    permissions = ReadingsPerm.objects.none()
+    permission = ReadingsPerm.objects.none()
 
   context = {
     'form': form,
