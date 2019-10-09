@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 
+from django.utils.crypto import get_random_string
+
 from django.contrib.auth import (
     REDIRECT_FIELD_NAME, get_user_model, login as auth_login
 )
@@ -8,9 +10,11 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordChangeDoneView
 
-from patientlogin.forms import UserEditForm
+from patientlogin.forms import UserEditForm, UserQrForm
 
 from core.models import User, Healthcare
+
+import hashlib
 
 class HealthcareLogin(LoginView):
   """
@@ -30,7 +34,11 @@ class HealthcareLogin(LoginView):
 
     if healthcare is not None:
       auth_login(self.request, form.get_user())
-      return redirect('healthcare_dashboard', healthcare_id=healthcare.id)
+      nonce = get_random_string(length=6, allowed_chars=u'abcdefghijklmnopqrstuvwxyz0123456789')
+      user = healthcare.username
+      user.sub_id_hash = nonce  # change field
+      user.save()  # this will update only
+      return redirect('healthcare_qr', healthcare_id=healthcare.id)
     else:
       form = AuthenticationForm
 
@@ -144,6 +152,37 @@ def healthcare_change_password_complete(request, healthcare_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+def healthcare_qr(request, healthcare_id):
+  healthcare = healthcare_does_not_exists(healthcare_id)
+  user = healthcare.username
+  if len(user.sub_id_hash) >0:
+    nonce = user.sub_id_hash
+  else:
+    return redirect('healthcare_login')
+
+  form = UserQrForm(request.POST or None)
+
+  if form.is_valid():
+    cd = form.cleaned_data
+    otp = cd.get('otp')
+    if user.device_id_hash == recovered_value(user.android_id_hash, nonce, otp):
+      # give HttpResponse only or render page you need to load on success
+      user.sub_id_hash = ""
+      user.save()
+      return redirect('healthcare_dashboard', healthcare_id=healthcare.id)
+    else:
+      # if fails, then redirect to custom url/page
+      return redirect('healthcare_login')
+
+  else:
+    context = {
+      'form': UserQrForm(),
+      'nonce': nonce,
+    }
+    return render(request, "healthcare_qr.html", context)
+
+@login_required(login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
 def healthcare_dashboard(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
@@ -169,3 +208,9 @@ def healthcare_does_not_exists(healthcare_id):
     return Healthcare.objects.get(id=healthcare_id)
   except Healthcare.DoesNotExist:
     redirect('healthcare_login')
+
+def recovered_value(hash_id, nonce, otp):
+  x = hashlib.sha256((hash_id + nonce).encode()).hexdigest()
+  xor = '{:x}'.format(int(x[-6:], 16) ^ int(otp, 16))
+
+  return hashlib.sha256((xor).encode()).hexdigest()

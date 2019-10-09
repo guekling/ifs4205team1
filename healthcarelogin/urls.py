@@ -8,5 +8,6 @@ urlpatterns = [
   path('<uuid:healthcare_id>/settings/edit', views.healthcare_edit_settings, name="healthcare_edit_settings"),
   path('<uuid:healthcare_id>/settings/change-password/', views.healthcare_change_password, name="healthcare_change_password"),
   path('<uuid:healthcare_id>/settings/change-password-complete/', views.healthcare_change_password_complete, name="healthcare_change_password_complete"),
-  path('<uuid:healthcare_id>/dashboard/', views.healthcare_dashboard, name="healthcare_dashboard")
+  path('<uuid:healthcare_id>/dashboard/', views.healthcare_dashboard, name="healthcare_dashboard"),
+  path('<uuid:healthcare_id>/qr-login/', views.healthcare_qr, name="healthcare_qr")
 ]
