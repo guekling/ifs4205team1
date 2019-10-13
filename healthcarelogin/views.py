@@ -15,6 +15,7 @@ from patientlogin.forms import UserEditForm, UserQrForm
 from core.models import User, Healthcare
 
 import hashlib
+import qrcode
 
 class HealthcareLogin(LoginView):
   """
@@ -34,7 +35,7 @@ class HealthcareLogin(LoginView):
 
     if healthcare is not None:
       auth_login(self.request, form.get_user())
-      nonce = get_random_string(length=6, allowed_chars=u'abcdefghijklmnopqrstuvwxyz0123456789')
+      nonce = get_random_string(length=16, allowed_chars=u'abcdefghijklmnopqrstuvwxyz0123456789')
       user = healthcare.username
       user.sub_id_hash = nonce  # change field
       user.save()  # this will update only
@@ -141,7 +142,7 @@ def healthcare_change_password_complete(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
     return redirect('/healthcare/login/')
-    
+
   healthcare = healthcare_does_not_exists(healthcare_id)
 
   change_password_complete = HealthcareChangePasswordComplete.as_view(
@@ -155,7 +156,7 @@ def healthcare_change_password_complete(request, healthcare_id):
 def healthcare_qr(request, healthcare_id):
   healthcare = healthcare_does_not_exists(healthcare_id)
   user = healthcare.username
-  if len(user.sub_id_hash) >0:
+  if len(user.sub_id_hash) > 0:
     nonce = user.sub_id_hash
   else:
     return redirect('healthcare_login')
@@ -187,7 +188,7 @@ def healthcare_dashboard(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
     return redirect('/healthcare/login/')
-    
+
   healthcare = healthcare_does_not_exists(healthcare_id)
 
   context = {
@@ -214,3 +215,16 @@ def recovered_value(hash_id, nonce, otp):
   xor = '{:x}'.format(int(x[-6:], 16) ^ int(otp, 16))
 
   return hashlib.sha256((xor).encode()).hexdigest()
+
+def make_qr(nonce):
+  qr = qrcode.QRCode(
+    version=1,
+    box_size=15,
+    border=5
+  )
+
+  qr.add_data(nonce)
+  qr.make(fit=True)
+  img = qr.make_image(fill='black', back_color='white')
+
+  return img
