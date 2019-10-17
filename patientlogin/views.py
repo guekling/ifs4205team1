@@ -39,9 +39,12 @@ class PatientLogin(LoginView):
       auth_login(self.request, form.get_user())
       nonce = get_random_string(length=16, allowed_chars=u'abcdefghijklmnopqrstuvwxyz0123456789')
       user = patient.username
-      user.sub_id_hash = nonce  # change field
-      user.save()  # this will update only
-      return redirect('patient_qr', patient_id=patient.id)
+      if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
+        user.sub_id_hash = nonce  # change field
+        user.save()  # this will update only
+        return redirect('patient_qr', patient_id=patient.id)
+      else:
+        return redirect('patient_token_register', patient_id=patient.id)
     else:
       form = AuthenticationForm
 
@@ -167,6 +170,14 @@ def patient_qr(request, patient_id):
       'nonce': nonce,
     }
     return render(request, "patient_qr.html", context)
+
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+def patient_token_register(request, patient_id):
+  patient = patient_does_not_exists(patient_id)
+  user = patient.username
+
+  return render(request, "patient_token_register.html")
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')

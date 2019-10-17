@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+{% load qr_code %}
+
+{% block content %}
+<h1>Mobile Token Register</h1>
+</br>
+<h4>You haven't linked a mobile token yet!</h4>
+<h4>To do so, please scan this code at the "REGISTER" page on the token APP:</h4>
+
+<table>
+  <tr>
+    <td>
+      <div>{% qr_from_text "Dummy" size="M" image_format="svg" %}</div>
+    </td>
+  </tr>
+</table>
+
+<a class="btn btn-primary" href="/healthcare/login/">Back</a>
+
+{% endblock %}

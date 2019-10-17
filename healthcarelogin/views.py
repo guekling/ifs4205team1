@@ -37,9 +37,12 @@ class HealthcareLogin(LoginView):
       auth_login(self.request, form.get_user())
       nonce = get_random_string(length=16, allowed_chars=u'abcdefghijklmnopqrstuvwxyz0123456789')
       user = healthcare.username
-      user.sub_id_hash = nonce  # change field
-      user.save()  # this will update only
-      return redirect('healthcare_qr', healthcare_id=healthcare.id)
+      if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
+        user.sub_id_hash = nonce  # change field
+        user.save()  # this will update only
+        return redirect('healthcare_qr', healthcare_id=healthcare.id)
+      else:
+        return redirect('healthcare_token_register', healthcare_id=healthcare.id)
     else:
       form = AuthenticationForm
 
@@ -181,6 +184,14 @@ def healthcare_qr(request, healthcare_id):
       'nonce': nonce,
     }
     return render(request, "healthcare_qr.html", context)
+
+@login_required(login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+def healthcare_token_register(request, healthcare_id):
+  healthcare = healthcare_does_not_exists(healthcare_id)
+  user = healthcare.username
+
+  return render(request, "healthcare_token_register.html")
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
