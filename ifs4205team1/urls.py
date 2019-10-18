@@ -29,6 +29,7 @@ urlpatterns = [
     path('patient/', include('patienthealthcare.urls')),
     path('healthcare/', include('healthcarelogin.urls')),
     path('healthcare/', include('healthcarepatients.urls')),
+    path('mobileregister/', include('mobileregister.urls')),
 ] 
 
 if settings.DEBUG:

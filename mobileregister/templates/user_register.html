@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+
+{% block content %}
+</br>
+<h5>Please press the "COPY DEVICE INFOR" button above.</h5>
+<h5>Carefully paste the content in the fields below.</h5>
+<h5>Press "Submit" to confirm.</h5>
+</br>
+
+<form method="post">
+  {% csrf_token %}
+    {{ form.as_p }}
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+{% endblock %}
