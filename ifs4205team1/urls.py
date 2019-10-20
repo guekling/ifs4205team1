@@ -29,7 +29,10 @@ urlpatterns = [
     path('patient/', include('patienthealthcare.urls')),
     path('healthcare/', include('healthcarelogin.urls')),
     path('healthcare/', include('healthcarepatients.urls')),
+    path('researcher/', include('researcherlogin.urls')),
+    path('researcher/', include('researcherquery.urls')),
+    path('researcher/', include('researcheranonymise.urls')) # Change to admin
 ] 
 
 if settings.DEBUG:
-  urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+  urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

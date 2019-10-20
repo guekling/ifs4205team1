@@ -1,0 +1,318 @@
+{% extends "researcher_base.html" %}
+
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="search" id="query">
+	<h1>Search Records</h1>
+	<h3>Quasi-Identifiers (QIs)</h3>
+
+	<form action="{% url 'search_records' researcher_id=researcher.id %}" method="post">
+		{% csrf_token %}
+
+		<table id="id_searchrecords_table">
+
+			<tr>
+				<div class="form-group">
+					<th>{{ form.date.label_tag }}</th>
+
+					<td>
+						{% if form.is_bound %}
+							{% if form.date.errors %}
+								{% render_field form.date class="form-control is-invalid" %}
+								{% for error in form.date.errors %}
+									<div class="invalid-feedback">
+										{{ error }}
+									</div>
+								{% endfor %}
+							{% else %}
+								{% render_field form.date class="form-control is-valid" %}
+							{% endif %}
+						{% else %}
+							{% render_field form.date class="form-control is-valid" %}
+						{% endif %}
+
+						{% if form.date.help_text %}
+							<small class="form-text text-muted">{{ form.date.help_text }}</small>
+						{% endif %}
+					</td>
+				</div>
+			</tr>
+
+			<tr>
+				<div class="form-group">
+					<th>{{ form.age.label_tag }}</th>
+
+					<td>
+						{% if form.is_bound %}
+							{% if form.age.errors %}
+								{% render_field form.age class="form-control is-invalid" %}
+								{% for error in form.age.errors %}
+									<div class="invalid-feedback">
+										{{ error }}
+									</div>
+								{% endfor %}
+							{% else %}
+								{% render_field form.age class="form-control is-valid" %}
+							{% endif %}
+						{% else %}
+							{% render_field form.age class="form-control is-valid" %}
+						{% endif %}
+
+						{% if form.age.help_text %}
+							<small class="form-text text-muted">{{ form.age.help_text }}</small>
+						{% endif %}
+					</td>
+				</div>
+			</tr>
+
+			<tr>
+				<div class="form-group">
+					<th>{{ form.postalcode1.label_tag }}</th>
+
+					<td>
+						{% if form.is_bound %}
+							{% if form.postalcode1.errors %}
+								{% render_field form.postalcode1 class="form-control is-invalid" %}
+								{% for error in form.postalcode1.errors %}
+									<div class="invalid-feedback">
+										{{ error }}
+									</div>
+								{% endfor %}
+							{% else %}
+								{% render_field form.postalcode1 class="form-control is-valid" %}
+							{% endif %}
+						{% else %}
+							{% render_field form.postalcode1 class="form-control is-valid" %}
+						{% endif %}
+
+						{% if form.postalcode1.help_text %}
+							<small class="form-text text-muted">{{ form.postalcode1.help_text }}</small>
+						{% endif %}
+					</td>
+				</div>
+			</tr>
+
+			<tr>
+				<div class="form-group">
+					<th>&emsp;[Optional]</th>
+
+					<td>
+						{% if form.is_bound %}
+							{% if form.postalcode2.errors %}
+								{% render_field form.postalcode2 class="form-control is-invalid" %}
+								{% for error in form.postalcode2.errors %}
+									<div class="invalid-feedback">
+										{{ error }}
+									</div>
+								{% endfor %}
+							{% else %}
+								{% render_field form.postalcode2 class="form-control is-valid" %}
+							{% endif %}
+						{% else %}
+							{% render_field form.postalcode2 class="form-control is-valid" %}
+						{% endif %}
+
+						{% if form.postalcode2.help_text %}
+							<small class="form-text text-muted">{{ form.postalcode2.help_text }}</small>
+						{% endif %}
+					</td>
+				</div>
+			</tr>
+
+			<tr>
+				<div class="form-group">
+					<th>&emsp;[Optional]</th>
+
+					<td>
+						{% if form.is_bound %}
+							{% if form.postalcode3.errors %}
+								{% render_field form.postalcode3 class="form-control is-invalid" %}
+								{% for error in form.postalcode3.errors %}
+									<div class="invalid-feedback">
+										{{ error }}
+									</div>
+								{% endfor %}
+							{% else %}
+								{% render_field form.postalcode3 class="form-control is-valid" %}
+							{% endif %}
+						{% else %}
+							{% render_field form.postalcode3 class="form-control is-valid" %}
+						{% endif %}
+
+						{% if form.postalcode3.help_text %}
+							<small class="form-text text-muted">{{ form.postalcode3.help_text }}</small>
+						{% endif %}
+					</td>
+				</div>
+			</tr>
+
+			<tr>
+				<td id="id_recordtypes_heading"><h3>Record Types</h3></td>
+			</tr>
+
+			<tr>
+				<div class="form-group">
+					<th>{{ form.recordtypes.label_tag }}</th>
+
+					<td>
+						{% if form.is_bound %}
+							{% if form.recordtypes.errors %}
+								{% render_field form.recordtypes class="form-control is-invalid" %}
+								{% for error in form.recordtypes.errors %}
+									<div class="invalid-feedback" id="id_recordtypes_invalid">
+										{{ error }}
+									</div>
+								{% endfor %}
+							{% else %}
+								{% render_field form.recordtypes class="form-control is-valid" %}
+							{% endif %}
+						{% else %}
+							{% render_field form.recordtypes class="form-control is-valid" %}
+						{% endif %}
+
+						{% if form.recordtypes.help_text %}
+							<small class="form-text text-muted">{{ form.recordtypes.help_text }}</small>
+						{% endif %}
+					</td>
+				</div>
+			</tr>
+
+		</table>
+
+		<button type="submit" name="btn_search" class="btn btn-primary" id="btn_search" value="Search">Search</button>
+	</form>
+</div>
+
+<br/>
+
+<div>
+	{# display only if is post request #}
+	{% if submitted %}
+
+		<h1>Search Results</h1>
+
+		{% if count != 0 %}
+			<h5>K = {{ qiinfo.get_k_value }},&emsp;Suppression rate (&le; 10.0%) = {{ qiinfo.get_suppression_rate }}%</h5>
+			<h5>Records retrieved (&ge; K) = {{ count }}</h5>
+		
+			<table class="table text-center">
+				<thread>
+					<tr>
+						<th scope="col">Patient</th>
+						<th scope="col">Age</th>
+						<th scope="col">Postal Code</th>
+						<th scope="col">Date</th>
+						<th scope="col">Diagnosis</th>
+						<th scope="col">BP Readings (mmHg)</th>
+						<th scope="col">HR Readings (bpm)</th>
+						<th scope="col">TEMP Readings (&#8451;)</th>
+						<th scope="col">Cancer Images</th>
+						<th scope="col">MRI Images</th>
+						<th scope="col">Ultrasound Images</th>
+						<th scope="col">Xray Images</th>
+						<th scope="col">Diabetes Videos</th>
+						<th scope="col">Gait Videos</th>
+					</tr>
+				</thread>
+				<tbody>
+					{% for user in users %}
+					<tr>
+						<!-- Patient -->
+						<th>{{ user.get_uid }}</th>
+						<!-- Age -->
+						<th>{{ user.get_age }}</th>
+						<!-- Postal Code -->
+						<th>{{ user.get_postalcode }}</th>
+						<!-- Date -->
+						<th>{{ date }}</th>
+						<!-- Diagnosis -->
+						<th>
+						{% if diagnosis %}
+							{% for diag in user.get_diagnosis %}
+								{{ diag.value | linebreaks }}
+							{% endfor %}
+						{% endif %}
+						</th>
+						<!-- BP Readings -->
+						<th>
+						{% if bp_reading %}
+							{% for bp_reading in user.get_bp_readings %}
+								{{ bp_reading.value | linebreaks }}
+							{% endfor %}
+						{% endif %}
+						</th>
+						<!-- HeartRate Readings -->
+						<th>
+						{% if hr_reading %}
+							{% for hr_reading in user.get_hr_readings %}
+								{{ hr_reading.value | linebreaks }}
+							{% endfor %}
+						{% endif %}
+						</th>
+						<!-- Temp Readings -->
+						<th>
+						{% if temp_reading %}
+							{% for temp_reading in user.get_temp_readings %}
+								{{ temp_reading.value | linebreaks }}
+							{% endfor %}
+						{% endif %}
+						</th>
+						<!-- Cancer Images -->
+						<th>
+						{% if cancer_img %}
+							{% for cancer_image in user.get_cancer_images %}
+								{{ cancer_image.value | linebreaks }}
+							{% endfor %}
+						{% endif %}
+						</th>
+						<!-- MRI Images -->
+						<th>
+						{% if mri_img %}
+							{% for mri_image in user.get_mri_images %}
+								{{ mri_image.value | linebreaks }}
+							{% endfor %}
+						{% endif %}
+						</th>
+						<!-- Ultrasound Images -->
+						<th>
+						{% if ultrasound_img %}
+							{% for ultrasound_image in user.get_ultrasound_images %}
+								{{ ultrasound_image.value | linebreaks }}
+							{% endfor %}
+						{% endif %}
+						</th>
+						<!-- Xray Images -->
+						<th>
+						{% if xray_img %}
+							{% for xray_image in user.get_xray_images %}
+								{{ xray_image.value | linebreaks }}
+							{% endfor %}
+						{% endif %}
+						</th>
+						<!-- Diabetes Videos -->
+						<th>
+						{% if diabetes_vid %}
+							{% for diabetes_video in user.get_diabetes_videos %}
+								{{ diabetes_video.value | linebreaks }}
+							{% endfor %}
+						{% endif %}
+						</th>
+						<!-- Gait Videos -->
+						<th>
+						{% if gait_vid %}
+							{% for gait_video in user.get_gait_videos %}
+								{{ gait_video.value | linebreaks }}
+							{% endfor %}
+						{% endif %}
+						</th>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		{% else %}
+			<h5>No records retrieved!</h5>
+		{% endif %}
+	{% endif %}
+</div>
+{% endblock %}

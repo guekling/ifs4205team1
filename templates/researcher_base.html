@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block navbar %}
+<!-- NavBar -->
+<nav class="navbar navbar-expand-lg navbar-light" style="background-color: #e3f2fd;">
+  <a class="navbar-brand">Researcher Interface</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'researcher_dashboard' researcher_id=researcher.id %}">Home</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Request Permission</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'search_records' researcher_id=researcher.id %}">Search Records</a>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Settings
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="{% url 'researcher_settings' researcher_id=researcher.id %}">View Account Information</a>
+          <a class="dropdown-item" href="{% url 'researcher_change_password' researcher_id=researcher.id %}">Change Password</a>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="collapse navbar-collapse justify-content-end">
+    <div>
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'researcher_logout' %}">Logout</a>
+        </li>
+      </ul>
+    </div>
+    <div>
+      <a class="navbar-brand">{{ researcher.username.username }}</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </div>
+  </div>
+</nav>
+<!-- End NavBar -->
+{% endblock %}
+
+{% block content %}
+{% endblock %}
+

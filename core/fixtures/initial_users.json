@@ -93,5 +93,26 @@
         "testpatient"
       ]
     }
+  },
+  {
+    "model": "core.user",
+    "pk": "testresearcher",
+    "fields": {
+      "username": "testresearcher",
+      "password": "1234",
+      "first_name": "John",
+      "last_name": "Lennon",
+      "email": "john_lennon@gmail.com",
+      "gender": "M",
+      "dob": "1987-05-06",
+      "address": "669D Jurong West Street 64 04-50",
+      "postalcode": "644669",
+      "contactnumber": "67909773"
+    }
+  },
+  {
+    "model": "core.researcher",
+    "pk": "testresearcher",
+    "fields": {}
   }
 ]

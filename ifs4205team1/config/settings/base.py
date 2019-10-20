@@ -38,14 +38,18 @@ INSTALLED_APPS = [
 
     # THIRD-PARTY APPS
     'widget_tweaks',
+    'django_select2',
 
-		# APPS
-		'core',
+	# APPS
+	'core',
     'patientlogin',
-		'patientrecords',
+	'patientrecords',
     'patienthealthcare',
     'healthcarelogin',
     'healthcarepatients',
+    'researcherlogin',
+    'researcherquery',
+    'researcheranonymise' # Change to admin
 ]
 
 # Extending User Model
@@ -94,8 +98,20 @@ DATABASES = {
 				'PASSWORD': os.environ.get("DB_PASS"),
 				'HOST': os.environ.get("DB_HOST"),
 				'PORT': '5432',
+		},
+		'safedb': {
+				'ENGINE': 'django.db.backends.postgresql_psycopg2',
+				'NAME': os.environ.get("DB_NAME2"),
+				'USER': os.environ.get("DB_USER"),
+				'PASSWORD': os.environ.get("DB_PASS"),
+				'HOST': os.environ.get("DB_HOST"),
+				'PORT': '5432',
 		}
 }
+
+DATABASE_ROUTERS = [
+		'researcherquery.router.ResearcherqueryRouter'
+]
 
 
 # Password validation
@@ -143,3 +159,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [
+	os.path.join(BASE_DIR, "static"),
+	'/researcherquery/static'
+]
