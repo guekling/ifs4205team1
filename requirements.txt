@@ -1,5 +1,4 @@
-django-qr-code
-django-qrcode
+qrcode~=6.1
 bcrypt==3.1.7
 cffi==1.12.3
 Django==2.2.5

@@ -31,7 +31,7 @@ urlpatterns = [
     path('healthcare/', include('healthcarepatients.urls')),
     path('researcher/', include('researcherlogin.urls')),
     path('researcher/', include('researcherquery.urls')),
-    path('researcher/', include('researcheranonymise.urls')) # Change to admin
+    path('researcher/', include('researcheranonymise.urls')), # Change to admin
     path('mobileregister/', include('mobileregister.urls')),
 ] 
 

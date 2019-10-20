@@ -14,10 +14,6 @@ from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView,
 from mobileregister.forms import DeviceInforForm
 
 from core.models import User
-from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
-
-import hashlib
-import qrcode
 
 class UserLogin(LoginView):
   """

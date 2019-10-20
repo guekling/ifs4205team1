@@ -14,6 +14,8 @@ import os
 from os.path import join, dirname
 from dotenv import load_dotenv
 
+from qr_code.qrcode import constants
+
 from django.core.management.utils import get_random_secret_key
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
