@@ -104,7 +104,7 @@ class Researcher(models.Model):
 	mri_img = models.BooleanField(default=False) 
 	ultrasound_img = models.BooleanField(default=False) 
 	xray_img = models.BooleanField(default=False)
-	diabetes_vid = models.BooleanField(default=False) 
+	gastroscope_vid = models.BooleanField(default=False)
 	gait_vid = models.BooleanField(default=False) 
 
 	def get_diagnosis_perm(self):
