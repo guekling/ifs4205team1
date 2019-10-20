@@ -211,7 +211,7 @@
 						<th scope="col">MRI Images</th>
 						<th scope="col">Ultrasound Images</th>
 						<th scope="col">Xray Images</th>
-						<th scope="col">Diabetes Videos</th>
+						<th scope="col">Gastroscope Videos</th>
 						<th scope="col">Gait Videos</th>
 					</tr>
 				</thread>
@@ -290,11 +290,11 @@
 							{% endfor %}
 						{% endif %}
 						</th>
-						<!-- Diabetes Videos -->
+						<!-- Gastroscope Videos -->
 						<th>
-						{% if diabetes_vid %}
-							{% for diabetes_video in user.get_diabetes_videos %}
-								{{ diabetes_video.value | linebreaks }}
+						{% if gastroscope_vid %}
+							{% for gastroscope_video in user.get_gastroscope_videos %}
+								{{ gastroscope_video.value | linebreaks }}
 							{% endfor %}
 						{% endif %}
 						</th>

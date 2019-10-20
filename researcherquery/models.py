@@ -60,8 +60,8 @@ class SafeUsers(models.Model):
 	def get_xray_images(self):
 		return self.safeimages_set.filter(type="Xray")
 
-	def get_diabetes_videos(self):
-		return self.safevideos_set.filter(type="Diabetes")
+	def get_gastroscope_videos(self):
+		return self.safevideos_set.filter(type="Gastroscope")
 
 	def get_gait_videos(self):
 		return self.safevideos_set.filter(type="Gait")

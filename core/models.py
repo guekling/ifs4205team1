@@ -131,7 +131,7 @@ class Researcher(models.Model):
 	def get_xray_img_perm(self):
 		return self.xray_img
 
-	def get_diabetes_vid_perm(self):
+	def get_gastroscope_vid_perm(self):
 		return self.diabetes_vid
 
 	def get_gait_vid_perm(self):
