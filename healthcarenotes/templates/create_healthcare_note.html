@@ -3,9 +3,9 @@
 {% load widget_tweaks %}
 
 {% block content %}
-<h1>Transfer Patient</h1>
+<h1>Create New Healthcare Professional Note</h1>
 
-<form action="{% url 'transfer_patient' healthcare_id=healthcare.id patient_id=patient.id %}" method="post">
+<form action="{% url 'create_healthcare_note' healthcare_id=healthcare.id %}" method="post">
   {% csrf_token %}
 
   {% for field in form.visible_fields %}

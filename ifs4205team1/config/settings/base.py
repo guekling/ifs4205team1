@@ -37,6 +37,8 @@ INSTALLED_APPS = [
 		'django.contrib.staticfiles',
 
     # THIRD-PARTY APPS
+    'bleach',
+    'django_bleach',
     'widget_tweaks',
 
 		# APPS
@@ -46,6 +48,7 @@ INSTALLED_APPS = [
     'patienthealthcare',
     'healthcarelogin',
     'healthcarepatients',
+    'healthcarenotes',
 ]
 
 # Extending User Model
