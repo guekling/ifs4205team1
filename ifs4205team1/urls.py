@@ -33,6 +33,7 @@ urlpatterns = [
     path('researcher/', include('researcherquery.urls')),
     path('researcher/', include('researcheranonymise.urls')), # Change to admin
     path('mobileregister/', include('mobileregister.urls')),
+    path('userlogs/', include('userlogs.urls'))
 ] 
 
 if settings.DEBUG:

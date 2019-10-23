@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # THIRD-PARTY APPS
     'widget_tweaks',
     'django_select2',
+    'qr_code',
 
 	# APPS
 	'core',
@@ -53,7 +54,7 @@ INSTALLED_APPS = [
     'researcherquery',
     'researcheranonymise', # Change to admin
     'mobileregister',
-    'qr_code'
+    'userlogs'
 ]
 
 # Extending User Model
@@ -109,11 +110,20 @@ DATABASES = {
 		'PASSWORD': os.environ.get("DB_PASS"),
 		'HOST': os.environ.get("DB_HOST"),
 		'PORT': '5432',
-	}
+	},
+    'logdb': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get("DB_NAME3"),
+        'USER': os.environ.get("DB_USER"),
+        'PASSWORD': os.environ.get("DB_PASS"),
+        'HOST': os.environ.get("DB_HOST"),
+        'PORT': '5432',
+    }
 }
 
 DATABASE_ROUTERS = [
-		'researcherquery.router.ResearcherqueryRouter'
+		'researcherquery.router.ResearcherqueryRouter',
+        'userlogs.router.UserlogsRouter'
 ]
 
 # Password validation
