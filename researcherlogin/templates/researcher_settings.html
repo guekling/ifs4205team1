@@ -1,0 +1,52 @@
+{% extends "researcher_base.html" %}
+
+{% block content %}
+<h1>Researcher Account Information</h1>
+
+<table class="table text-center">
+  <tr>
+    <th>First Name</th>
+    <th>{{ user.first_name }}</th>
+  </tr>
+  <tr>
+    <th>Last Name</th>
+    <th>{{ user.last_name }}</th>
+  </tr>
+  <tr>
+    <th>Username</th>
+    <th>{{ user.username }}</th>
+  </tr>
+  <tr>
+    <th>Email</th>
+    <th>{{ user.email }}</th>
+  </tr>
+  <tr>
+    <th>Date of Birth</th>
+    <th>{{ user.dob }}</th>
+  </tr>
+  <tr>
+    <th>Address</th>
+    <th>{{ user.address }}</th>
+  </tr>
+  <tr>
+    <th>Postal Code</th>
+    <th>{{ user.postalcode }}</th>
+  </tr>
+  <tr>
+    <th>Contact Number</th>
+    <th>{{ user.contactnumber }}</th>
+  </tr>
+  <tr>
+    <th>Last Login</th>
+    <th>{{ user.last_login }}</th>
+  </tr>
+  <tr>
+    <th>Date Joined</th>
+    <th>{{ user.date_joined }}</th>
+  </tr>
+</table>
+
+<a href="{% url 'researcher_edit_settings' researcher_id=researcher.id %}"><button type="buton" class="btn btn-primary">Edit Information</button></a>
+<a href="{% url 'researcher_change_password' researcher_id=researcher.id %}"><button type="buton" class="btn btn-secondary">Change Password</button></a>
+
+{% endblock %}

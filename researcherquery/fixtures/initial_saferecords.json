@@ -1,0 +1,342 @@
+[
+		{
+		"model": "researcherquery.QiInfo",
+		"fields": {
+			"combi_age": "D",
+			"combi_postalcode": "XX",
+			"combi_date": "LM",
+			"k_value": "5",
+			"suppression_rate": 10.00
+		}
+	},
+	{
+		"model": "researcherquery.SafeUsers",
+		"pk": 1,
+		"fields": {
+			"age": "11-20",
+			"postalcode": "11XXXX"
+		}
+	},
+	{
+		"model": "researcherquery.SafeUsers",
+		"pk": 2,
+		"fields": {
+			"age": "11-20",
+			"postalcode": "11XXXX"
+		}
+	},
+	{
+		"model": "researcherquery.SafeUsers",
+		"pk": 3,
+		"fields": {
+			"age": "11-20",
+			"postalcode": "11XXXX"
+		}
+	},
+	{
+		"model": "researcherquery.SafeUsers",
+		"pk": 4,
+		"fields": {
+			"age": "11-20",
+			"postalcode": "11XXXX"
+		}
+	},
+	{
+		"model": "researcherquery.SafeUsers",
+		"pk": 5,
+		"fields": {
+			"age": "11-20",
+			"postalcode": "11XXXX"
+		}
+	},
+	{
+		"model": "researcherquery.SafeDiagnosis",
+		"fields": {
+			"uid": 1,
+			"value": "Flu"
+		}
+	},
+	{
+		"model": "researcherquery.SafeDiagnosis",
+		"fields": {
+			"uid": 1,
+			"value": "Skin cancer"
+		}
+	},
+	{
+		"model": "researcherquery.SafeDiagnosis",
+		"fields": {
+			"uid": 2,
+			"value": "Leg fracture"
+		}
+	},
+	{
+		"model": "researcherquery.SafeDiagnosis",
+		"fields": {
+			"uid": 2,
+			"value": "Diabetes"
+		}
+	},
+	{
+		"model": "researcherquery.SafeDiagnosis",
+		"fields": {
+			"uid": 3,
+			"value": "Gait"
+		}
+	},
+	{
+		"model": "researcherquery.SafeDiagnosis",
+		"fields": {
+			"uid": 3,
+			"value": "High BP"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 1,
+			"type": "Blood Pressure",
+			"value": "100/75"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 1,
+			"type": "Blood Pressure",
+			"value": "120/80"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 1,
+			"type": "Blood Pressure",
+			"value": "110/78"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 2,
+			"type": "Blood Pressure",
+			"value": "105/78"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 2,
+			"type": "Blood Pressure",
+			"value": "120/80"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 3,
+			"type": "Blood Pressure",
+			"value": "120/90"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 3,
+			"type": "Blood Pressure",
+			"value": "115/75"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 3,
+			"type": "Blood Pressure",
+			"value": "130/95"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 3,
+			"type": "Blood Pressure",
+			"value": "120/75"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 4,
+			"type": "Blood Pressure",
+			"value": "100/80"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 5,
+			"type": "Blood Pressure",
+			"value": "100/65"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 5,
+			"type": "Blood Pressure",
+			"value": "110/70"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 1,
+			"type": "Heart Rate",
+			"value": "90"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 1,
+			"type": "Heart Rate",
+			"value": "80"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 1,
+			"type": "Heart Rate",
+			"value": "75"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 2,
+			"type": "Heart Rate",
+			"value": "88"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 2,
+			"type": "Heart Rate",
+			"value": "80"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 3,
+			"type": "Heart Rate",
+			"value": "90"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 3,
+			"type": "Heart Rate",
+			"value": "80"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 3,
+			"type": "Heart Rate",
+			"value": "100"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 3,
+			"type": "Heart Rate",
+			"value": "90"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 1,
+			"type": "Temperature",
+			"value": "38.1"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 1,
+			"type": "Temperature",
+			"value": "37.8"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 1,
+			"type": "Temperature",
+			"value": "36.9"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 2,
+			"type": "Temperature",
+			"value": "36.5"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 2,
+			"type": "Temperature",
+			"value": "37.2"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 3,
+			"type": "Temperature",
+			"value": "36.5"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 3,
+			"type": "Temperature",
+			"value": "36.7"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 3,
+			"type": "Temperature",
+			"value": "37.1"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 3,
+			"type": "Temperature",
+			"value": "36.8"
+		}
+	},
+	{
+		"model": "researcherquery.SafeReadings",
+		"fields": {
+			"uid": 4,
+			"type": "Temperature",
+			"value": "37.1"
+		}
+	}
+]

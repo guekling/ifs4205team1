@@ -1,0 +1,32 @@
+{% extends "researcher_base.html" %}
+
+{% block content %}
+<h1>Researcher Dashboard</h1>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-3">
+      <a href="{% url 'search_records' researcher_id=researcher.id %}">
+        <div class="card text-white bg-info mb-3" style="max-width: 18rem;">
+          <div class="card-body">
+            <h5 class="card-title">Search Records</h5>
+            <p class="card-text">asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf</p>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-sm-3">
+      <a href="{% url 'researcher_settings' researcher_id=researcher.id %}">
+        <div class="card text-white bg-info mb-3" style="max-width: 18rem;">
+          <div class="card-body">
+            <h5 class="card-title">Settings</h5>
+            <p class="card-text">asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

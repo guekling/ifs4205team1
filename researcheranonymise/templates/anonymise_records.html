@@ -1,0 +1,16 @@
+{# Change to admin_base.html #}
+{% extends "researcher_base.html" %}
+
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="anonymise">
+	<h1>Anonymise Records</h1>
+
+	<form action="{% url 'anonymise_records' researcher_id=researcher.id %}" method="post">
+		{% csrf_token %}
+
+		<button type="submit" name="btn_anonymise" class="btn btn-primary" id="btn_anonymise" value="Anonymise">Anonymise</button>
+	</form>
+</div>
+{% endblock %}

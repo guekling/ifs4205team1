@@ -17,6 +17,7 @@ from core.models import User, Patient
 from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
 
 import hashlib
+import qrcode
 
 class PatientLogin(LoginView):
   """
@@ -36,11 +37,14 @@ class PatientLogin(LoginView):
 
     if patient is not None:
       auth_login(self.request, form.get_user())
-      nonce = get_random_string(length=6, allowed_chars=u'abcdefghijklmnopqrstuvwxyz0123456789')
+      nonce = get_random_string(length=16, allowed_chars=u'abcdefghijklmnopqrstuvwxyz0123456789')
       user = patient.username
-      user.sub_id_hash = nonce  # change field
-      user.save()  # this will update only
-      return redirect('patient_qr', patient_id=patient.id)
+      if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
+        user.sub_id_hash = nonce  # change field
+        user.save()  # this will update only
+        return redirect('patient_qr', patient_id=patient.id)
+      else:
+        return redirect('patient_token_register', patient_id=patient.id)
     else:
       form = AuthenticationForm
 
@@ -77,8 +81,16 @@ class PatientChangePasswordComplete(PasswordChangeDoneView):
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
 def patient_settings(request, patient_id):
+  # checks if logged in patient has the same id as in the URL
+  if (request.user.patient_username.id != patient_id):
+    return redirect('/patient/login/')
+
   patient = patient_does_not_exists(patient_id)
   user = patient.username
+
+  # the action has not gone through QR verification
+  if len(user.sub_id_hash) > 0:
+    return redirect('patient_login')
 
   context = {
     'patient': patient,
@@ -90,8 +102,17 @@ def patient_settings(request, patient_id):
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
 def patient_edit_settings(request, patient_id):
+  # checks if logged in patient has the same id as in the URL
+  if (request.user.patient_username.id != patient_id):
+    return redirect('/patient/login/')
+
   patient = patient_does_not_exists(patient_id)
   user = patient.username
+
+  # the action has not gone through QR verification
+  if len(user.sub_id_hash) > 0:
+    return redirect('patient_login')
+
   form = UserEditForm(request.POST or None, instance=user)
 
   if request.method == 'POST':
@@ -117,7 +138,16 @@ def patient_edit_settings(request, patient_id):
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
 def patient_change_password(request, patient_id):
+  # checks if logged in patient has the same id as in the URL
+  if (request.user.patient_username.id != patient_id):
+    return redirect('/patient/login/')
+
   patient = patient_does_not_exists(patient_id)
+  user = patient.username
+
+  # the action has not gone through QR verification
+  if len(user.sub_id_hash) > 0:
+    return redirect('patient_login')
 
   change_password = PatientChangePassword.as_view(
     extra_context={'patient': patient}
@@ -128,7 +158,16 @@ def patient_change_password(request, patient_id):
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
 def patient_change_password_complete(request, patient_id):
+  # checks if logged in patient has the same id as in the URL
+  if (request.user.patient_username.id != patient_id):
+    return redirect('/patient/login/')
+
   patient = patient_does_not_exists(patient_id)
+  user = patient.username
+
+  # the action has not gone through QR verification
+  if len(user.sub_id_hash) > 0:
+    return redirect('patient_login')
 
   change_password_complete = PatientChangePasswordComplete.as_view(
     extra_context={'patient': patient}
@@ -139,9 +178,13 @@ def patient_change_password_complete(request, patient_id):
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
 def patient_qr(request, patient_id):
+  # checks if logged in patient has the same id as in the URL
+  if (request.user.patient_username.id != patient_id):
+    return redirect('/patient/login/')
+
   patient = patient_does_not_exists(patient_id)
   user = patient.username
-  if len(user.sub_id_hash) >0:
+  if len(user.sub_id_hash) > 0:
     nonce = user.sub_id_hash
   else:
     return redirect('patient_login')
@@ -153,8 +196,11 @@ def patient_qr(request, patient_id):
     otp = cd.get('otp')
     if user.device_id_hash == recovered_value(user.android_id_hash, nonce, otp):
       # give HttpResponse only or render page you need to load on success
+      # delete the nonce
       user.sub_id_hash = ""
       user.save()
+      # the session will expire 15 minutes after login, and will require log in again.
+      request.session.set_expiry(900)
       return redirect('patient_dashboard', patient_id=patient.id)
     else:
       # if fails, then redirect to custom url/page
@@ -169,8 +215,33 @@ def patient_qr(request, patient_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
-def patient_dashboard(request, patient_id):
+def patient_token_register(request, patient_id):
+  # checks if logged in patient has the same id as in the URL
+  if (request.user.patient_username.id != patient_id):
+    return redirect('/patient/login/')
+
   patient = patient_does_not_exists(patient_id)
+  user = patient.username
+
+  # device already linked
+  if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
+    return redirect("repeat_register", user_id=user.uid)
+
+  return render(request, "patient_token_register.html")
+
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+def patient_dashboard(request, patient_id):
+  # checks if logged in patient has the same id as in the URL
+  if (request.user.patient_username.id != patient_id):
+    return redirect('/patient/login/')
+
+  patient = patient_does_not_exists(patient_id)
+  user = patient.username
+
+  # the action has not gone through QR verification
+  if len(user.sub_id_hash) > 0:
+    return redirect('patient_login')
 
   context = {
     'patient': patient,
@@ -196,3 +267,16 @@ def recovered_value(hash_id, nonce, otp):
   xor = '{:x}'.format(int(x[-6:], 16) ^ int(otp, 16))
 
   return hashlib.sha256((xor).encode()).hexdigest()
+
+def make_qr(nonce):
+  qr = qrcode.QRCode(
+    version=1,
+    box_size=15,
+    border=5
+  )
+
+  qr.add_data(nonce)
+  qr.make(fit=True)
+  img = qr.make_image(fill='black', back_color='white')
+
+  return img

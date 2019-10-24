@@ -9,5 +9,6 @@ urlpatterns = [
   path('<uuid:healthcare_id>/settings/change-password/', views.healthcare_change_password, name="healthcare_change_password"),
   path('<uuid:healthcare_id>/settings/change-password-complete/', views.healthcare_change_password_complete, name="healthcare_change_password_complete"),
   path('<uuid:healthcare_id>/dashboard/', views.healthcare_dashboard, name="healthcare_dashboard"),
-  path('<uuid:healthcare_id>/qr-login/', views.healthcare_qr, name="healthcare_qr")
+  path('<uuid:healthcare_id>/qr-login/', views.healthcare_qr, name="healthcare_qr"),
+  path('<uuid:healthcare_id>/token-register/', views.healthcare_token_register, name="healthcare_token_register")
 ]
