@@ -1,4 +1,5 @@
 bcrypt==3.1.7
+beautifulsoup4==4.8.1
 bleach==3.1.0
 cffi==1.12.3
 Django==2.2.5
@@ -11,5 +12,6 @@ pycparser==2.19
 python-dotenv==0.10.3
 pytz==2019.2
 six==1.12.0
+soupsieve==1.9.4
 sqlparse==0.3.0
 webencodings==0.5.1
