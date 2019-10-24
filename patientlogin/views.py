@@ -15,6 +15,7 @@ from patientlogin.forms import UserEditForm, UserQrForm
 
 from core.models import User, Patient
 from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
+from userlogs.models import Logs
 
 import hashlib
 import qrcode
@@ -42,6 +43,7 @@ class PatientLogin(LoginView):
       if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
         user.sub_id_hash = nonce  # change field
         user.save()  # this will update only
+        Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Patient Login')
         return redirect('patient_qr', patient_id=patient.id)
       else:
         return redirect('patient_token_register', patient_id=patient.id)
@@ -83,6 +85,7 @@ class PatientChangePasswordComplete(PasswordChangeDoneView):
 def patient_settings(request, patient_id):
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[Settings] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/patient/login/')
 
   patient = patient_does_not_exists(patient_id)
@@ -91,6 +94,8 @@ def patient_settings(request, patient_id):
   # the action has not gone through QR verification
   if len(user.sub_id_hash) > 0:
     return redirect('patient_login')
+
+  Logs.objects.create(type='READ', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Settings')
 
   context = {
     'patient': patient,
@@ -104,6 +109,7 @@ def patient_settings(request, patient_id):
 def patient_edit_settings(request, patient_id):
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='UPDATE', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Settings] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/patient/login/')
 
   patient = patient_does_not_exists(patient_id)
@@ -118,14 +124,18 @@ def patient_edit_settings(request, patient_id):
   if request.method == 'POST':
     if form.is_valid():
       user.save()
+      Logs.objects.create(type='UPDATE', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Edit Settings')
       return redirect('patient_settings', patient_id=patient_id)
     else:
+      Logs.objects.create(type='UPDATE', user_id=user.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Settings] Invalid Form')
       context = {
         'form': form,
         'patient': patient,
         'user': user,
       }
       return render(request, 'patient_edit_settings.html', context)
+
+  Logs.objects.create(type='READ', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='[Edit Settings] Render Settings Form')
 
   context = {
     'form': form,
@@ -140,6 +150,7 @@ def patient_edit_settings(request, patient_id):
 def patient_change_password(request, patient_id):
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[Change PW] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/patient/login/')
 
   patient = patient_does_not_exists(patient_id)
@@ -153,6 +164,8 @@ def patient_change_password(request, patient_id):
     extra_context={'patient': patient}
   )
 
+  Logs.objects.create(type='UPDATE', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Change Password')
+
   return change_password(request)
 
 @login_required(login_url='/patient/login/')
@@ -160,6 +173,7 @@ def patient_change_password(request, patient_id):
 def patient_change_password_complete(request, patient_id):
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[Change PW Complete] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/patient/login/')
 
   patient = patient_does_not_exists(patient_id)
@@ -203,6 +217,7 @@ def patient_qr(request, patient_id):
   if form.is_valid():
     cd = form.cleaned_data
     otp = cd.get('otp')
+    # if otp == '1234':
     if user.device_id_hash == recovered_value(user.android_id_hash, nonce, otp):
       # give HttpResponse only or render page you need to load on success
       # delete the nonce
@@ -244,6 +259,7 @@ def patient_token_register(request, patient_id):
 def patient_dashboard(request, patient_id):
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[Dashboard] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/patient/login/')
 
   patient = patient_does_not_exists(patient_id)
@@ -252,6 +268,8 @@ def patient_dashboard(request, patient_id):
   # the action has not gone through QR verification
   if len(user.sub_id_hash) > 0:
     return redirect('patient_login')
+
+  Logs.objects.create(type='READ', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Dashboard')
 
   context = {
     'patient': patient,
@@ -263,13 +281,17 @@ def patient_dashboard(request, patient_id):
 ############ Helper Functions ############
 ##########################################
 
-def patient_does_not_exists(patient_id):
+STATUS_OK = 1
+STATUS_ERROR = 0
+
+def patient_does_not_exists(patient_id): # TODO: This function is never called?
   """
   Redirects to login if patient_id is invalid
   """
   try:
     return Patient.objects.get(id=patient_id)
   except Patient.DoesNotExist:
+    Logs.objects.create(type='READ', user_id=patient_id, interface='PATIENT', status=STATUS_ERROR, details='Patient ID is invalid.')
     redirect('patient_login')
 
 def recovered_value(hash_id, nonce, otp):

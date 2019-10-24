@@ -39,22 +39,25 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # THIRD-PARTY APPS
+    'bleach',
+    'django_bleach',
     'widget_tweaks',
     'django_select2',
     'qr_code',
 
-	# APPS
-	'core',
+  	# APPS
+  	'core',
     'patientlogin',
-	'patientrecords',
+    'patientrecords',
     'patienthealthcare',
     'healthcarelogin',
     'healthcarepatients',
+    'healthcarenotes',
     'researcherlogin',
     'researcherquery',
     'researcheranonymise', # Change to admin
     'mobileregister',
-    'userlogs'
+    'userlogs',
 ]
 
 # Extending User Model
@@ -106,17 +109,17 @@ DATABASES = {
 	'safedb': {
 		'ENGINE': 'django.db.backends.postgresql_psycopg2',
 		'NAME': os.environ.get("DB_NAME2"),
-		'USER': os.environ.get("DB_USER"),
-		'PASSWORD': os.environ.get("DB_PASS"),
-		'HOST': os.environ.get("DB_HOST"),
+		'USER': os.environ.get("DB_USER2"),
+		'PASSWORD': os.environ.get("DB_PASS2"),
+		'HOST': os.environ.get("DB_HOST2"),
 		'PORT': '5432',
 	},
     'logdb': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': os.environ.get("DB_NAME3"),
-        'USER': os.environ.get("DB_USER"),
-        'PASSWORD': os.environ.get("DB_PASS"),
-        'HOST': os.environ.get("DB_HOST"),
+        'USER': os.environ.get("DB_USER3"),
+        'PASSWORD': os.environ.get("DB_PASS3"),
+        'HOST': os.environ.get("DB_HOST3"),
         'PORT': '5432',
     }
 }

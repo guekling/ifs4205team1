@@ -3,9 +3,9 @@
 {% load widget_tweaks %}
 
 {% block content %}
-<h1>Transfer Patient</h1>
+<h1>Edit Healthcare Professional Note</h1>
 
-<form action="{% url 'transfer_patient' healthcare_id=healthcare.id patient_id=patient.id %}" method="post">
+<form action="{% url 'edit_healthcare_note' healthcare_id=healthcare.id note_id=note.id %}" method="post">
   {% csrf_token %}
 
   {% for field in form.visible_fields %}
@@ -14,17 +14,17 @@
 
       {% if form.is_bound %}
         {% if field.errors %}
-          {% render_field field class="form-control is-invalid" %}
+          {% render_field field class="form-control is-invalid" value=field.initial placeholder=field.initial %}
           {% for error in field.errors %}
             <div class="invalid-feedback">
               {{ error }}
             </div>
           {% endfor %}
         {% else %}
-          {% render_field field class="form-control is-valid" %}
+          {% render_field field class="form-control is-valid" value=field.initial placeholder=field.initial %}
         {% endif %}
       {% else %}
-        {% render_field field class="form-control" %}
+        {% render_field field class="form-control" value=field.initial placeholder=field.initial %}
       {% endif %}
 
       {% if field.help_text %}
@@ -36,4 +36,10 @@
   <button type="submit" class="btn btn-primary">Submit</button>
 </form>
 
+<script>
+  note_initial = $("#id_note").attr("placeholder")
+  $("#id_note").text(note_initial);
+</script>
+
 {% endblock %}
+

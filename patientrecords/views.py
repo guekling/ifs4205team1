@@ -5,6 +5,7 @@ from patientrecords.forms import ReadingsPermissionEditForm, TimeSeriesPermissio
 
 from core.models import Patient
 from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
+from userlogs.models import Logs
 
 from itertools import chain
 
@@ -14,6 +15,10 @@ def show_all_records(request, patient_id):
   """
   List all medical records belonging to the patient
   """
+  if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[Show All Records] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    return redirect('/patient/login/')
+
   patient = patient_does_not_exists(patient_id)
 
   readings = Readings.objects.filter(patient_id=patient)
@@ -23,6 +28,8 @@ def show_all_records(request, patient_id):
   videos = Videos.objects.filter(patient_id=patient)
 
   results = list(chain(readings, timeseries, documents, images, videos))
+
+  Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Show All Records')
 
   context = {
     'patient': patient,
@@ -37,12 +44,17 @@ def show_record(request, patient_id, record_id):
   """
   Show information of a single medical record, and the permissions of the medical record
   """
+  if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[Show Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    return redirect('/patient/login/')
+
   patient = patient_does_not_exists(patient_id)
 
   try:
     record = get_record(record_id)
     record = record[0]
   except IndexError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Show Record] Record ID is invalid.')
     return redirect('show_all_records', patient_id=patient_id)
 
   model = get_model(record)
@@ -60,6 +72,8 @@ def show_record(request, patient_id, record_id):
   else:
     permissions = ReadingsPerm.objects.none()
 
+  Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Show Record ' + str(record_id))
+
   context = {
     'patient': patient,
     'record': record,
@@ -74,12 +88,17 @@ def edit_permission(request, patient_id, record_id, perm_id):
   """
   Edit a permission of a single medical record
   """
+  if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    return redirect('/patient/login/')
+
   patient = patient_does_not_exists(patient_id)
 
   try:
     record = get_record(record_id)
     record = record[0]
   except IndexError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Record ID is invalid.')
     return redirect('show_all_records', patient_id=patient_id)
 
   model = get_model(record)
@@ -90,8 +109,10 @@ def edit_permission(request, patient_id, record_id, perm_id):
     if request.method == 'POST':
       if form.is_valid():
         permission.save()
+        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Edit Permission ' + str(perm_id))
         return redirect('show_record', patient_id=patient_id, record_id=record_id)
       else:
+        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Invalid Form')
         context = {
           'form': form,
           'patient': patient,
@@ -105,8 +126,10 @@ def edit_permission(request, patient_id, record_id, perm_id):
     if request.method == 'POST':
       if form.is_valid():
         permission.save()
+        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Edit Permission ' + str(perm_id))
         return redirect('show_record', patient_id=patient_id, record_id=record_id)
       else:
+        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Invalid Form')
         context = {
           'form': form,
           'patient': patient,
@@ -120,8 +143,10 @@ def edit_permission(request, patient_id, record_id, perm_id):
     if request.method == 'POST':
       if form.is_valid():
         permission.save()
+        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Edit Permission ' + str(perm_id))
         return redirect('show_record', patient_id=patient_id, record_id=record_id)
       else:
+        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Invalid Form')
         context = {
           'form': form,
           'patient': patient,
@@ -135,8 +160,10 @@ def edit_permission(request, patient_id, record_id, perm_id):
     if request.method == 'POST':
       if form.is_valid():
         permission.save()
+        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Edit Permission ' + str(perm_id))
         return redirect('show_record', patient_id=patient_id, record_id=record_id)
       else:
+        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Invalid Form')
         context = {
           'form': form,
           'patient': patient,
@@ -150,8 +177,10 @@ def edit_permission(request, patient_id, record_id, perm_id):
     if request.method == 'POST':
       if form.is_valid():
         permission.save()
+        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Edit Permission ' + str(perm_id))
         return redirect('show_record', patient_id=patient_id, record_id=record_id)
       else:
+        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Invalid Form')
         context = {
           'form': form,
           'patient': patient,
@@ -161,6 +190,8 @@ def edit_permission(request, patient_id, record_id, perm_id):
         return render(request, 'edit_permission.html', context)
   else:
     permission = ReadingsPerm.objects.none()
+
+  Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[Edit Permission] Render Form')
 
   context = {
     'form': form,
@@ -175,13 +206,17 @@ def edit_permission(request, patient_id, record_id, perm_id):
 ############ Helper Functions ############
 ##########################################
 
-def patient_does_not_exists(patient_id):
+STATUS_OK = 1
+STATUS_ERROR = 0
+
+def patient_does_not_exists(patient_id): # TODO: This function is never called?
   """
   Redirects to login if patient_id is invalid
   """
   try:
     return Patient.objects.get(id=patient_id)
   except Patient.DoesNotExist:
+    Logs.objects.create(type='READ', user_id=patient_id, interface='PATIENT', status=STATUS_ERROR, details='Patient ID is invalid.')
     redirect('patient_login')
 
 def get_record(record_id):

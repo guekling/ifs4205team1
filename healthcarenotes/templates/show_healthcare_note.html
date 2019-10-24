@@ -1,0 +1,61 @@
+{% extends "healthcare_base.html" %}
+
+{% load app_filters %}
+
+{% block content %}
+<h1>{{ note.title }}</h1>
+
+<table class="table text-center">
+  <tr>
+    <th>Date</th>
+    <th>{{ note.timestamp | get_date }}</th>
+  </tr>
+  <tr>
+    <th>Time</th>
+    <th>{{ note.timestamp | get_time }}</th>
+  </tr>
+  <tr>
+    <th>Written For</th>
+    <th>{{ note.patient_id | get_patient_full_name }}</th>
+  </tr>
+  <tr>
+    <th>Note</th>
+    <th><a href="{{ note.data }}">View Note</a></th>
+  </tr>
+  <tr>
+    <th>Edit</th>
+    <th><a href="{% url 'edit_healthcare_note' healthcare_id=healthcare.id note_id=note.id %}">Edit Note</a></th>
+  </tr>
+</table>
+
+<h1>Permissions</h1>
+
+<table class="table text-center">
+  <thead>
+  <tr>
+    <th scope="col">Given To</th>
+    <th scope="col">Given By</th>
+    <th scope="col">Given On</th>
+    <th scope="col">Permission</th>
+    <th scope="col"></th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for perm in permissions %}
+  {% to_model_name perm as to_model_name_result %}
+  <tr>
+    <th scope="row">
+      {% for name in perm.username.all %}
+        {{ name | get_full_name }}
+      {% endfor %}
+    </th>
+    <th>{{ perm.given_by | get_full_name }}</th>
+    <th>{{ perm.timestamp | get_datetime }}</th>
+    <th>{{ perm.perm_value | get_perm }}</th>
+    <th><a href="{% url 'edit_healthcare_note_permission' healthcare_id=healthcare.id note_id=note.id perm_id=perm.id %}">Edit Permission</a></th>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

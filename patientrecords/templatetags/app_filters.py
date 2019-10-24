@@ -34,3 +34,7 @@ def get_perm(value):
 @register.filter
 def get_full_name(user):
   return user.get_full_name()
+
+@register.filter
+def get_patient_full_name(patient):
+  return patient.username.get_full_name()

@@ -1,11 +1,30 @@
 {% extends "healthcare_base.html" %}
 
+{% load app_filters %}
 {% load widget_tweaks %}
 
 {% block content %}
-<h1>Transfer Patient</h1>
+<h1> Edit Permission </h1>
 
-<form action="{% url 'transfer_patient' healthcare_id=healthcare.id patient_id=patient.id %}" method="post">
+<div>
+  <label>Note Title: {{ note.title }}</label>
+</div>
+
+<div>
+  <label>Note Writen For: {{ note.patient_id | get_patient_full_name }}</label>
+</div>
+
+<div>
+  {% for name in permission.username.all %}
+     <label>Permission Given To: {{ name | get_full_name }}</label>
+  {% endfor %}
+</div>
+
+<div>
+  <label>Permission Given By: {{ permission.given_by | get_full_name }}</label>
+</div>
+
+<form action="{% url 'edit_healthcare_note_permission' healthcare_id=healthcare.id note_id=note.id perm_id=permission.id %}" method="post">
   {% csrf_token %}
 
   {% for field in form.visible_fields %}

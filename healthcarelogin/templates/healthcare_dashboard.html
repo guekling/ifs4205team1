@@ -18,18 +18,7 @@
     </div>
 
     <div class="col-sm-3">
-      <a href="#">
-        <div class="card text-white bg-info mb-3" style="max-width: 18rem;">
-          <div class="card-body">
-            <h5 class="card-title">Patients' Medical Records</h5>
-            <p class="card-text">asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf</p>
-          </div>
-        </div>
-      </a>
-    </div>
-
-    <div class="col-sm-3">
-      <a href="#">
+      <a href="{% url 'show_all_healthcare_notes' healthcare_id=healthcare.id %}">
         <div class="card text-white bg-info mb-3" style="max-width: 18rem;">
           <div class="card-body">
             <h5 class="card-title">Patients' Notes</h5>
