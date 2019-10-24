@@ -45,10 +45,10 @@ INSTALLED_APPS = [
     'django_select2',
     'qr_code',
 
-	# APPS
-	'core',
+  	# APPS
+  	'core',
     'patientlogin',
-	'patientrecords',
+    'patientrecords',
     'patienthealthcare',
     'healthcarelogin',
     'healthcarepatients',
@@ -57,7 +57,7 @@ INSTALLED_APPS = [
     'researcherquery',
     'researcheranonymise', # Change to admin
     'mobileregister',
-    'userlogs'
+    'userlogs',
 ]
 
 # Extending User Model
