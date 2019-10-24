@@ -49,7 +49,14 @@ class UserLogin(LoginView):
 
 @login_required(login_url='/mobileregister/login/')
 def user_register(request, user_id):
+  # the session will expire 1 minutes after inactivity, and will require log in again.
+  request.session.set_expiry(60)
+
   user = user_does_not_exists(user_id)
+
+  # when user purposefully try to traverse to this url but they already registered
+  if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
+    return redirect("repeat_register", user_id=user.uid)
 
   form = DeviceInforForm(request.POST or None)
 
@@ -69,13 +76,21 @@ def user_register(request, user_id):
 
 @login_required(login_url='/mobileregister/login/')
 def repeat_register(request, user_id):
-  user = user_does_not_exists(user_id).username
+  user = user_does_not_exists(user_id)
+
+  # when user purposefully try to traverse to this url but they haven't register
+  if len(user.device_id_hash) == 0 and len(user.android_id_hash) == 0:
+    return redirect("user_register", user_id=user.uid)
 
   return render(request, "repeat_register.html")
 
 @login_required(login_url='/mobileregister/login/')
 def success_register(request, user_id):
-  user = user_does_not_exists(user_id).username
+  user = user_does_not_exists(user_id)
+
+  # when user purposefully try to traverse to this url but they haven't registered
+  if len(user.device_id_hash) == 0 and len(user.android_id_hash) == 0:
+    return redirect("user_register", user_id=user.uid)
 
   return render(request, "success_register.html")
 

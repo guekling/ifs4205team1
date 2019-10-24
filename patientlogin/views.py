@@ -178,15 +178,24 @@ def patient_change_password_complete(request, patient_id):
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
 def patient_qr(request, patient_id):
+  # the session will expire 15 minutes after inactivity, and will require log in again.
+  request.session.set_expiry(900)
+
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
     return redirect('/patient/login/')
 
   patient = patient_does_not_exists(patient_id)
   user = patient.username
+
+  # when user purposefully try to traverse to this url but they haven't registered
+  if len(user.device_id_hash) == 0 and len(user.android_id_hash) == 0:
+    return redirect("patient_token_register", user_id=user.uid)
+
   if len(user.sub_id_hash) > 0:
     nonce = user.sub_id_hash
   else:
+    # if somehow bypassed login
     return redirect('patient_login')
 
   form = UserQrForm(request.POST or None)
@@ -199,8 +208,6 @@ def patient_qr(request, patient_id):
       # delete the nonce
       user.sub_id_hash = ""
       user.save()
-      # the session will expire 15 minutes after login, and will require log in again.
-      request.session.set_expiry(900)
       return redirect('patient_dashboard', patient_id=patient.id)
     else:
       # if fails, then redirect to custom url/page
@@ -216,6 +223,9 @@ def patient_qr(request, patient_id):
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
 def patient_token_register(request, patient_id):
+  # the session will expire 15 minutes after inactivity, and will require log in again.
+  request.session.set_expiry(900)
+
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
     return redirect('/patient/login/')

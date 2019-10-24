@@ -176,15 +176,24 @@ def healthcare_change_password_complete(request, healthcare_id):
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
 def healthcare_qr(request, healthcare_id):
+  # the session will expire 15 minutes after inactivity, and will require log in again.
+  request.session.set_expiry(900)
+
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
   user = healthcare.username
+
+  # when user purposefully try to traverse to this url but they haven't registered
+  if len(user.device_id_hash) == 0 and len(user.android_id_hash) == 0:
+    return redirect("healthcare_token_register", user_id=user.uid)
+
   if len(user.sub_id_hash) > 0:
     nonce = user.sub_id_hash
   else:
+    # if somehow bypassed login
     return redirect('healthcare_login')
 
   form = UserQrForm(request.POST or None)
@@ -197,8 +206,6 @@ def healthcare_qr(request, healthcare_id):
       # delete the nonce
       user.sub_id_hash = ""
       user.save()
-      # the session will expire 15 minutes after login, and will require log in again.
-      request.session.set_expiry(900)
       return redirect('healthcare_dashboard', healthcare_id=healthcare.id)
     else:
       # if fails, then redirect to custom url/page
@@ -214,6 +221,9 @@ def healthcare_qr(request, healthcare_id):
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
 def healthcare_token_register(request, healthcare_id):
+  # the session will expire 15 minutes after inactivity, and will require log in again.
+  request.session.set_expiry(900)
+
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
     return redirect('/healthcare/login/')
