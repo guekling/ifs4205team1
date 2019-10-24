@@ -40,13 +40,13 @@ class PatientLogin(LoginView):
       auth_login(self.request, form.get_user())
       nonce = get_random_string(length=16, allowed_chars=u'abcdefghijklmnopqrstuvwxyz0123456789')
       user = patient.username
-      # if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
-      user.sub_id_hash = nonce  # change field
-      user.save()  # this will update only
-      Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Patient Login')
-      return redirect('patient_qr', patient_id=patient.id)
-      # else:
-      #   return redirect('patient_token_register', patient_id=patient.id)
+      if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
+        user.sub_id_hash = nonce  # change field
+        user.save()  # this will update only
+        Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Patient Login')
+        return redirect('patient_qr', patient_id=patient.id)
+      else:
+        return redirect('patient_token_register', patient_id=patient.id)
     else:
       form = AuthenticationForm
 
@@ -208,8 +208,8 @@ def patient_qr(request, patient_id):
   if form.is_valid():
     cd = form.cleaned_data
     otp = cd.get('otp')
-    if otp == '1234':
-    # if user.device_id_hash == recovered_value(user.android_id_hash, nonce, otp):
+    # if otp == '1234':
+    if user.device_id_hash == recovered_value(user.android_id_hash, nonce, otp):
       # give HttpResponse only or render page you need to load on success
       # delete the nonce
       user.sub_id_hash = ""
