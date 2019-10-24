@@ -22,6 +22,10 @@
     <th>Note</th>
     <th><a href="{{ note.data }}">View Note</a></th>
   </tr>
+  <tr>
+    <th>Edit</th>
+    <th><a href="{% url 'edit_healthcare_note' healthcare_id=healthcare.id note_id=note.id %}">Edit Note</a></th>
+  </tr>
 </table>
 
 <h1>Permissions</h1>

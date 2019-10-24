@@ -7,4 +7,5 @@ urlpatterns = [
     path("<uuid:healthcare_id>/notes/<uuid:note_id>/edit-permission/<uuid:perm_id>", views.edit_healthcare_note_permission, name="edit_healthcare_note_permission"),
     path("<uuid:healthcare_id>/notes/new", views.create_healthcare_note, name="create_healthcare_note"),
     path("<uuid:healthcare_id>/patients/<uuid:patient_id>/notes/new", views.create_healthcare_note_for_patient, name="create_healthcare_note_for_patient"),
+    path("<uuid:healthcare_id>/notes/<uuid:note_id>/edit", views.edit_healthcare_note, name="edit_healthcare_note"),
 ]

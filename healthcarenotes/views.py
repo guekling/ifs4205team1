@@ -1,15 +1,19 @@
+from __future__ import division, unicode_literals 
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
 
-from healthcarenotes.forms import DocumentsPermissionEditForm, AddHealthcareNote, AddHealthcareNoteForPatient
+from healthcarenotes.forms import DocumentsPermissionEditForm, AddHealthcareNote, AddHealthcareNoteForPatient, EditHealthcareNote
 
 from core.models import Healthcare
-from patientrecords.models import Documents, DocumentsPerm
+from patientrecords.models import Readings, Images, TimeSeries, Videos, Documents, DocumentsPerm
 
 import bleach
 import os
 from os.path import join
+import codecs
+from bs4 import BeautifulSoup
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
@@ -202,25 +206,93 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
       permission = DocumentsPerm.objects.create(docs_id=note, given_by=healthcare.username, perm_value=2)
       permission.username.add(patient.username)
       permissions = DocumentsPerm.objects.filter(docs_id=note)
+
+      return redirect('show_healthcare_note', healthcare_id=healthcare.id, note_id=note.id)
       
     else:
       context = {
         'form': form,
         'healthcare': healthcare,
         'patient': patient,
+        'permissions': permissions,
       }
-      return render(request, 'create_healthcare_note_for_patient.html', context)
+      return render(request, 'show_healthcare_note.html', context)
+
+  context = {
+    'form': form,
+    'healthcare': healthcare,
+    'patient': patient,
+  }
+
+  return render(request, 'create_healthcare_note_for_patient.html', context)
+
+@login_required(login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+def edit_healthcare_note(request, healthcare_id, note_id):
+  """
+  Create a new healthcare professional note for a single patient
+  """
+  # checks if logged in healthcare professional has the same id as in the URL
+  if (request.user.healthcare_username.id != healthcare_id):
+    return redirect('/healthcare/login/')
+
+  healthcare = healthcare_does_not_exists(healthcare_id)
+
+  try:
+    note = Documents.objects.filter(id=note_id)
+    note = note[0]
+  except IndexError:
+    return redirect('show_all_healthcare_notes', healthcare_id=healthcare_id)
+
+  patient = note.patient_id
+
+  base_dir = settings.BASE_DIR
+  note_path = os.path.join(base_dir, 'media', 'documents', note.title + ".html")
+
+  open_note = codecs.open(note_path, 'r', 'utf-8') # open note 
+  document = BeautifulSoup(open_note.read(), 'html.parser').get_text() # read note
+  split_at = 'Attachments:'
+  split = document.split(split_at, 1) # split the note to remove attachments
+
+  form = EditHealthcareNote(request.POST, patient=patient, initial={
+    'title': note.title, 
+    'note': split[0],
+  })
+
+  if request.method == 'POST':
+    if form.is_valid():
+      title = bleach.clean(form.cleaned_data['title'], tags=[], attributes=[], protocols=[], strip=True)
+      edit_note = bleach.clean(form.cleaned_data['note'], attributes=[], protocols=[], strip=True)
+
+      edit_note = edit_note + "<p>Attachments:</p>"
+      edit_note = edit_note + split[1] # Attachments has not been edited + w/o HTML
+      
+      save_note = open(note_path,"w")
+      save_note.write(edit_note)
+      save_note.close()
+
+      note.title = title
+      note.save()
+
+      return redirect('show_healthcare_note', healthcare_id=healthcare.id, note_id=note.id)
+
+    else:
+      context = {
+        'form': form,
+        'healthcare': healthcare,
+        'patient': patient,
+        'note': note,
+      }
+      return render(request, 'edit_healthcare_note.html', context)
 
   context = {
     'form': form,
     'healthcare': healthcare,
     'patient': patient,
     'note': note,
-    'permissions': permissions,
   }
 
-  return render(request, 'show_healthcare_note.html', context)
-
+  return render(request, 'edit_healthcare_note.html', context)
 
 ##########################################
 ############ Helper Functions ############
