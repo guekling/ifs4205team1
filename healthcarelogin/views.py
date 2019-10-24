@@ -86,6 +86,10 @@ def healthcare_settings(request, healthcare_id):
   healthcare = healthcare_does_not_exists(healthcare_id)
   user = healthcare.username
 
+  # the action has not gone through QR verification
+  if len(user.sub_id_hash) > 0:
+    return redirect('healthcare_login')
+
   context = {
     'healthcare': healthcare,
     'user': user,
@@ -102,6 +106,11 @@ def healthcare_edit_settings(request, healthcare_id):
 
   healthcare = healthcare_does_not_exists(healthcare_id)
   user = healthcare.username
+
+  # the action has not gone through QR verification
+  if len(user.sub_id_hash) > 0:
+    return redirect('healthcare_login')
+
   form = UserEditForm(request.POST or None, instance=user)
 
   if request.method == 'POST':
@@ -132,6 +141,11 @@ def healthcare_change_password(request, healthcare_id):
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
+  user = healthcare.username
+
+  # the action has not gone through QR verification
+  if len(user.sub_id_hash) > 0:
+    return redirect('healthcare_login')
 
   change_password = HealthcareChangePassword.as_view(
     extra_context={'healthcare': healthcare}
@@ -147,6 +161,11 @@ def healthcare_change_password_complete(request, healthcare_id):
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
+  user = healthcare.username
+
+  # the action has not gone through QR verification
+  if len(user.sub_id_hash) > 0:
+    return redirect('healthcare_login')
 
   change_password_complete = HealthcareChangePasswordComplete.as_view(
     extra_context={'healthcare': healthcare}
@@ -157,6 +176,10 @@ def healthcare_change_password_complete(request, healthcare_id):
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
 def healthcare_qr(request, healthcare_id):
+  # checks if logged in healthcare professional has the same id as in the URL
+  if (request.user.healthcare_username.id != healthcare_id):
+    return redirect('/healthcare/login/')
+
   healthcare = healthcare_does_not_exists(healthcare_id)
   user = healthcare.username
   if len(user.sub_id_hash) > 0:
@@ -171,8 +194,11 @@ def healthcare_qr(request, healthcare_id):
     otp = cd.get('otp')
     if user.device_id_hash == recovered_value(user.android_id_hash, nonce, otp):
       # give HttpResponse only or render page you need to load on success
+      # delete the nonce
       user.sub_id_hash = ""
       user.save()
+      # the session will expire 15 minutes after login, and will require log in again.
+      request.session.set_expiry(900)
       return redirect('healthcare_dashboard', healthcare_id=healthcare.id)
     else:
       # if fails, then redirect to custom url/page
@@ -188,8 +214,16 @@ def healthcare_qr(request, healthcare_id):
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
 def healthcare_token_register(request, healthcare_id):
+  # checks if logged in healthcare professional has the same id as in the URL
+  if (request.user.healthcare_username.id != healthcare_id):
+    return redirect('/healthcare/login/')
+
   healthcare = healthcare_does_not_exists(healthcare_id)
   user = healthcare.username
+
+  # device already linked
+  if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
+    return redirect("repeat_register", user_id=user.uid)
 
   return render(request, "healthcare_token_register.html")
 
@@ -201,6 +235,11 @@ def healthcare_dashboard(request, healthcare_id):
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
+  user = healthcare.username
+
+  # the action has not gone through QR verification
+  if len(user.sub_id_hash) > 0:
+    return redirect('healthcare_login')
 
   context = {
     'healthcare': healthcare,
