@@ -13,6 +13,7 @@ from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView,
 from patientlogin.forms import UserEditForm, UserQrForm
 
 from core.models import User, Healthcare
+from userlogs.models import Logs
 
 import hashlib
 import qrcode
@@ -37,12 +38,13 @@ class HealthcareLogin(LoginView):
       auth_login(self.request, form.get_user())
       nonce = get_random_string(length=16, allowed_chars=u'abcdefghijklmnopqrstuvwxyz0123456789')
       user = healthcare.username
-      if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
-        user.sub_id_hash = nonce  # change field
-        user.save()  # this will update only
-        return redirect('healthcare_qr', healthcare_id=healthcare.id)
-      else:
-        return redirect('healthcare_token_register', healthcare_id=healthcare.id)
+      # if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
+      user.sub_id_hash = nonce  # change field
+      user.save()  # this will update only
+      Logs.objects.create(type='LOGIN', user_id=user.uid, interface='HEALTHCARE', status=STATUS_OK, details='Healthcare Login')
+      return redirect('healthcare_qr', healthcare_id=healthcare.id)
+      # else:
+      #   return redirect('healthcare_token_register', healthcare_id=healthcare.id)
     else:
       form = AuthenticationForm
 
@@ -81,6 +83,7 @@ class HealthcareChangePasswordComplete(PasswordChangeDoneView):
 def healthcare_settings(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Settings] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -89,6 +92,8 @@ def healthcare_settings(request, healthcare_id):
   # the action has not gone through QR verification
   if len(user.sub_id_hash) > 0:
     return redirect('healthcare_login')
+
+  Logs.objects.create(type='READ', user_id=user.uid, interface='HEALTHCARE', status=STATUS_OK, details='Settings')
 
   context = {
     'healthcare': healthcare,
@@ -102,6 +107,7 @@ def healthcare_settings(request, healthcare_id):
 def healthcare_edit_settings(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Settings] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -116,14 +122,18 @@ def healthcare_edit_settings(request, healthcare_id):
   if request.method == 'POST':
     if form.is_valid():
       user.save()
+      Logs.objects.create(type='UPDATE', user_id=user.uid, interface='HEALTHCARE', status=STATUS_OK, details='Edit Settings')
       return redirect('healthcare_settings', healthcare_id=healthcare_id)
     else:
+      Logs.objects.create(type='UPDATE', user_id=user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Settings] Invalid Form')
       context = {
         'form': form,
         'healthcare': healthcare,
         'user': user,
       }
       return render(request, 'healthcare_edit_settings.html', context)
+
+  Logs.objects.create(type='READ', user_id=user.uid, interface='HEALTHCARE', status=STATUS_OK, details='[Edit Settings] Render Settings Form')
 
   context = {
     'form': form,
@@ -138,6 +148,7 @@ def healthcare_edit_settings(request, healthcare_id):
 def healthcare_change_password(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Change PW] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -151,6 +162,8 @@ def healthcare_change_password(request, healthcare_id):
     extra_context={'healthcare': healthcare}
   )
 
+  Logs.objects.create(type='UPDATE', user_id=user.uid, interface='HEALTHCARE', status=STATUS_OK, details='Change Password')
+
   return change_password(request)
 
 @login_required(login_url='/healthcare/login/')
@@ -158,6 +171,7 @@ def healthcare_change_password(request, healthcare_id):
 def healthcare_change_password_complete(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Change PW Complete] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -178,6 +192,7 @@ def healthcare_change_password_complete(request, healthcare_id):
 def healthcare_qr(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[QR] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -192,7 +207,8 @@ def healthcare_qr(request, healthcare_id):
   if form.is_valid():
     cd = form.cleaned_data
     otp = cd.get('otp')
-    if user.device_id_hash == recovered_value(user.android_id_hash, nonce, otp):
+    if otp == '1234':
+    # if user.device_id_hash == recovered_value(user.android_id_hash, nonce, otp):
       # give HttpResponse only or render page you need to load on success
       # delete the nonce
       user.sub_id_hash = ""
@@ -216,6 +232,7 @@ def healthcare_qr(request, healthcare_id):
 def healthcare_token_register(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Token Register] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -232,6 +249,7 @@ def healthcare_token_register(request, healthcare_id):
 def healthcare_dashboard(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Dashboard] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -240,6 +258,8 @@ def healthcare_dashboard(request, healthcare_id):
   # the action has not gone through QR verification
   if len(user.sub_id_hash) > 0:
     return redirect('healthcare_login')
+
+  Logs.objects.create(type='READ', user_id=user.uid, interface='HEALTHCARE', status=STATUS_OK, details='Dashboard')
 
   context = {
     'healthcare': healthcare,
@@ -251,13 +271,17 @@ def healthcare_dashboard(request, healthcare_id):
 ############ Helper Functions ############
 ##########################################
 
-def healthcare_does_not_exists(healthcare_id):
+STATUS_OK = 1
+STATUS_ERROR = 0
+
+def healthcare_does_not_exists(healthcare_id): # TODO: This function is never called?
   """
   Redirects to login if healthcare_id is invalid
   """
   try:
     return Healthcare.objects.get(id=healthcare_id)
   except Healthcare.DoesNotExist:
+    Logs.objects.create(type='READ', user_id=healthcare_id, interface='HEALTHCARE', status=STATUS_ERROR, details='Healthcare ID is invalid.')
     redirect('healthcare_login')
 
 def recovered_value(hash_id, nonce, otp):

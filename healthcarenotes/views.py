@@ -8,6 +8,7 @@ from healthcarenotes.forms import DocumentsPermissionEditForm, AddHealthcareNote
 
 from core.models import Healthcare
 from patientrecords.models import Readings, Images, TimeSeries, Videos, Documents, DocumentsPerm
+from userlogs.models import Logs
 
 import bleach
 import os
@@ -23,11 +24,14 @@ def show_all_healthcare_notes(request, healthcare_id):
   """ 
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show All Notes] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
 
   notes = Documents.objects.filter(owner_id_id=healthcare.username)
+
+  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Show All Notes')
 
   context = {
     'healthcare': healthcare,
@@ -44,6 +48,7 @@ def show_healthcare_note(request, healthcare_id, note_id):
   """
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Note] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -52,9 +57,12 @@ def show_healthcare_note(request, healthcare_id, note_id):
     note = Documents.objects.filter(id=note_id)
     note = note[0]
   except IndexError:
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Note] Note ID is invalid.')
     return redirect('show_all_healthcare_notes', healthcare_id=healthcare_id)
 
   permissions = DocumentsPerm.objects.filter(docs_id=note_id)
+
+  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Show Note ' + str(note_id))
 
   context = {
     'healthcare': healthcare,
@@ -72,6 +80,7 @@ def edit_healthcare_note_permission(request, healthcare_id, note_id, perm_id):
   """
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note Permission] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -80,19 +89,23 @@ def edit_healthcare_note_permission(request, healthcare_id, note_id, perm_id):
     note = Documents.objects.filter(id=note_id)
     note = note[0]
   except IndexError:
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note Permission] Note ID is invalid.')
     return redirect('show_all_healthcare_notes', healthcare_id=healthcare_id)
 
   try:
     permission = DocumentsPerm.objects.get(id = perm_id)
   except DocumentsPerm.DoesNotExist:
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note Permission] Permission ID is invalid.')
     redirect('show_healthcare_note.html', healthcare_id=healthcare_id, note_id=note_id)
 
   form = DocumentsPermissionEditForm(request.POST or None, instance=permission)
   if request.method == 'POST':
     if form.is_valid():
       permission.save()
+      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Edit Note ' + str(note_id) + ' permission ' + str(perm_id))
       return redirect('show_healthcare_note', healthcare_id=healthcare_id, note_id=note_id)
     else:
+      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note Permission] Invalid Form')
       context = {
         'form': form,
         'healthcare': healthcare,
@@ -100,6 +113,8 @@ def edit_healthcare_note_permission(request, healthcare_id, note_id, perm_id):
         'permission': permission
       }
       return render(request, 'edit_healthcare_note_permission.html', context)
+
+  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='[Edit Note Permission] Render Form')
 
   context = {
     'form': form,
@@ -115,6 +130,7 @@ def edit_healthcare_note_permission(request, healthcare_id, note_id, perm_id):
 def create_healthcare_note(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Create Note] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -124,13 +140,17 @@ def create_healthcare_note(request, healthcare_id):
   if request.method == 'POST':
     if form.is_valid():
       note_patient = form.cleaned_data['patient']
+      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Create new healthcare note')
       return redirect('create_healthcare_note_for_patient', healthcare_id=healthcare_id, patient_id=note_patient.id)
     else:
+      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Create Note] Invalid Form')
       context = {
         'form': form,
         'healthcare': healthcare,
       }
       return render(request, 'create_healthcare_note.html', context)
+
+  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='[Create Note] Render Form')
 
   context = {
     'form': form,
@@ -147,6 +167,7 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
   """
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Note for Patient] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -155,6 +176,7 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
     patient = healthcare.patients.all().filter(id=patient_id)
     patient = patient[0]
   except IndexError:
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Create Note for Patient] Patient ID is invalid.')
     return redirect('show_all_patients', healthcare_id=healthcare_id)
 
   form = AddHealthcareNoteForPatient(request.POST, patient=patient)
@@ -207,9 +229,11 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
       permission.username.add(patient.username)
       permissions = DocumentsPerm.objects.filter(docs_id=note)
 
+      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Create new note for patient ' + str(patient_id))
+
       return redirect('show_healthcare_note', healthcare_id=healthcare.id, note_id=note.id)
-      
     else:
+      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Create Note] Invalid Form')
       context = {
         'form': form,
         'healthcare': healthcare,
@@ -217,6 +241,8 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
         'permissions': permissions,
       }
       return render(request, 'show_healthcare_note.html', context)
+
+  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='[Create Note for Patient] Render Form')
 
   context = {
     'form': form,
@@ -234,6 +260,7 @@ def edit_healthcare_note(request, healthcare_id, note_id):
   """
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -241,6 +268,7 @@ def edit_healthcare_note(request, healthcare_id, note_id):
   try:
     note = Documents.objects.filter(id=note_id)
     note = note[0]
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note] Note ID is invalid.')
   except IndexError:
     return redirect('show_all_healthcare_notes', healthcare_id=healthcare_id)
 
@@ -249,7 +277,13 @@ def edit_healthcare_note(request, healthcare_id, note_id):
   base_dir = settings.BASE_DIR
   note_path = os.path.join(base_dir, 'media', 'documents', note.title + ".html")
 
-  open_note = codecs.open(note_path, 'r', 'utf-8') # open note 
+  try: 
+    open_note = codecs.open(note_path, 'r', 'utf-8') # open note 
+  except FileNotFoundError:
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note] File not found.')
+    return redirect('show_healthcare_note', healthcare_id=healthcare.id, note_id=note.id)
+
+  open_note = codecs.open(note_path, 'r', 'utf-8') # open note
   document = BeautifulSoup(open_note.read(), 'html.parser').get_text() # read note
   split_at = 'Attachments:'
   split = document.split(split_at, 1) # split the note to remove attachments
@@ -274,9 +308,11 @@ def edit_healthcare_note(request, healthcare_id, note_id):
       note.title = title
       note.save()
 
-      return redirect('show_healthcare_note', healthcare_id=healthcare.id, note_id=note.id)
+      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Edit Note ' + str(note_id) + ' for patient ' + str(patient.id))
 
+      return redirect('show_healthcare_note', healthcare_id=healthcare.id, note_id=note.id)
     else:
+      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note] Invalid Form')
       context = {
         'form': form,
         'healthcare': healthcare,
@@ -284,6 +320,8 @@ def edit_healthcare_note(request, healthcare_id, note_id):
         'note': note,
       }
       return render(request, 'edit_healthcare_note.html', context)
+
+  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='[Edit Note] Render Form')
 
   context = {
     'form': form,
@@ -298,7 +336,10 @@ def edit_healthcare_note(request, healthcare_id, note_id):
 ############ Helper Functions ############
 ##########################################
 
-def healthcare_does_not_exists(healthcare_id):
+STATUS_OK = 1
+STATUS_ERROR = 0
+
+def healthcare_does_not_exists(healthcare_id): # TODO: This function is never called?
   """
   Redirects to login if healthcare_id is invalid
   """
@@ -306,12 +347,3 @@ def healthcare_does_not_exists(healthcare_id):
     return Healthcare.objects.get(id=healthcare_id)
   except Healthcare.DoesNotExist:
     redirect('healthcare_login')
-
-def get_r(record_id):
-  readings = Readings.objects.filter(id=record_id)
-  timeseries = TimeSeries.objects.filter(id=record_id)
-  documents = Documents.objects.filter(id=record_id)
-  images = Images.objects.filter(id=record_id)
-  videos = Videos.objects.filter(id=record_id)
-
-  return list(chain(readings, timeseries, documents, images, videos))

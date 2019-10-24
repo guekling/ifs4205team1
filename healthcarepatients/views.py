@@ -5,6 +5,7 @@ from healthcarepatients.forms import TransferPatientForm
 
 from core.models import Healthcare
 from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
+from userlogs.models import Logs
 
 from itertools import chain
 
@@ -16,11 +17,14 @@ def show_all_patients(request, healthcare_id):
   """ 
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show All Patients] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
 
   patients = healthcare.patients.all()
+
+  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Show All Patients')
 
   context = {
     'healthcare': healthcare,
@@ -37,6 +41,7 @@ def show_patient(request, healthcare_id, patient_id):
   """
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -45,7 +50,10 @@ def show_patient(request, healthcare_id, patient_id):
     patient = healthcare.patients.all().filter(id=patient_id)
     patient = patient[0]
   except IndexError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient] Patient ID is invalid.')
     return redirect('show_all_patients', healthcare_id=healthcare_id)
+
+  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Show Patient ' + str(patient_id))
 
   context = {
     'healthcare': healthcare,
@@ -62,6 +70,8 @@ def show_patient_records(request, healthcare_id, patient_id):
   """
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient Records] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -70,6 +80,7 @@ def show_patient_records(request, healthcare_id, patient_id):
     patient = healthcare.patients.all().filter(id=patient_id)
     patient = patient[0]
   except IndexError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient] Patient ID is invalid.')
     return redirect('show_all_patients', healthcare_id=healthcare_id)
 
   records = get_records(patient)
@@ -79,6 +90,8 @@ def show_patient_records(request, healthcare_id, patient_id):
     'patient': patient,
     'records': records,
   }
+
+  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Show Patient ' + str(patient_id) + ' Records')
 
   return render(request, 'show_patient_records.html', context)
 
@@ -90,6 +103,7 @@ def show_patient_record(request, healthcare_id, patient_id, record_id):
   """
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -98,12 +112,14 @@ def show_patient_record(request, healthcare_id, patient_id, record_id):
     patient = healthcare.patients.all().filter(id=patient_id)
     patient = patient[0]
   except IndexError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient Record] Patient ID is invalid.')
     return redirect('show_all_patients', healthcare_id=healthcare_id)
 
   try:
     record = get_record(record_id)
     record = record[0]
   except IndexError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient Record] Record ID is invalid.')
     return redirect('show_patient_records', healthcare_id=healthcare_id, patient_id=patient_id)
 
   model = get_model(record)
@@ -128,6 +144,8 @@ def show_patient_record(request, healthcare_id, patient_id, record_id):
     'permissions': permissions
   }
 
+  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Show Patient ' + str(patient_id) + ' Record ' + str(record_id))
+
   return render(request, 'show_patient_record.html', context)
 
 @login_required(login_url='/healthcare/login/')
@@ -135,6 +153,8 @@ def show_patient_record(request, healthcare_id, patient_id, record_id):
 def transfer_patient(request, healthcare_id, patient_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Transfer Patient] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -143,6 +163,7 @@ def transfer_patient(request, healthcare_id, patient_id):
     patient = healthcare.patients.all().filter(id=patient_id)
     patient = patient[0]
   except IndexError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Transfer Patient] Patient ID is invalid.')
     return redirect('show_all_patients', healthcare_id=healthcare_id)
 
   form = TransferPatientForm(request.POST)
@@ -175,14 +196,19 @@ def transfer_patient(request, healthcare_id, patient_id):
         permission = ImagesPerm.objects.create(img_id=record, given_by=healthcare_user, perm_value=2)
         permission.username.add(transfer_healthcare)
 
+      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Transfer Patient ' + str(patient_id) + ' to Healthcare Prof ' + str(transfer_healthcare.id))
+
       return redirect('show_patient', healthcare_id=healthcare_id, patient_id=patient_id)
     else:
+      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Transfer Patient] Invalid Form')
       context = {
         'form': form,
         'patient': patient,
         'healthcare': healthcare,
       }
       return render(request, 'show_patient.html', context)
+
+  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='[Transfer Patient] Render Form')
 
   context = {
     'form': form,
@@ -196,7 +222,10 @@ def transfer_patient(request, healthcare_id, patient_id):
 ############ Helper Functions ############
 ##########################################
 
-def healthcare_does_not_exists(healthcare_id):
+STATUS_OK = 1
+STATUS_ERROR = 0
+
+def healthcare_does_not_exists(healthcare_id): # TODO: This function is never called?
   """
   Redirects to login if healthcare_id is invalid
   """

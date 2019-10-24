@@ -173,6 +173,7 @@ def patient_change_password(request, patient_id):
 def patient_change_password_complete(request, patient_id):
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[Change PW Complete] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/patient/login/')
 
   patient = patient_does_not_exists(patient_id)
