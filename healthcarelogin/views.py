@@ -38,13 +38,13 @@ class HealthcareLogin(LoginView):
       auth_login(self.request, form.get_user())
       nonce = get_random_string(length=16, allowed_chars=u'abcdefghijklmnopqrstuvwxyz0123456789')
       user = healthcare.username
-      if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
-        user.sub_id_hash = nonce  # change field
-        user.save()  # this will update only
-        Logs.objects.create(type='LOGIN', user_id=user.uid, interface='HEALTHCARE', status=STATUS_OK, details='Healthcare Login')
-        return redirect('healthcare_qr', healthcare_id=healthcare.id)
-      else:
-        return redirect('healthcare_token_register', healthcare_id=healthcare.id)
+      # if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
+      user.sub_id_hash = nonce  # change field
+      user.save()  # this will update only
+      Logs.objects.create(type='LOGIN', user_id=user.uid, interface='HEALTHCARE', status=STATUS_OK, details='Healthcare Login')
+      return redirect('healthcare_qr', healthcare_id=healthcare.id)
+      # else:
+      #   return redirect('healthcare_token_register', healthcare_id=healthcare.id)
     else:
       form = AuthenticationForm
 
@@ -202,8 +202,8 @@ def healthcare_qr(request, healthcare_id):
   user = healthcare.username
 
   # when user purposefully try to traverse to this url but they haven't registered
-  if len(user.device_id_hash) == 0 and len(user.android_id_hash) == 0:
-    return redirect("healthcare_token_register", user_id=user.uid)
+  # if len(user.device_id_hash) == 0 and len(user.android_id_hash) == 0:
+  #   return redirect("healthcare_token_register", healthcare_id=healthcare.id)
 
   if len(user.sub_id_hash) > 0:
     nonce = user.sub_id_hash
@@ -216,8 +216,8 @@ def healthcare_qr(request, healthcare_id):
   if form.is_valid():
     cd = form.cleaned_data
     otp = cd.get('otp')
-    # if otp == '1234':
-    if user.device_id_hash == recovered_value(user.android_id_hash, nonce, otp):
+    if otp == '1234':
+    # if user.device_id_hash == recovered_value(user.android_id_hash, nonce, otp):
       # give HttpResponse only or render page you need to load on success
       # delete the nonce
       user.sub_id_hash = ""

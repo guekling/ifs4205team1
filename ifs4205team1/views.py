@@ -6,4 +6,7 @@ def home(request):
 
   return render(request, 'home.html', context)
 
-
+def protected_media(request):
+  response['Content-Type'] = ''
+  response['X-Accel-Redirect'] = '/media/' + request.path
+  return response

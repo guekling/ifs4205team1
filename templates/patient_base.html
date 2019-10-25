@@ -18,7 +18,7 @@
         </a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
           <a class="dropdown-item" href="{% url 'show_all_records' patient_id=patient.id %}">View All Records</a>
-          <a class="dropdown-item" href="#">Upload New Record</a>
+          <a class="dropdown-item" href="{% url 'new_record' patient_id=patient.id %}">Upload New Record</a>
         </div>
       </li>
       <li class="nav-item dropdown">

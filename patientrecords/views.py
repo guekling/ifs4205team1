@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
 
-from patientrecords.forms import ReadingsPermissionEditForm, TimeSeriesPermissionEditForm, DocumentsPermissionEditForm, VideosPermissionEditForm, ImagesPermissionEditForm
+from patientrecords.forms import ReadingsPermissionEditForm, TimeSeriesPermissionEditForm, DocumentsPermissionEditForm, VideosPermissionEditForm, ImagesPermissionEditForm, CreateNewRecord, CreateReadingsRecord, CreateTimeSeriesRecord, CreateImagesRecord, CreateVideosRecord, CreateDocumentsRecord
 
 from core.models import Patient
 from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
@@ -201,6 +201,280 @@ def edit_permission(request, patient_id, record_id, perm_id):
   }
 
   return render(request, 'edit_permission.html', context)
+
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+def new_record(request, patient_id):
+  if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    return redirect('/patient/login/')
+
+  patient = patient_does_not_exists(patient_id)
+
+  form = CreateNewRecord(request.POST)
+
+  if request.method == 'POST':
+    if form.is_valid():
+      type = form.cleaned_data['type']
+
+      if (type == 'Readings'):
+        return redirect('new_readings_record', patient_id=patient_id)
+      elif (type == 'TimeSeries'):
+        return redirect('new_timeseries_record', patient_id=patient_id)
+      elif (type == 'Images'):
+        return redirect('new_images_record', patient_id=patient_id)
+      elif (type == 'Videos'):
+        return redirect('new_videos_record', patient_id=patient_id)
+      elif (type == 'Documents'):
+        return redirect('new_documents_record', patient_id=patient_id)
+
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='New Record')
+    else:
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Record] Invalid Form')
+
+      context = {
+        'form': form,
+        'patient': patient,
+      }
+
+      return render(request, 'new_record.html', context)
+
+  Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[New Record] Render Form')
+
+  context = {
+    'form': form,
+    'patient': patient,
+  }
+
+  return render(request, 'new_record.html', context)
+
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+def new_readings_record(request, patient_id):
+  if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Readings Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    return redirect('/patient/login/')
+
+  patient = patient_does_not_exists(patient_id)
+
+  form = CreateReadingsRecord(request.POST or None)
+
+  if request.method == 'POST':
+    if form.is_valid():
+      readings = form.save(commit=False)
+      readings.owner_id = patient.username
+      readings.patient_id = patient
+      type = form.cleaned_data['type']
+      readings.type = type
+      readings.save()
+
+      # Get all patient's healthcare professional
+      patient_healthcare = patient.healthcare_patients.all()
+
+      for healthcare in patient_healthcare:
+        permission = ReadingsPerm.objects.create(readings_id=readings, given_by=patient.username, perm_value=2)
+        permission.username.add(healthcare)
+      
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='New Readings Record')
+      return redirect('show_record', patient_id=patient_id, record_id=readings.id)
+    else:
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Readings Record] Invalid Form')
+      context = {
+        'form': form,
+        'patient': patient,
+      }
+      return render(request, 'new_readings_record.html', context)
+
+  Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[New Readings Record] Render Form')
+
+  context = {
+    'form': form,
+    'patient': patient,
+  }
+
+  return render(request, 'new_readings_record.html', context)
+
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+def new_timeseries_record(request, patient_id):
+  if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[New TimeSeries Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    return redirect('/patient/login/')
+
+  patient = patient_does_not_exists(patient_id)
+
+  form = CreateTimeSeriesRecord(request.POST or None, request.FILES)
+
+  if request.method == 'POST':
+    if form.is_valid():
+      timeseries = form.save(commit=False)
+      timeseries.owner_id = patient.username
+      timeseries.patient_id = patient
+      timeseries.save()
+
+      # Get all patient's healthcare professional
+      patient_healthcare = patient.healthcare_patients.all()
+
+      for healthcare in patient_healthcare:
+        permission = TimeSeriesPerm.objects.create(timeseries_id=timeseries, given_by=patient.username, perm_value=2)
+        permission.username.add(healthcare)
+      
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='New TimeSeries Record')
+      return redirect('show_record', patient_id=patient_id, record_id=timeseries.id)
+    else:
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[New TimeSeries Record] Invalid Form')
+      context = {
+        'form': form,
+        'patient': patient,
+      }
+      return render(request, 'new_timeseries_record.html', context)
+
+  Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[New TimeSeries Record] Render Form')
+
+  context = {
+    'form': form,
+    'patient': patient,
+  }
+
+  return render(request, 'new_timeseries_record.html', context)
+
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+def new_images_record(request, patient_id):
+  if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Images Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    return redirect('/patient/login/')
+
+  patient = patient_does_not_exists(patient_id)
+
+  form = CreateImagesRecord(request.POST or None, request.FILES)
+
+  if request.method == 'POST':
+    if form.is_valid():
+      images = form.save(commit=False)
+      images.owner_id = patient.username
+      images.patient_id = patient
+      type = form.cleaned_data['type']
+      images.type = type
+      images.save()
+
+      # Get all patient's healthcare professional
+      patient_healthcare = patient.healthcare_patients.all()
+
+      for healthcare in patient_healthcare:
+        permission = ImagesPerm.objects.create(img_id=images, given_by=patient.username, perm_value=2)
+        permission.username.add(healthcare)
+      
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='New Images Record')
+      return redirect('show_record', patient_id=patient_id, record_id=images.id)
+    else:
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Images Record] Invalid Form')
+      context = {
+        'form': form,
+        'patient': patient,
+      }
+      return render(request, 'new_images_record.html', context)
+
+  Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[New Images Record] Render Form')
+
+  context = {
+    'form': form,
+    'patient': patient,
+  }
+
+  return render(request, 'new_images_record.html', context)
+
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+def new_videos_record(request, patient_id):
+  if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Videos Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    return redirect('/patient/login/')
+
+  patient = patient_does_not_exists(patient_id)
+
+  form = CreateVideosRecord(request.POST or None, request.FILES)
+
+  if request.method == 'POST':
+    if form.is_valid():
+      videos = form.save(commit=False)
+      videos.owner_id = patient.username
+      videos.patient_id = patient
+      type = form.cleaned_data['type']
+      videos.type = type
+      videos.save()
+
+      # Get all patient's healthcare professional
+      patient_healthcare = patient.healthcare_patients.all()
+
+      for healthcare in patient_healthcare:
+        permission = VideosPerm.objects.create(videos_id=videos, given_by=patient.username, perm_value=2)
+        permission.username.add(healthcare)
+      
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='New Videos Record')
+      return redirect('show_record', patient_id=patient_id, record_id=videos.id)
+    else:
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Videos Record] Invalid Form')
+      context = {
+        'form': form,
+        'patient': patient,
+      }
+      return render(request, 'new_videos_record.html', context)
+
+  Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[New Videos Record] Render Form')
+
+  context = {
+    'form': form,
+    'patient': patient,
+  }
+
+  return render(request, 'new_videos_record.html', context)
+
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+def new_documents_record(request, patient_id):
+  if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Documents Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    return redirect('/patient/login/')
+
+  patient = patient_does_not_exists(patient_id)
+
+  form = CreateDocumentsRecord(request.POST or None, request.FILES)
+
+  if request.method == 'POST':
+    if form.is_valid():
+      docs = form.save(commit=False)
+      docs.owner_id = patient.username
+      docs.patient_id = patient
+      type = form.cleaned_data['type']
+      docs.type = type
+      docs.save()
+
+      # Get all patient's healthcare professional
+      patient_healthcare = patient.healthcare_patients.all()
+
+      for healthcare in patient_healthcare:
+        permission = DocumentsPerm.objects.create(docs_id=docs, given_by=patient.username, perm_value=2)
+        permission.username.add(healthcare.username)
+      
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='New Documents Record')
+      return redirect('show_record', patient_id=patient_id, record_id=docs.id)
+    else:
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Documents Record] Invalid Form')
+      context = {
+        'form': form,
+        'patient': patient,
+      }
+      return render(request, 'new_documents_record.html', context)
+
+  Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[New Documents Record] Render Form')
+
+  context = {
+    'form': form,
+    'patient': patient,
+  }
+
+  return render(request, 'new_documents_record.html', context)
 
 ##########################################
 ############ Helper Functions ############

@@ -37,9 +37,15 @@
   {% to_model_name perm as to_model_name_result %}
   <tr>
     <th scope="row">
-      {% for name in perm.username.all %}
-        {{ name.username | get_full_name }}
-      {% endfor %}
+      {% if to_model_name_result == 'DocumentsPerm' %}
+        {% for name in perm.username.all %}
+          {{ name | get_full_name }}
+        {% endfor %}
+      {% else %}
+        {% for name in perm.username.all %}
+          {{ name.username | get_full_name }}
+        {% endfor %}
+      {% endif %}
     </th>
     <th>{{ perm.given_by | get_full_name }}</th>
     <th>{{ perm.timestamp | get_datetime }}</th>
