@@ -1,5 +1,6 @@
 import uuid
 
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from core.models import User, Patient, Healthcare
 
@@ -55,7 +56,7 @@ class TimeSeries(models.Model):
     on_delete=models.CASCADE,
     related_name='timeseries_patient'
   )
-  data = models.FileField(upload_to='timeseries/') # txt files
+  data = models.FileField(upload_to='timeseries/', validators=[FileExtensionValidator(allowed_extensions=['txt'])])
 
 class TimeSeriesPerm(models.Model):
   PERMISSION_CHOICES = [
@@ -147,7 +148,7 @@ class Videos(models.Model):
     on_delete=models.CASCADE,
     related_name='videos_patient'
   )
-  data = models.FileField(upload_to='videos/')
+  data = models.FileField(upload_to='videos/', validators=[FileExtensionValidator(allowed_extensions=['mp4'])])
 
 class VideosPerm(models.Model):
   PERMISSION_CHOICES = [
