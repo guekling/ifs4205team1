@@ -25,6 +25,7 @@ urlpatterns = [
     # path('admin/', admin.site.urls),
     path('', views.home, name="home"),
     path('patient/', include('patientlogin.urls')),
+    url('protectedmedia/', views.protected_media, name="protected_media"),
     path('patient/', include('patientrecords.urls')),
     path('patient/', include('patienthealthcare.urls')),
     path('healthcare/', include('healthcarelogin.urls')),
