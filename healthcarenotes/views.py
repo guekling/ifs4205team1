@@ -291,6 +291,7 @@ def edit_healthcare_note(request, healthcare_id, note_id):
   form = EditHealthcareNote(request.POST, patient=patient, initial={
     'title': note.title, 
     'note': split[0],
+    'attach_readings': Readings.objects.filter(patient_id=patient, type="Temperature")
   })
 
   if request.method == 'POST':
