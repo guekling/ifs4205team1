@@ -1,3 +1,4 @@
+from django.shortcuts import redirect
 from core.models import Researcher
 
 ### Helper functions related to researcher e.g. login & anonymisation
