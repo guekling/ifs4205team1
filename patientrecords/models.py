@@ -20,6 +20,18 @@ class Readings(models.Model):
   )
   data = models.CharField(max_length=15)
 
+  def has_permission(self, healthcare):
+    """
+    Checks if a user has permissions to view the reading.
+    """
+
+    reading = ReadingsPerm.objects.filter(readings_id = self, username=healthcare)
+
+    if (reading.count() == 0):
+      return False
+    else:
+      return True
+
 class ReadingsPerm(models.Model):
   PERMISSION_CHOICES = [
     (1, 'No Access'),
@@ -58,6 +70,18 @@ class TimeSeries(models.Model):
   )
   data = models.FileField(upload_to='timeseries/', validators=[FileExtensionValidator(allowed_extensions=['txt'])])
 
+  def has_permission(self, healthcare):
+    """
+    Checks if a user has permissions to view the timeseries.
+    """
+
+    timeseries = TimeSeriesPerm.objects.filter(timeseries_id = self, username=healthcare)
+
+    if (timeseries.count() == 0):
+      return False
+    else:
+      return True
+
 class TimeSeriesPerm(models.Model):
   PERMISSION_CHOICES = [
     (1, 'No Access'),
@@ -81,58 +105,6 @@ class TimeSeriesPerm(models.Model):
   perm_value = models.PositiveSmallIntegerField(choices=PERMISSION_CHOICES)
   (('timeseries_id', 'username'),)
 
-class Documents(models.Model):
-  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-  title = models.CharField(max_length=64)
-  type = models.CharField(max_length=64)
-  timestamp = models.DateTimeField(auto_now=True)
-  owner_id = models.ForeignKey(
-    User,
-    on_delete=models.PROTECT,
-    related_name='documents_owner'
-  )
-  patient_id = models.ForeignKey(
-    Patient,
-    on_delete=models.CASCADE,
-    related_name='documents_patient'
-  )
-  data = models.FileField(upload_to='documents/')
-
-  def has_permission(self, user):
-    """
-    Checks if a user has permissions to view the document.
-    """
-
-    document = DocumentsPerm.objects.filter(docs_id = self, username=user)
-
-    if (document.count() == 0):
-      return False
-    else:
-      return True
-
-class DocumentsPerm(models.Model):
-  PERMISSION_CHOICES = [
-    (1, 'No Access'),
-    (2, 'Read Only Access'),
-    (3, 'Full Access'),
-  ]
-
-  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-  docs_id = models.ForeignKey(
-    Documents,
-    on_delete=models.CASCADE,
-    related_name='documentsperm_documents'
-  )
-  username = models.ManyToManyField(User)
-  timestamp = models.DateTimeField(auto_now=True)
-  given_by = models.ForeignKey(
-    User,
-    on_delete=models.PROTECT,
-    related_name='documentsperm_given_by'
-  )
-  perm_value = models.PositiveSmallIntegerField(choices=PERMISSION_CHOICES)
-  (('docs_id', 'username'),)
-
 class Videos(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   title = models.CharField(max_length=64)
@@ -149,6 +121,18 @@ class Videos(models.Model):
     related_name='videos_patient'
   )
   data = models.FileField(upload_to='videos/', validators=[FileExtensionValidator(allowed_extensions=['mp4'])])
+
+  def has_permission(self, healthcare):
+    """
+    Checks if a user has permissions to view the video.
+    """
+
+    video = VideosPerm.objects.filter(videos_id = self, username=healthcare)
+
+    if (video.count() == 0):
+      return False
+    else:
+      return True
 
 class VideosPerm(models.Model):
   PERMISSION_CHOICES = [
@@ -190,6 +174,18 @@ class Images(models.Model):
   )
   data = models.ImageField(upload_to='images/')
 
+  def has_permission(self, healthcare):
+    """
+    Checks if a user has permissions to view the reading.
+    """
+
+    image = ImagesPerm.objects.filter(img_id = self, username=healthcare)
+
+    if (image.count() == 0):
+      return False
+    else:
+      return True
+
 class ImagesPerm(models.Model):
   PERMISSION_CHOICES = [
     (1, 'No Access'),
@@ -223,6 +219,18 @@ class Diagnosis(models.Model):
     related_name='diagnosis_username'
   )
 
+  def has_permission(self, healthcare):
+    """
+    Checks if a user has permissions to view the reading.
+    """
+
+    diagnosis = DiagnosisPerm.objects.filter(diag_id = self, username=healthcare)
+
+    if (diagnosis.count() == 0):
+      return False
+    else:
+      return True
+
 class DiagnosisPerm(models.Model):
   PERMISSION_CHOICES = [
     (1, 'No Access'),
@@ -245,3 +253,60 @@ class DiagnosisPerm(models.Model):
   )
   perm_value = models.PositiveSmallIntegerField(choices=PERMISSION_CHOICES)
   unique_together = (('diag_id', 'username'),)
+
+class Documents(models.Model):
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  title = models.CharField(max_length=64)
+  type = models.CharField(max_length=64)
+  timestamp = models.DateTimeField(auto_now=True)
+  owner_id = models.ForeignKey(
+    User,
+    on_delete=models.PROTECT,
+    related_name='documents_owner'
+  )
+  patient_id = models.ForeignKey(
+    Patient,
+    on_delete=models.CASCADE,
+    related_name='documents_patient'
+  )
+  data = models.FileField(upload_to='documents/')
+  attach_readings = models.ManyToManyField(Readings)
+  attach_timeseries = models.ManyToManyField(TimeSeries)
+  attach_videos = models.ManyToManyField(Videos)
+  attach_images = models.ManyToManyField(Images)
+  attach_documents = models.ManyToManyField("self")
+
+  def has_permission(self, user):
+    """
+    Checks if a user has permissions to view the document.
+    """
+
+    document = DocumentsPerm.objects.filter(docs_id = self, username=user)
+
+    if (document.count() == 0):
+      return False
+    else:
+      return True
+
+class DocumentsPerm(models.Model):
+  PERMISSION_CHOICES = [
+    (1, 'No Access'),
+    (2, 'Read Only Access'),
+    (3, 'Full Access'),
+  ]
+
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  docs_id = models.ForeignKey(
+    Documents,
+    on_delete=models.CASCADE,
+    related_name='documentsperm_documents'
+  )
+  username = models.ManyToManyField(User)
+  timestamp = models.DateTimeField(auto_now=True)
+  given_by = models.ForeignKey(
+    User,
+    on_delete=models.PROTECT,
+    related_name='documentsperm_given_by'
+  )
+  perm_value = models.PositiveSmallIntegerField(choices=PERMISSION_CHOICES)
+  (('docs_id', 'username'),)

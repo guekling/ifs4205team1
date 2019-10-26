@@ -1,4 +1,5 @@
 from django import template
+from core.models import User, Patient, Healthcare, Researcher, Admin
 
 register = template.Library()
 
@@ -38,3 +39,41 @@ def get_full_name(user):
 @register.filter
 def get_patient_full_name(patient):
   return patient.username.get_full_name()
+
+@register.filter
+def get_log_status(value):
+  if (value == 1):
+    return "OK"
+  elif (value == 0):
+    return "ERROR"
+  else:
+    return ""
+
+@register.filter
+def get_log_user(id):
+  user = User.objects.filter(uid=id)
+
+  if user.exists:
+    return user.first()
+
+  patient = Patient.objects.filter(id=id)
+
+  if patient.exists:
+    return patient.first()
+
+  healthcare = Healthcare.objects.filter(id=id)
+
+  if healthcare.exists:
+    return healthcare.first()
+
+  researcher = Researcher.objects.filter(id=id)
+
+  if researcher.exists:
+    return researcher.first()
+  
+  admin = Admin.objects.filter(id=id)
+
+  if admin.exists:
+    return admin.first()
+  
+  return None

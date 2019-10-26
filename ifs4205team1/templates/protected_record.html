@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% load app_filters %}
+
+{% block content %}
+<h1>{{ record.type }} Record</h1>
+
+<table class="table text-center">
+  <tr>
+    <th>Date</th>
+    <th>{{ record.timestamp | get_date }}</th>
+  </tr>
+  <tr>
+    <th>Time</th>
+    <th>{{ record.timestamp | get_time }}</th>
+  </tr>
+  <tr>
+    <th>Data</th>
+    <th>{{ record.data }}</th>
+  </tr>
+</table>
+
+{% endblock %}

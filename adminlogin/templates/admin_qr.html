@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+{% load qr_code %}
+
+{% block content %}
+<h1>Admin QR</h1>
+</br>
+<h4>Please use this code:</h4>
+<h3>{{ nonce }}</h3>
+
+<table>
+  <tr>
+    <td>
+      <div>{% qr_from_text nonce size="M" image_format="svg" %}</div>
+    </td>
+  </tr>
+</table>
+
+<form method="post">
+  {% csrf_token %}
+    {{ form.as_p }}
+  <button type="submit" class="btn btn-primary">Log In</button>
+</form>
+
+{% endblock %}
