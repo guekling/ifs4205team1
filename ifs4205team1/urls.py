@@ -26,6 +26,8 @@ urlpatterns = [
     path('', views.home, name="home"),
     path('protectedrecord/<uuid:record_id>', views.protected_record, name="protected_record"),
     path('protectedmedia/', views.protected_media, name="protected_media"),
+    path(settings.ADMIN_URL, include('adminlogin.urls')),
+    path(settings.ADMIN_URL, include('adminusers.urls')),
     path('patient/', include('patientlogin.urls')),
     path('patient/', include('patientrecords.urls')),
     path('patient/', include('patienthealthcare.urls')),
@@ -36,7 +38,7 @@ urlpatterns = [
     path('researcher/', include('researcherquery.urls')),
     path('researcher/', include('researcheranonymise.urls')), # Change to admin
     path('mobileregister/', include('mobileregister.urls')),
-    path('userlogs/', include('userlogs.urls'))
+    # path('userlogs/', include('userlogs.urls'))
 ] 
 
 if settings.DEBUG:

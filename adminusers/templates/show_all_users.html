@@ -1,0 +1,55 @@
+{% extends "admin_base.html" %}
+
+{% load app_filters %}
+
+{% block content %}
+<h1>All Users</h1>
+
+<table class="table text-center">
+  <thead>
+  <tr>
+    <th scope="col">Full Name</th>
+    <th scope="col">Username</th>
+    <th scope="col">Email</th>
+    <th scope="col">Last Login</th>
+    <th scope="col">Date Joined</th>
+    <th scope="col"></th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for user in users %}
+  <tr>
+    <th scope="row">{{ user | get_full_name }}</th>
+    <th>{{ user.username }}</th>
+    <th>{{ user.email }}</th>
+    <th>{{ user.last_login }}</th>
+    <th>{{ user.date_joined }}</th>
+    <th><a href="{% url 'admin_show_user' admin_id=admin.id user_id=user.uid %}">More Details</a></th>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% if users.has_other_pages %}
+  <ul class="pagination">
+    {% if users.has_previous %}
+      <li><a href="?page={{ users.previous_page_number }}">&laquo;</a></li>
+    {% else %}
+      <li class="disabled"><span>&laquo;</span></li>
+    {% endif %}
+    {% for i in users.paginator.page_range %}
+      {% if users.number == i %}
+        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+      {% else %}
+        <li><a href="?page={{ i }}">{{ i }}</a></li>
+      {% endif %}
+    {% endfor %}
+    {% if users.has_next %}
+      <li><a href="?page={{ users.next_page_number }}">&raquo;</a></li>
+    {% else %}
+      <li class="disabled"><span>&raquo;</span></li>
+    {% endif %}
+  </ul>
+{% endif %}
+
+{% endblock %}
