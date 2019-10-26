@@ -16,6 +16,7 @@ from researcherlogin.forms import UserEditForm, UserQrForm
 from core.models import User, Researcher
 
 import hashlib
+import qrcode
 
 class ResearcherLogin(LoginView):
 	"""
@@ -35,11 +36,15 @@ class ResearcherLogin(LoginView):
 
 		if researcher is not None:
 			auth_login(self.request, form.get_user())
-			nonce = get_random_string(length=6, allowed_chars=u'abcdefghijklmnopqrstuvwxyz0123456789')
+			nonce = get_random_string(length=16, allowed_chars=u'abcdefghijklmnopqrstuvwxyz0123456789')
 			user = researcher.username
+			# if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
 			user.sub_id_hash = nonce # change field
 			user.save() # this will update only
+			Logs.objects.create(type='LOGIN', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Patient Login')
 			return redirect('researcher_qr', researcher_id=researcher.id)
+			# else:
+      		#   return redirect('patient_token_register', patient_id=patient.id)
 		else:
 			form = AuthenticationForm
 
@@ -76,8 +81,19 @@ class ResearcherChangePasswordComplete(PasswordChangeDoneView):
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
 def researcher_settings(request, researcher_id):
+	# Checks if logged in researcher has the same id as in the URL
+	if (request.user.researcher_username.id != researcher_id):
+		Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Settings] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
+		return redirect('researcher_login')
+
 	researcher = researcher_does_not_exists(researcher_id)
 	user = researcher.username
+
+	# the action has not gone through QR verification
+	if len(user.sub_id_hash) > 0:
+		return redirect('researcher_login')
+
+	Logs.objects.create(type='READ', user_id=user.id, interface='RESEARCHER', status=STATUS_OK, details='Settings')
 
 	context = {
 		'researcher': researcher,
@@ -89,22 +105,35 @@ def researcher_settings(request, researcher_id):
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
 def researcher_edit_settings(request, researcher_id):
+	# Checks if logged in researcher has the same id as in the URL
+	if (request.user.researcher_username.id != researcher_id):
+		Logs.objects.create(type='UPDATE', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Edit Settings] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
+		return redirect('researcher_login')
+
 	researcher = researcher_does_not_exists(researcher_id)
 	user = researcher.username
+
+	# the action has not gone through QR verfication
+	if len(user.sub_id_hash) > 0:
+		return redirect('researcher_login')
+
 	form = UserEditForm(request.POST or None, instance=user)
 
 	if request.method == 'POST':
 		if form.is_valid():
 			user.save()
+			Logs.objects.create(type='UPDATE', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Edit Settings')
 			return redirect('researcher_settings', researcher_id=researcher_id)
 		else:
+			Logs.objects.create(type='UPDATE', user_id=user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Edit Settings] Invalid Form')
 			context = {
 				'form': form,
 				'researcher': researcher,
 				'user': user
 			}
-
 			return render(request, 'researcher_edit_settings.html', context)
+
+	Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='[Edit Settings] Render Settings Form')
 
 	context = {
 		'form': form,
@@ -117,18 +146,40 @@ def researcher_edit_settings(request, researcher_id):
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
 def researcher_change_password(request, researcher_id):
+	# Checks if logged in researcher has the same id as in the URL
+	if (request.user.researcher_username.id != researcher_id):
+		Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Change PW] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
+		return redirect('researcher_login')
+
 	researcher = researcher_does_not_exists(researcher_id)
+	user = researcher.username
+
+	# the action has not gone through QR verification
+	if len(user.sub_id_hash) > 0:
+		return redirect('researcher_login')
 
 	change_password = ResearcherChangePassword.as_view(
 		extra_context={'researcher': researcher}
 	)
+
+	Logs.objects.create(type='UPDATE', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Change Password')
 
 	return change_password(request)
 
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
 def researcher_change_password_complete(request, researcher_id):
+	# Checks if logged in researcher has the same id as in the URL
+	if (request.user.researcher_username.id != researcher_id):
+		Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Change PW Complete] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
+		return redirect('researcher_login')
+
 	researcher = researcher_does_not_exists(researcher_id)
+	user = researcher.username
+
+	# the action has not gone through QR verification
+	if len(user.sub_id_hash) > 0:
+		return redirect('researcher_login')
 
 	change_password_complete = ResearcherChangePasswordComplete.as_view(
 			extra_context={'researcher': researcher}
@@ -139,8 +190,20 @@ def researcher_change_password_complete(request, researcher_id):
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
 def researcher_qr(request, researcher_id):
+	# the session will expire 15 minutes after inactivity, and will require log in again
+	request.session.set_expiry(900)
+
+	# Checks if logged in researcher has the same id as in the URL
+	if (request.user.researcher_username.id != researcher_id):
+		return redirect('researcher_login')
+
 	researcher = researcher_does_not_exists(researcher_id)
 	user = researcher.username
+
+	# when user purposefully try to traverse to this url but they haven't registered
+	# if len(user.device_id_hash) == 0 and len(user.android_id_hash) == 0:
+	#	return redirect("researcher_token_register")
+
 	if len(user.sub_id_hash) > 0:
 		nonce = user.sub_id_hash
 	else:
@@ -171,8 +234,39 @@ def researcher_qr(request, researcher_id):
 
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
-def researcher_dashboard(request, researcher_id):
+def researcher_token_register(request, researcher_id):
+	# the session will expire 15 minutes after inactivity, and will require log in again
+	request.session.set_expiry(900)
+
+	# Checks if logged in researcher has the same id as in the URL
+	if (request.user.researcher_username.id != researcher_id):
+		return redirect('researcher_login')
+
 	researcher = researcher_does_not_exists(researcher_id)
+	user = researcher.username
+
+	# device already linked
+	if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
+		return redirect("repeat_register", user_id=user.uid)
+
+	return redirect(request, "researcher_token_register.html")
+
+@login_required(login_url='/researcher/login/')
+@user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
+def researcher_dashboard(request, researcher_id):
+	# Checks if logged in researcher has the same id as in the URL
+	if (request.user.researcher_username.id != researcher_id):
+		Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Dashboard] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
+		return redirect(researcher_login)
+
+	researcher = researcher_does_not_exists(researcher_id)
+	user = researcher.username
+
+	# the action has not gone through QR verification
+	if len(user.sub_id_hash) > 0:
+		return redirect('researcher_login')
+
+	Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Dashboard')
 
 	context = {
 		'researcher': researcher
@@ -183,6 +277,9 @@ def researcher_dashboard(request, researcher_id):
 ##########################################
 ############ Helper Functions ############
 ##########################################
+
+STATUS_OK = 1
+STATUS_ERROR = 0
 
 def researcher_does_not_exists(researcher_id):
 	"""
@@ -198,3 +295,16 @@ def recovered_value(hash_id, nonce, otp):
 	xor = '{:x}'.format(int(x[-6:], 16) ^ int(otp, 16))
 
 	return hashlib.sha256((xor).encode()).hexdigest()
+
+def make_qr(nonce):
+	qr = qrcode.QRCode(
+		version=1,
+		box_size=15,
+		border=5
+	)
+
+	qr.add_data(nonce)
+	qr.make(fit=True)
+	img = qr.make_image(fill='black', back_color='white')
+
+	return img

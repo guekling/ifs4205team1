@@ -9,5 +9,6 @@ urlpatterns = [
   path('<uuid:researcher_id>/settings/change-password/', views.researcher_change_password, name="researcher_change_password"),
   path('<uuid:researcher_id>/settings/change-password-complete/', views.researcher_change_password_complete, name="researcher_change_password_complete"),
   path('<uuid:researcher_id>/dashboard/', views.researcher_dashboard, name="researcher_dashboard"),
-  path('<uuid:researcher_id>/qr-login/', views.researcher_qr, name="researcher_qr")
+  path('<uuid:researcher_id>/qr-login/', views.researcher_qr, name="researcher_qr"),
+  path('<uuid:researcher_id>/token-register/', views.researcher_token_register, name="researcher_token_register")
 ]
