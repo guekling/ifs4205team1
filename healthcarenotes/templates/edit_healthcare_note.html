@@ -12,23 +12,48 @@
     <div class="form-group">
       {{ field.label_tag }}
 
-      {% if form.is_bound %}
-        {% if field.errors %}
-          {% render_field field class="form-control is-invalid" value=field.initial placeholder=field.initial %}
-          {% for error in field.errors %}
-            <div class="invalid-feedback">
-              {{ error }}
-            </div>
-          {% endfor %}
-        {% else %}
-          {% render_field field class="form-control is-valid" value=field.initial placeholder=field.initial %}
-        {% endif %}
-      {% else %}
-        {% render_field field class="form-control" value=field.initial placeholder=field.initial %}
-      {% endif %}
+      {% if field.label == "Note" or field.label == "Title" %}
 
-      {% if field.help_text %}
-        <small class="form-text text-muted">{{ field.help_text }}</small>
+        {% if form.is_bound %}
+          {% if field.errors %}
+            {% render_field field class="form-control is-invalid" value=field.initial placeholder=field.initial %}
+            {% for error in field.errors %}
+              <div class="invalid-feedback">
+                {{ error }}
+              </div>
+            {% endfor %}
+          {% else %}
+            {% render_field field class="form-control is-valid" value=field.initial placeholder=field.initial %}
+          {% endif %}
+        {% else %}
+          {% render_field field class="form-control" value=field.initial placeholder=field.initial %}
+        {% endif %}
+
+        {% if field.help_text %}
+          <small class="form-text text-muted">{{ field.help_text }}</small>
+        {% endif %}
+
+      {% else %}
+
+        {% if form.is_bound %}
+          {% if field.errors %}
+            {% render_field field class="form-control is-invalid" %}
+            {% for error in field.errors %}
+              <div class="invalid-feedback">
+                {{ error }}
+              </div>
+            {% endfor %}
+          {% else %}
+            {% render_field field class="form-control is-valid" %}
+          {% endif %}
+        {% else %}
+          {% render_field field class="form-control" %}
+        {% endif %}
+
+        {% if field.help_text %}
+          <small class="form-text text-muted">{{ field.help_text }}</small>
+        {% endif %}
+
       {% endif %}
     </div>
   {% endfor %}
@@ -39,6 +64,22 @@
 <script>
   note_initial = $("#id_note").attr("placeholder")
   $("#id_note").text(note_initial);
+
+  {% for reading in saved_attached_readings %}
+    $("#id_attach_readings option[value={{ reading.id }}]").prop('selected', true);
+  {% endfor %}
+
+  {% for timeseries in saved_attached_timeseries %}
+    $("#id_attach_timeseries option[value={{ timeseries.id }}]").prop('selected', true);
+  {% endfor %}
+
+  {% for video in saved_attached_videos %}
+    $("#id_attach_videos option[value={{ video.id }}]").prop('selected', true);
+  {% endfor %}
+
+  {% for image in saved_attached_images %}
+    $("#id_attach_images option[value={{ image.id }}]").prop('selected', true);
+  {% endfor %}
 </script>
 
 {% endblock %}
