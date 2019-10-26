@@ -69,16 +69,16 @@ class EditHealthcareNote(forms.Form):
   title = forms.CharField()
   note = forms.CharField(widget=forms.Textarea(attrs={"rows":5, "cols":20}))
   attach_readings = ReadingsMultipleChoiceField(queryset=Readings.objects.all(), required=False)
-  # attach_timeseries = TimeSeriesMultipleChoiceField(queryset=TimeSeries.objects.all(), required=False)
-  # attach_images = ImgVidMultipleChoiceField(queryset=Images.objects.all(), required=False)
-  # attach_videos = ImgVidMultipleChoiceField(queryset=Videos.objects.all(), required=False)
+  attach_timeseries = TimeSeriesMultipleChoiceField(queryset=TimeSeries.objects.all(), required=False)
+  attach_images = ImgVidMultipleChoiceField(queryset=Images.objects.all(), required=False)
+  attach_videos = ImgVidMultipleChoiceField(queryset=Videos.objects.all(), required=False)
 
   def __init__(self,*args,**kwargs):
     self.patient = kwargs.pop('patient')
     super(EditHealthcareNote, self).__init__(*args,**kwargs)
     self.fields['attach_readings'].queryset = Readings.objects.filter(patient_id=self.patient)
-    # self.fields['attach_timeseries'].queryset = TimeSeries.objects.filter(patient_id=self.patient)
-    # self.fields['attach_images'].queryset = Images.objects.filter(patient_id=self.patient)
-    # self.fields['attach_videos'].queryset = Videos.objects.filter(patient_id=self.patient)
+    self.fields['attach_timeseries'].queryset = TimeSeries.objects.filter(patient_id=self.patient)
+    self.fields['attach_images'].queryset = Images.objects.filter(patient_id=self.patient)
+    self.fields['attach_videos'].queryset = Videos.objects.filter(patient_id=self.patient)
 
     

@@ -128,6 +128,9 @@ def edit_healthcare_note_permission(request, healthcare_id, note_id, perm_id):
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
 def create_healthcare_note(request, healthcare_id):
+  """
+  Create a new healthcare professional note
+  """
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Create Note] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
@@ -190,27 +193,39 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
       attach_images = form.cleaned_data['attach_images']
       attach_videos = form.cleaned_data['attach_videos']
 
+      # Save new note into database
+      note = Documents.objects.create(title=title, type="Healthcare Professional Note", owner_id=healthcare.username, patient_id=patient)
+
       # Put attachments for note
       new_note = new_note + "<p>Attachments:</p>"
       new_note = new_note + "<p>Readings:</p>"
+
       for reading in attach_readings:
         datetime = reading.timestamp.strftime("%a, %d %b %Y %I:%M %p")
-        new_note = new_note + "<p><a href=\"" + reading.data + "\">" + datetime + " " + reading.type + "</a></p>"
+        url = "/protectedrecord/" + str(reading.id)
+        new_note = new_note + "<p><a href=" + url + ">" + datetime + " " + reading.type + "</a></p>"
+        note.attach_readings.add(reading)
 
       new_note = new_note + "<p>TimeSeries:</p>"
       for timeseries in attach_timeseries:
         datetime = timeseries.timestamp.strftime("%a, %d %b %Y %I:%M %p")
-        new_note = new_note + "<p><a href=\"" + timeseries.data.url + "\">" + datetime + "</a></p>"
+        url = "/protectedrecord/" + str(timeseries.id)
+        new_note = new_note + "<p><a href=" + url + ">" + datetime + "</a></p>"
+        note.attach_timeseries.add(timeseries)
 
       new_note = new_note + "<p>Images:</p>"
       for image in attach_images:
         datetime = image.timestamp.strftime("%a, %d %b %Y %I:%M %p")
-        new_note = new_note + "<p><a href=\"" + image.data.url + "\">" + datetime + " Type: " + image.type + " Title: " + image.title + "</a></p>"
+        url = "/protectedrecord/" + str(image.id)
+        new_note = new_note + "<p><a href=" + url + ">" + datetime + " Type: " + image.type + " Title: " + image.title + "</a></p>"
+        note.attach_images.add(image)
 
       new_note = new_note + "<p>Videos:</p>"
       for video in attach_videos:
         datetime = timeseries.timestamp.strftime("%a, %d %b %Y %I:%M %p")
-        new_note = new_note + "<p><a href=\"" + video.data.url + "\">" + datetime + " Type: " + video.type + " Title: " + video.title + "</a></p>"
+        url = "/protectedrecord/" + str(video.id)
+        new_note = new_note + "<p><a href=" + url + ">" + datetime + " Type: " + video.type + " Title: " + video.title + "</a></p>"
+        note.attach_videos.add(video)
 
       base_dir = settings.BASE_DIR
       note_path = os.path.join(base_dir, 'media', 'documents', title + ".html") # directory to save new note in
@@ -221,8 +236,8 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
       save_note.write(new_note)
       save_note.close()
 
-      # Save new note into database
-      note = Documents.objects.create(title=title, type="Healthcare Professional Note", owner_id=healthcare.username, patient_id=patient, data=data_path)
+      # Add data into new note
+      note.data = data_path
 
       # Set default permissions for note
       permission = DocumentsPerm.objects.create(docs_id=note, given_by=healthcare.username, perm_value=2)
@@ -256,7 +271,7 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
 def edit_healthcare_note(request, healthcare_id, note_id):
   """
-  Create a new healthcare professional note for a single patient
+  Edit healthcare professional note for a single patient
   """
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
@@ -291,9 +306,13 @@ def edit_healthcare_note(request, healthcare_id, note_id):
   form = EditHealthcareNote(request.POST, patient=patient, initial={
     'title': note.title, 
     'note': split[0],
-    'attach_readings': Readings.objects.filter(patient_id=patient, type="Temperature")
   })
 
+  saved_attached_readings = note.attach_readings.all()
+  saved_attached_timeseries = note.attach_timeseries.all()
+  saved_attached_videos = note.attach_videos.all()
+  saved_attached_images = note.attach_images.all()
+  
   if request.method == 'POST':
     if form.is_valid():
       title = bleach.clean(form.cleaned_data['title'], tags=[], attributes=[], protocols=[], strip=True)
@@ -319,6 +338,10 @@ def edit_healthcare_note(request, healthcare_id, note_id):
         'healthcare': healthcare,
         'patient': patient,
         'note': note,
+        'saved_attached_readings': saved_attached_readings,
+        'saved_attached_timeseries': saved_attached_timeseries,
+        'saved_attached_videos': saved_attached_videos,
+        'saved_attached_images': saved_attached_images,
       }
       return render(request, 'edit_healthcare_note.html', context)
 
@@ -329,6 +352,10 @@ def edit_healthcare_note(request, healthcare_id, note_id):
     'healthcare': healthcare,
     'patient': patient,
     'note': note,
+    'saved_attached_readings': saved_attached_readings,
+    'saved_attached_timeseries': saved_attached_timeseries,
+    'saved_attached_videos': saved_attached_videos,
+    'saved_attached_images': saved_attached_images,
   }
 
   return render(request, 'edit_healthcare_note.html', context)

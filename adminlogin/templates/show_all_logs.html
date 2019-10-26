@@ -1,0 +1,55 @@
+{% extends "admin_base.html" %}
+
+{% load app_filters %}
+
+{% block content %}
+<h1>Logs</h1>
+
+<table class="table text-center">
+  <thead>
+  <tr>
+    <th scope="col">Timestamp</th>
+    <th scope="col">Type</th>
+    <th scope="col">User ID</th>
+    <th scope="col">Interface</th>
+    <th scope="col">Details</th>
+    <th scope="col">Status</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for log in logs %}
+  <tr>
+    <th scope="row">{{ log.timestamp | get_datetime }}</th>
+    <th>{{ log.type }}</th>
+    <th>{{ log.user_id | get_log_user }}</th>
+    <th>{{ log.interface }}</th>
+    <th>{{ log.details }}</th>
+    <th>{{ log.status | get_log_status }}</th>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% if logs.has_other_pages %}
+  <ul class="pagination">
+    {% if logs.has_previous %}
+      <li><a href="?page={{ logs.previous_page_number }}">&laquo;</a></li>
+    {% else %}
+      <li class="disabled"><span>&laquo;</span></li>
+    {% endif %}
+    {% for i in logs.paginator.page_range %}
+      {% if logs.number == i %}
+        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+      {% else %}
+        <li><a href="?page={{ i }}">{{ i }}</a></li>
+      {% endif %}
+    {% endfor %}
+    {% if logs.has_next %}
+      <li><a href="?page={{ logs.next_page_number }}">&raquo;</a></li>
+    {% else %}
+      <li class="disabled"><span>&raquo;</span></li>
+    {% endif %}
+  </ul>
+{% endif %}
+
+{% endblock %}

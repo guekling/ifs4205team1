@@ -46,7 +46,10 @@ INSTALLED_APPS = [
     'qr_code',
 
   	# APPS
+    'ifs4205team1',
   	'core',
+    'adminlogin',
+    'adminusers',
     'patientlogin',
     'patientrecords',
     'patienthealthcare',
@@ -105,6 +108,12 @@ DATABASES = {
 		'PASSWORD': os.environ.get("DB_PASS"),
 		'HOST': os.environ.get("DB_HOST"),
 		'PORT': '5432',
+    # 'OPTIONS': {
+    #   'sslmode': 'require',
+    #   'sslcert': 'default.crt',
+    #   'sslkey': 'default.key',
+    #   'sslrootcert': 'default_root.crt',
+    # },
 	},
 	'safedb': {
 		'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -113,15 +122,27 @@ DATABASES = {
 		'PASSWORD': os.environ.get("DB_PASS2"),
 		'HOST': os.environ.get("DB_HOST2"),
 		'PORT': '5432',
+    # 'OPTIONS': {
+    #   'sslmode': 'require',
+    #   'sslcert': 'safedb.crt',
+    #   'sslkey': 'safedb.key',
+    #   'sslrootcert': 'safedb_root.crt',
+    # },
 	},
-    'logdb': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get("DB_NAME3"),
-        'USER': os.environ.get("DB_USER3"),
-        'PASSWORD': os.environ.get("DB_PASS3"),
-        'HOST': os.environ.get("DB_HOST3"),
-        'PORT': '5432',
-    }
+  'logdb': {
+      'ENGINE': 'django.db.backends.postgresql_psycopg2',
+      'NAME': os.environ.get("DB_NAME3"),
+      'USER': os.environ.get("DB_USER3"),
+      'PASSWORD': os.environ.get("DB_PASS3"),
+      'HOST': os.environ.get("DB_HOST3"),
+      'PORT': '5432',
+      # 'OPTIONS': {
+      #   'sslmode': 'verify-full',
+      #   'sslrootcert': '/home/sadm/.postgresql/logdb_root.crt',
+      #   'sslcert': '/home/sadm/.postgresql/logdb.crt',
+      #   'sslkey': '/home/sadm/.postgresql/logdb.key',
+      # },
+  }
 }
 
 DATABASE_ROUTERS = [
@@ -178,3 +199,10 @@ STATICFILES_DIRS = [
 	os.path.join(BASE_DIR, "static"),
 	'/researcherquery/static'
 ]
+
+# Media Files
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Admin Page
+ADMIN_URL = os.environ.get("ADMIN_URL")
