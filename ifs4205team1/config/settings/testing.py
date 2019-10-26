@@ -27,3 +27,7 @@ if 'TRAVIS' in os.environ:
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 MEDIA_URL = '/media/'
+
+# Admin page
+
+ADMIN_URL = 'admin/'
