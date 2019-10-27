@@ -11,7 +11,7 @@ class Command(BaseCommand):
   def add_arguments(self, parser):
     parser.add_argument('--csvpath', type=str)
 
-  def handle(self, *args, **options):
+  def handle(self, *args, **options): # -csvpath /../files/diagnosis_random.csv
     path = options['csvpath']
     # generate_readings_records(path)
     generate_diagnosis_records(path)
