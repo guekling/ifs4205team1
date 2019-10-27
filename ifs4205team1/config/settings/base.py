@@ -97,59 +97,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ifs4205team1.wsgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-
-DATABASES = {
-	'default': {
-		'ENGINE': 'django.db.backends.postgresql_psycopg2',
-		'NAME': os.environ.get("DB_NAME"),
-		'USER': os.environ.get("DB_USER"),
-		'PASSWORD': os.environ.get("DB_PASS"),
-		'HOST': os.environ.get("DB_HOST"),
-		'PORT': '5432',
-    # 'OPTIONS': {
-    #   'sslmode': 'require',
-    #   'sslcert': 'default.crt',
-    #   'sslkey': 'default.key',
-    #   'sslrootcert': 'default_root.crt',
-    # },
-	},
-	'safedb': {
-		'ENGINE': 'django.db.backends.postgresql_psycopg2',
-		'NAME': os.environ.get("DB_NAME2"),
-		'USER': os.environ.get("DB_USER2"),
-		'PASSWORD': os.environ.get("DB_PASS2"),
-		'HOST': os.environ.get("DB_HOST2"),
-		'PORT': '5432',
-    # 'OPTIONS': {
-    #   'sslmode': 'require',
-    #   'sslcert': 'safedb.crt',
-    #   'sslkey': 'safedb.key',
-    #   'sslrootcert': 'safedb_root.crt',
-    # },
-	},
-  'logdb': {
-      'ENGINE': 'django.db.backends.postgresql_psycopg2',
-      'NAME': os.environ.get("DB_NAME3"),
-      'USER': os.environ.get("DB_USER3"),
-      'PASSWORD': os.environ.get("DB_PASS3"),
-      'HOST': os.environ.get("DB_HOST3"),
-      'PORT': '5432',
-      # 'OPTIONS': {
-      #   'sslmode': 'verify-full',
-      #   'sslrootcert': '/home/sadm/.postgresql/logdb_root.crt',
-      #   'sslcert': '/home/sadm/.postgresql/logdb.crt',
-      #   'sslkey': '/home/sadm/.postgresql/logdb.key',
-      # },
-  }
-}
-
-DATABASE_ROUTERS = [
-		'researcherquery.router.ResearcherqueryRouter',
-        'userlogs.router.UserlogsRouter'
-]
-
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
