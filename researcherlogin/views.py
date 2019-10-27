@@ -42,10 +42,10 @@ class ResearcherLogin(LoginView):
 			# if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
 			user.sub_id_hash = nonce # change field
 			user.save() # this will update only
-			Logs.objects.create(type='LOGIN', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Patient Login')
+			Logs.objects.create(type='LOGIN', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Researcher Login')
 			return redirect('researcher_qr', researcher_id=researcher.id)
 			# else:
-      		#   return redirect('patient_token_register', patient_id=patient.id)
+					#   return redirect('researcher_token_register', researcher_id=researcher.id)
 		else:
 			form = AuthenticationForm
 
@@ -196,6 +196,7 @@ def researcher_qr(request, researcher_id):
 
 	# Checks if logged in researcher has the same id as in the URL
 	if (request.user.researcher_username.id != researcher_id):
+		Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[2FA] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
 		return redirect('researcher_login')
 
 	researcher = researcher_does_not_exists(researcher_id)
@@ -203,11 +204,15 @@ def researcher_qr(request, researcher_id):
 
 	# when user purposefully try to traverse to this url but they haven't registered
 	# if len(user.device_id_hash) == 0 and len(user.android_id_hash) == 0:
-	#	return redirect("researcher_token_register")
+	# 	Logs.objects.create(type='LOGIN', user_id=user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[2FA] URL traversal. Not Registered yet.')
+	# 	return redirect("researcher_token_register")
 
+	# require a valid nonce (exists and not expired)
 	if len(user.sub_id_hash) > 0:
 		nonce = user.sub_id_hash
 	else:
+		# if somehow bypassed login
+		Logs.objects.create(type='LOGIN', user_id=user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[2FA] Username-password login bypassed. No valid nonce.')
 		return redirect('researcher_login')
 
 	form = UserQrForm(request.POST or None)
@@ -220,9 +225,11 @@ def researcher_qr(request, researcher_id):
 			# given HttpResponse only or render page you need to load on success
 			user.sub_id_hash = ""
 			user.save()
+			Logs.objects.create(type='LOGIN', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK,	details='[2FA] Login successful. Nonce deleted.')
 			return redirect('researcher_dashboard', researcher_id=researcher.id)
 		else:
 			# if fails, then redirect to custom url/page
+			Logs.objects.create(type='LOGIN', user_id=user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[2FA] Wrong OTP.')
 			return redirect('researcher_login')
 
 	else:
@@ -241,6 +248,7 @@ def researcher_token_register(request, researcher_id):
 
 	# Checks if logged in researcher has the same id as in the URL
 	if (request.user.researcher_username.id != researcher_id):
+		Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR,	details='[2FA Reminder] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
 		return redirect('researcher_login')
 
 	researcher = researcher_does_not_exists(researcher_id)
@@ -248,6 +256,7 @@ def researcher_token_register(request, researcher_id):
 
 	# device already linked
 	if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
+		Logs.objects.create(type='LOGIN', user_id=user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[2FA_Reminder] URL traversal. Already registered.')
 		return redirect("repeat_register", user_id=user.uid)
 
 	return redirect(request, "researcher_token_register.html")
@@ -258,7 +267,7 @@ def researcher_dashboard(request, researcher_id):
 	# Checks if logged in researcher has the same id as in the URL
 	if (request.user.researcher_username.id != researcher_id):
 		Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Dashboard] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
-		return redirect(researcher_login)
+		return redirect('researcher_login')
 
 	researcher = researcher_does_not_exists(researcher_id)
 	user = researcher.username
