@@ -4,7 +4,6 @@ from core.models import User, Researcher
 from researcherquery.models import QiInfo, SafeUsers, SafeDiagnosis, SafeReadings, SafeImages, SafeVideos
 from userlogs.models import Logs
 from researcherquery.forms import SearchRecordsForm
-from researcherquery.helper import *
 import datetime
 
 @login_required(login_url='/researcher/login/')
