@@ -12,4 +12,5 @@ urlpatterns = [
   path('<uuid:admin_id>/qr-login/', views.admin_qr, name="admin_qr"),
   # path('<uuid:admin_id>/token-register/', views.admin_token_register, name="admin_token_register")
   path('<uuid:admin_id>/logs/', views.show_all_logs, name="show_all_logs"),
+  path("<uuid:admin_id>/records/anonymise/", views.anonymise_records, name="anonymise_records"),
 ]

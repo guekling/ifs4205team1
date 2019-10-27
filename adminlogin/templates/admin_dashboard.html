@@ -29,6 +29,17 @@
     </div>
 
     <div class="col-sm-3">
+      <a href="{% url 'anonymise_records' admin_id=admin.id %}">
+        <div class="card text-white bg-info mb-3" style="max-width: 18rem;">
+          <div class="card-body">
+            <h5 class="card-title">Records</h5>
+            <p class="card-text">Anonymise records of all patients in the system.</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-sm-3">
       <a href="{% url 'admin_settings' admin_id=admin.id %}">
         <div class="card text-white bg-info mb-3" style="max-width: 18rem;">
           <div class="card-body">

@@ -16,6 +16,7 @@ from adminlogin.forms import UserEditForm, UserQrForm
 
 from core.models import User, Admin
 from userlogs.models import Logs
+from adminlogin.anonymise import anonymise_and_store
 
 import hashlib
 import qrcode
@@ -224,6 +225,33 @@ def show_all_logs(request, admin_id):
   Logs.objects.create(type='READ', user_id=admin.username.uid, interface='ADMIN', status=STATUS_OK, details='[Show All Logs] Page: ' + str(page))
 
   return render(request, 'show_all_logs.html', context)
+
+@login_required(login_url='/')
+@user_passes_test(lambda u: u.is_admin(), login_url='/')
+def anonymise_records(request, admin_id):
+  # Checks if logged in admin has the same id as in the URL
+  if (request.user.admin_username.id != admin_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[Anonymise Records] Logged in user does not match ID in URL. URL ID: ' + str(admin_id))
+    return redirect('/')
+
+  admin = admin_does_not_exists(admin_id)
+  user = admin.username
+
+  context = {
+    'admin': admin
+  }
+
+  # Check if GET (first load) or POST (subsequent load)
+  if request.method == 'POST':
+    # Pre-Process DB
+    anonymise_and_store()
+    Logs.objects.create(type='UPDATE', user_id=user.uid, interface='ADMIN', status=STATUS_OK, details='Anonymise Records')
+
+    return render(request, 'anonymise_records.html', context)
+
+  # GET - First load
+  else:
+    return render(request, 'anonymise_records.html', context)
 
 ##########################################
 ############ Helper Functions ############
