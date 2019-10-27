@@ -34,7 +34,6 @@ def anonymise_records(request, researcher_id): # Change to admin_id
 	if request.method == 'POST':
 		# Pre-Process DB
 		anonymise()
-
 		Logs.objects.create(type='UPDATE', user_id=user.uid, interface='ADMIN', status=STATUS_OK, details='Anonymise Records')
 
 		return render(request, 'anonymise_records.html', context)
