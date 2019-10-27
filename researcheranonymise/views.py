@@ -106,7 +106,6 @@ def anonymise():
 
 				if not (patients_left >= k_value):
 					for user in users_copy:
-						print("LINE 145")
 						patients = patients.exclude(username=user.username)
 
 				# After this if:
@@ -141,8 +140,7 @@ def store_qi_combi(qi_combi, k_value, suppression_rate):
 	if qiinfo_data.count() != 0:
 		QiInfo.objects.all().delete()
 
-	qiinfo_obj = QiInfo(combi_age=combi_age, combi_postalcode=combi_postalcode, combi_date=combi_date, k_value=k_value, suppression_rate=suppression_rate)
-	qiinfo_obj.save()
+	QiInfo.objects.create(combi_age=combi_age, combi_postalcode=combi_postalcode, combi_date=combi_date, k_value=k_value, suppression_rate=suppression_rate)
 
 	print("DONE_SAVING_QI_COMBI")
 
@@ -160,9 +158,7 @@ def store_anonymised_records(qi_combi, patients):
 
 	print("STORE_ANONYMISED_RECORDS")
 
-	uid = 0
 	for patient in patients:
-		uid += 1
 		user = User.objects.get(username=patient.username)
 
 		# Convert age & postalcode based on current QI combi
@@ -176,16 +172,14 @@ def store_anonymised_records(qi_combi, patients):
 		if qi_combi[POSTALCODE_NAME] == COMBI_POSTALCODE_ALL:
 			user.postalcode = '*'
 
-		safeusers_obj = SafeUsers(uid=uid, age=user.age, postalcode=user.postalcode)
-		safeusers_obj.save()
+		safeusers_obj = SafeUsers.objects.create(uid=user.uid, age=user.age, postalcode=user.postalcode)
 
 		# print(safeusers_obj.uid)
 
 		# Get all readings associated with current patient
 		readings = patient.readings_patient.all()
 		for reading in readings:
-			safereadings_obj = SafeReadings(uid=safeusers_obj, type=reading.type, value=reading.data)
-			safereadings_obj.save()
+			safereadings_obj = SafeReadings.objects.create(uid=safeusers_obj, type=reading.type, value=reading.data)
 
 			# print(safereadings_obj.id)
 
