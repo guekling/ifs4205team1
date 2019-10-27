@@ -7,13 +7,24 @@ import pytz
 from core.models import Researcher, Patient, User # Change to admin
 from patientrecords.models import Diagnosis, Readings, Images, Videos # Production DB
 from researcherquery.models import QiInfo, SafeUsers, SafeDiagnosis, SafeReadings, SafeImages, SafeVideos # SAFE DB
+from userlogs.models import Logs
 from researcherquery.helper import *
 
 # Change to admin login
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
 def anonymise_records(request, researcher_id): # Change to admin_id
+	# Checks if logged in admin has the same id as in the URL
+	if (request.user.researcher_username.id != researcher_id):
+		Logs.objects.create(type='READ', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[Anonymise Records] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
+		return redirect('researcher_login')
+
 	researcher = check_researcher_exists(researcher_id)
+	user = researcher.username
+
+	# the action has not gone through QR verification
+	if len(user.sub_id_hash) > 0:
+		return redirect('researcher_login')
 
 	context = {
 		'researcher': researcher
@@ -23,6 +34,8 @@ def anonymise_records(request, researcher_id): # Change to admin_id
 	if request.method == 'POST':
 		# Pre-Process DB
 		anonymise()
+
+		Logs.objects.create(type='UPDATE', user_id=user.uid, interface='ADMIN', status=STATUS_OK, details='Anonymise Records')
 
 		return render(request, 'anonymise_records.html', context)
 

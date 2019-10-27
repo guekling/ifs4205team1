@@ -14,6 +14,7 @@ from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView,
 
 from researcherlogin.forms import UserEditForm, UserQrForm
 from core.models import User, Researcher
+from userlogs.models import Logs
 
 import hashlib
 import qrcode
@@ -93,7 +94,7 @@ def researcher_settings(request, researcher_id):
 	if len(user.sub_id_hash) > 0:
 		return redirect('researcher_login')
 
-	Logs.objects.create(type='READ', user_id=user.id, interface='RESEARCHER', status=STATUS_OK, details='Settings')
+	Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Settings')
 
 	context = {
 		'researcher': researcher,

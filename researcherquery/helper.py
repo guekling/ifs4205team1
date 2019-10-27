@@ -3,6 +3,9 @@ from core.models import Researcher
 
 ### Helper functions related to researcher e.g. login & anonymisation
 
+STATUS_OK = 1
+STATUS_ERROR = 0
+
 AGE_NAME = "age"
 POSTALCODE_NAME = "postalcode"
 DATE_NAME = "date"

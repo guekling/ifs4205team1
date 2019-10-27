@@ -1,7 +1,8 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
-from core.models import Researcher
+from core.models import User, Researcher
 from researcherquery.models import QiInfo, SafeUsers, SafeDiagnosis, SafeReadings, SafeImages, SafeVideos
+from userlogs.models import Logs
 from researcherquery.forms import SearchRecordsForm
 from researcherquery.helper import *
 import datetime
@@ -9,7 +10,18 @@ import datetime
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
 def search_records(request, researcher_id):
+	# Checks if logged in researcher has the same id as in the URL
+	if (request.user.researcher_username.id != researcher_id):
+		Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Search Records] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
+		return redirect('researcher_login')
+
 	researcher = check_researcher_exists(researcher_id)
+	user = researcher.username
+
+	# the action has not gone through QR verification
+	if len(user.sub_id_hash) > 0:
+		return redirect('researcher_login')
+
 	today_date = datetime.datetime.now().strftime("%Y-%m-%d")
 	reset_recordtypes_choices_checkbox()
 	submitted = False
@@ -49,6 +61,8 @@ def search_records(request, researcher_id):
 
 			users = process_age_postalcode(combi_age, combi_postalcode, ages, postalcodes)
 			process_recordtypes(recordtypes)
+
+			Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Search Records')
 
 			context = {
 				'form': form,
