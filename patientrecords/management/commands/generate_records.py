@@ -13,7 +13,8 @@ class Command(BaseCommand):
 
   def handle(self, *args, **options):
     path = options['csvpath']
-    generate_readings_records(path)
+    # generate_readings_records(path)
+    generate_diagnosis_records(path)
 
     # generate_timeseries_records()
 
@@ -65,7 +66,43 @@ def generate_readings_records(path):
         perm.username.add(healthcare)
       print("{}{}".format("Finishing processing permissions for reading ", r))
 
+def generate_diagnosis_records(path):
+  """
+  Load CSV to populate `Diagnosis` & `DiagnosisPerm` table with data
+  """
+  with open(path, 'rt') as csvFile:
+    reader = csv.reader(csvFile, delimiter=',', quotechar="\"")
+    fields_name = next(reader)
+    for r, row in enumerate(reader):
+      diagnosis = Diagnosis()
 
+      if (r < 6000): # Diagnosis 1 - 6000 to Patients 1 - 6000
+        temp_d = r
+      else: # Diagnosis 6001 - 7800 to Patients 1 - 1800
+        temp_d = r - 6000
+
+      for i, field in enumerate(row):
+        print("{}{}".format("Currently processing ", fields_name[i]))
+        print("{}{}".format("Currently processing ", field))
+        setattr(diagnosis, fields_name[i], field)
+        
+        # Assign Diagnosis to a specific User & Patient
+        patient = Patient.objects.all()[temp_d]
+        user = patient.username
+        diagnosis.owner_id = user
+        diagnosis.patient_id = patient
+
+      diagnosis.save()
+      print("{}{}{}".format("Diagnosis ", r, " is saved."))
+
+      # Get all patient's healthcare professional
+      patient_healthcare = patient.healthcare_patients.all()
+
+      # Assign permissions to Healthcare
+      for healthcare in patient_healthcare.iterator():
+        perm = DiagnosisPerm.objects.create(diag_id=diagnosis, given_by=user, perm_value=2)
+        perm.username.add(healthcare)
+      print("{}{}".format("Finishing processing permissions for diagnosis ", r))
 
 def generate_timeseries_records():
   """
