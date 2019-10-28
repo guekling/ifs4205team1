@@ -93,11 +93,11 @@ def download_protected_record(request, record_id):
 
     return response  
 
-# def protected_media(request):
-#   response = HttpResponse()
-#   response['Content-Type'] = ''
-#   response['X-Accel-Redirect'] = '/media/images/MRI_Image_2.jpg'
-#   return response
+def protected_media(request):
+  response = HttpResponse()
+  response['Content-Type'] = ''
+  response['X-Accel-Redirect'] = '/media/images/MRI_Image_2.jpg'
+  return response
 
 ##########################################
 ############ Helper Functions ############
