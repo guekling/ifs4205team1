@@ -20,7 +20,7 @@
   </tr>
   <tr>
     <th>Note</th>
-    <th><a href="{{ note.data }}">View Note</a></th>
+    <th><a href="{{ note.data }}">View Note</a> | <a href="{% url 'download_note' patient_id=patient.id note_id=note.id %}">Download Note</a></th>
   </tr>
 </table>
 
