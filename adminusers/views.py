@@ -10,7 +10,7 @@ from userlogs.models import Logs
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
-def show_all_users(request, admin_id):
+def admin_show_all_users(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[Show All Users] Logged in user does not match ID in URL. URL ID: ' + str(admin_id))
@@ -35,11 +35,11 @@ def show_all_users(request, admin_id):
 
   Logs.objects.create(type='READ', user_id=admin.username.uid, interface='ADMIN', status=STATUS_OK, details='[Show All Users] Page: ' + str(page))
 
-  return render(request, 'show_all_users.html', context)
+  return render(request, 'admin_show_all_users.html', context)
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
-def show_user(request, admin_id, user_id):
+def admin_show_user(request, admin_id, user_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[Show User] Logged in user does not match ID in URL. URL ID: ' + str(admin_id))
@@ -61,11 +61,11 @@ def show_user(request, admin_id, user_id):
 
   Logs.objects.create(type='READ', user_id=admin.username.uid, interface='ADMIN', status=STATUS_OK, details='[Show User] Page: ' + str(user_id))
 
-  return render(request, 'show_user.html', context)
+  return render(request, 'admin_show_user.html', context)
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
-def show_all_patients(request, admin_id):
+def admin_show_all_patients(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[Show All Patients] Logged in user does not match ID in URL. URL ID: ' + str(admin_id))
@@ -90,11 +90,11 @@ def show_all_patients(request, admin_id):
 
   Logs.objects.create(type='READ', user_id=admin.username.uid, interface='ADMIN', status=STATUS_OK, details='[Show All Patients] Page: ' + str(page))
 
-  return render(request, 'show_all_patients.html', context)
+  return render(request, 'admin_show_all_patients.html', context)
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
-def show_patient(request, admin_id, patient_id):
+def admin_show_patient(request, admin_id, patient_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[Show Patient] Logged in user does not match ID in URL. URL ID: ' + str(admin_id))
@@ -116,11 +116,11 @@ def show_patient(request, admin_id, patient_id):
 
   Logs.objects.create(type='READ', user_id=admin.username.uid, interface='ADMIN', status=STATUS_OK, details='[Show Patient] Page: ' + str(patient_id))
 
-  return render(request, 'show_patient.html', context)
+  return render(request, 'admin_show_patient.html', context)
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
-def new_patient(request, admin_id):
+def admin_new_patient(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[New Patient] Logged in user does not match ID in URL. URL ID: ' + str(admin_id))
@@ -147,7 +147,7 @@ def new_patient(request, admin_id):
         'form': form,
         'admin': admin,
       }
-      return render(request, 'new_patient.html', context)
+      return render(request, 'admin_new_patient.html', context)
 
   Logs.objects.create(type='READ', user_id=admin.username.uid, interface='ADMIN', status=STATUS_OK, details='[New Patient] Render Form')
 
@@ -156,11 +156,11 @@ def new_patient(request, admin_id):
     'admin': admin,
   }
 
-  return render(request, 'new_patient.html', context)
+  return render(request, 'admin_new_patient.html', context)
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
-def show_all_healthcare(request, admin_id):
+def admin_show_all_healthcare(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[Show All Healthcare] Logged in user does not match ID in URL. URL ID: ' + str(admin_id))
@@ -185,11 +185,11 @@ def show_all_healthcare(request, admin_id):
 
   Logs.objects.create(type='READ', user_id=admin.username.uid, interface='ADMIN', status=STATUS_OK, details='[Show All Healthcare] Page: ' + str(page))
 
-  return render(request, 'show_all_healthcare.html', context)
+  return render(request, 'admin_show_all_healthcare.html', context)
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
-def show_healthcare(request, admin_id, healthcare_id):
+def admin_show_healthcare(request, admin_id, healthcare_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[Show Healthcare] Logged in user does not match ID in URL. URL ID: ' + str(admin_id))
@@ -211,11 +211,11 @@ def show_healthcare(request, admin_id, healthcare_id):
 
   Logs.objects.create(type='READ', user_id=admin.username.uid, interface='ADMIN', status=STATUS_OK, details='[Show Healthcare] Page: ' + str(healthcare_id))
 
-  return render(request, 'show_healthcare.html', context)
+  return render(request, 'admin_show_healthcare.html', context)
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
-def new_healthcare(request, admin_id):
+def admin_new_healthcare(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[New Healthcare] Logged in user does not match ID in URL. URL ID: ' + str(admin_id))
@@ -247,7 +247,7 @@ def new_healthcare(request, admin_id):
         'form': form,
         'admin': admin,
       }
-      return render(request, 'new_healthcare.html', context)
+      return render(request, 'admin_new_healthcare.html', context)
 
   Logs.objects.create(type='READ', user_id=admin.username.uid, interface='ADMIN', status=STATUS_OK, details='[New Healthcare] Render Form')
 
@@ -256,11 +256,11 @@ def new_healthcare(request, admin_id):
     'admin': admin,
   }
 
-  return render(request, 'new_healthcare.html', context)
+  return render(request, 'admin_new_healthcare.html', context)
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
-def show_all_researchers(request, admin_id):
+def admin_show_all_researchers(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[Show All Researchers] Logged in user does not match ID in URL. URL ID: ' + str(admin_id))
@@ -285,11 +285,11 @@ def show_all_researchers(request, admin_id):
 
   Logs.objects.create(type='READ', user_id=admin.username.uid, interface='ADMIN', status=STATUS_OK, details='[Show All Researchers] Page: ' + str(page))
 
-  return render(request, 'show_all_researchers.html', context)
+  return render(request, 'admin_show_all_researchers.html', context)
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
-def show_researcher(request, admin_id, researcher_id):
+def admin_show_researcher(request, admin_id, researcher_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[Show Researcher] Logged in user does not match ID in URL. URL ID: ' + str(admin_id))
@@ -311,7 +311,7 @@ def show_researcher(request, admin_id, researcher_id):
 
   Logs.objects.create(type='READ', user_id=admin.username.uid, interface='ADMIN', status=STATUS_OK, details='[Show Researcher] Page: ' + str(researcher_id))
 
-  return render(request, 'show_researcher.html', context)
+  return render(request, 'admin_show_researcher.html', context)
 
 ##########################################
 ############ Helper Functions ############
@@ -320,7 +320,7 @@ def show_researcher(request, admin_id, researcher_id):
 STATUS_OK = 1
 STATUS_ERROR = 0
 
-def admin_does_not_exists(admin_id):
+def admin_admin_does_not_exists(admin_id):
   """
   Redirects to login if admin_id is invalid
   """
