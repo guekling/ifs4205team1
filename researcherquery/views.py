@@ -1,10 +1,15 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from django.core import serializers
 from core.models import User, Researcher
 from researcherquery.models import QiInfo, SafeUsers, SafeDiagnosis, SafeReadings, SafeImages, SafeVideos
 from userlogs.models import Logs
 from researcherquery.forms import SearchRecordsForm
 import datetime
+import csv
+import xlwt
+import json
 
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
@@ -59,6 +64,8 @@ def search_records(request, researcher_id):
 				postalcodes.append(postalcode3)
 
 			users = process_age_postalcode(combi_age, combi_postalcode, ages, postalcodes)
+			users_list = list(users)
+			request.session['users_list'] = serializers.serialize("json", users_list)
 			process_recordtypes(recordtypes)
 
 			Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Search Records')
@@ -107,6 +114,186 @@ def search_records(request, researcher_id):
 		}
 
 		return render(request, 'search_records.html', context)
+
+@login_required(login_url='researcher_login')
+@user_passes_test(lambda u: u.is_researcher(), login_url='researcher_login')
+def download_records_csv(request, researcher_id):
+	# Checks if logged in researcher has the same id as in the URL
+	if (request.user.researcher_username.id != researcher_id):
+		Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Download Anonymised Records (CSV)] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
+		return redirect('researcher_login')
+
+	researcher = check_researcher_exists(researcher_id)
+	user = researcher.username
+
+	# the action has not gone through QR verification
+	if len(user.sub_id_hash) > 0:
+		return redirect('researcher_login')
+
+	response = HttpResponse(content_type='text/csv')
+	response['Content-Disposition'] = 'attachment; filename="anonymised_records.csv"'
+
+	writer = csv.writer(response)
+	writer.writerow(['Patient', 'Age', 'Postal Code', 'Date', 'Diagnosis', 'BP Readings', 'HR Readings', 'TEMP Readings'])
+
+	qiinfo_combi_date = QiInfo.objects.all().first().get_combi_date()
+	date = process_date(qiinfo_combi_date)
+
+	users_list = request.session.get('users_list', None)
+	safeusers = json.loads(users_list)
+
+	for safeuser in safeusers:
+		safeuser_list = []
+
+		uid = safeuser['pk']
+		age = safeuser['fields']['age']
+		postalcode = safeuser['fields']['postalcode']
+
+		safeuser_list.append(uid)
+		safeuser_list.append(age)
+		safeuser_list.append(postalcode)
+		safeuser_list.append(date)
+
+		safeuser_obj = SafeUsers.objects.get(pk=uid)
+
+		if RECORD_TYPES_SELECTED[DIAGNOSIS_NAME]:
+			diagnosis_list = []
+			diagnosis_obj = safeuser_obj.get_diagnosis()
+			for diag in diagnosis_obj:
+				diagnosis_list.append(diag.value)
+			safeuser_list.append(str(diagnosis_list))
+		else:
+			safeuser_list.append('')
+
+		if RECORD_TYPES_SELECTED[BP_READING_NAME]:
+			bp_readings_list = []
+			bp_reading_obj = safeuser_obj.get_bp_readings()
+			for bp_reading in bp_reading_obj:
+				bp_readings_list.append(bp_reading.value)
+			safeuser_list.append(str(bp_readings_list))
+		else:
+			safeuser_list.append('')
+
+		
+		if RECORD_TYPES_SELECTED[HR_READING_NAME]:
+			hr_readings_list = []
+			hr_reading_obj = safeuser_obj.get_hr_readings()
+			for hr_reading in hr_reading_obj:
+				hr_readings_list.append(hr_reading.value)
+			safeuser_list.append(str(hr_readings_list))
+		else:
+			safeuser_list.append('')
+
+		if RECORD_TYPES_SELECTED[TEMP_READING_NAME]:
+			temp_readings_list = []
+			temp_reading_obj = safeuser_obj.get_temp_readings()
+			for temp_reading in temp_reading_obj:
+					temp_readings_list.append(temp_reading.value)
+			safeuser_list.append(str(temp_readings_list))
+		else:
+			safeuser_list.append('')
+
+		writer.writerow(safeuser_list)
+
+	Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Download Anonymised Records (CSV)')
+	return response
+
+@login_required(login_url='researcher_login')
+@user_passes_test(lambda u: u.is_researcher(), login_url='researcher_login')
+def download_records_xls(request, researcher_id):
+	# Checks if logged in researcher has the same id as in the URL
+	if (request.user.researcher_username.id != researcher_id):
+		Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Download Anonymised Records (XLS)] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
+		return redirect('researcher_login')
+
+	researcher = check_researcher_exists(researcher_id)
+	user = researcher.username
+
+	# the action has not gone through QR verification
+	if len(user.sub_id_hash) > 0:
+		return redirect('researcher_login')
+
+
+	response = HttpResponse(content_type='application/ms-excel')
+	response['Content-Disposition'] = 'attachment; filename="anonymised_records.xls"'
+
+	wb = xlwt.Workbook(encoding='utf-8')
+	ws = wb.add_sheet('Anonymised Records')
+
+	# Sheet header, first row
+	row_num = 0
+
+	font_style = xlwt.XFStyle()
+	font_style.font.bold = True
+
+	columns = ['Patient', 'Age', 'Postal Code', 'Date', 'Diagnosis', 'BP Readings', 'HR Readings', 'TEMP Readings']
+	for col_num in range(len(columns)):
+		ws.write(row_num, col_num, columns[col_num], font_style)
+
+	# Sheet body, remaining rows
+	font_style = xlwt.XFStyle()
+
+	qiinfo_combi_date = QiInfo.objects.all().first().get_combi_date()
+	date = process_date(qiinfo_combi_date)
+
+	users_list = request.session.get('users_list', None)
+	safeusers = json.loads(users_list)
+
+	for safeuser in safeusers:
+		row_num += 1
+
+		uid = safeuser['pk']
+		age = safeuser['fields']['age']
+		postalcode = safeuser['fields']['postalcode']
+
+		ws.write(row_num, 0, uid, font_style)
+		ws.write(row_num, 1, age, font_style)
+		ws.write(row_num, 2, postalcode, font_style)
+		ws.write(row_num, 3, date, font_style)
+
+		safeuser_obj = SafeUsers.objects.get(pk=uid)
+
+		if RECORD_TYPES_SELECTED[DIAGNOSIS_NAME]:
+			diagnosis_list = []
+			diagnosis_obj = safeuser_obj.get_diagnosis()
+			for diag in diagnosis_obj:
+				diagnosis_list.append(diag.value)
+			ws.write(row_num, 4, str(diagnosis_list), font_style)
+		else:
+			ws.write(row_num, 4, '', font_style)
+
+		if RECORD_TYPES_SELECTED[BP_READING_NAME]:
+			bp_readings_list = []
+			bp_reading_obj = safeuser_obj.get_bp_readings()
+			for bp_reading in bp_reading_obj:
+				bp_readings_list.append(bp_reading.value)
+			ws.write(row_num, 5, str(bp_readings_list), font_style)
+		else:
+			ws.write(row_num, 5, '', font_style)
+
+		
+		if RECORD_TYPES_SELECTED[HR_READING_NAME]:
+			hr_readings_list = []
+			hr_reading_obj = safeuser_obj.get_hr_readings()
+			for hr_reading in hr_reading_obj:
+				hr_readings_list.append(hr_reading.value)
+			ws.write(row_num, 6, str(hr_readings_list), font_style)
+		else:
+			ws.write(row_num, 6, '', font_style)
+
+		if RECORD_TYPES_SELECTED[TEMP_READING_NAME]:
+			temp_readings_list = []
+			temp_reading_obj = safeuser_obj.get_temp_readings()
+			for temp_reading in temp_reading_obj:
+					temp_readings_list.append(temp_reading.value)
+			ws.write(row_num, 7, str(temp_readings_list), font_style)
+		else:
+			ws.write(row_num, 7, '', font_style)
+
+	wb.save(response)
+	
+	Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Download Anonymised Records (XLS)')
+	return response
 
 ##########################################
 ############ Helper Functions ############

@@ -96,6 +96,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ifs4205team1.wsgi.application'
 
+SESSION_EXPIRE_SECONDS = 1*60  # 5 mins
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_EXPIRE_AFTER_LAST_ACTIVITY = True # Expires after 5 minutes of inactivity
+
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 

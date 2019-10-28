@@ -196,6 +196,13 @@
 			<h5>K = {{ qiinfo.get_k_value }},&emsp;Suppression rate (&le; 10.0%) = {{ qiinfo.get_suppression_rate }}%</h5>
 			<h5>Records retrieved (&ge; K) = {{ count }}</h5>
 		
+			<br/>
+
+			<h6>Download selected record types (only diagnosis & readings):&nbsp;
+				<a href="{% url 'download_records_csv' researcher_id=researcher.id %}">CSV</a>
+				<a href="{% url 'download_records_xls' researcher_id=researcher.id %}">XLS</a>
+			</h6>
+
 			<table class="table text-center">
 				<thread>
 					<tr>
