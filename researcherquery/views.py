@@ -18,7 +18,7 @@ def search_records(request, researcher_id):
 	user = researcher.username
 
 	# the action has not gone through QR verification
-	if len(user.sub_id_hash) > 0:
+	if len(user.latest_nonce) > 0:
 		return redirect('researcher_login')
 
 	today_date = datetime.datetime.now().strftime("%Y-%m-%d")

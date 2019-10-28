@@ -10,6 +10,7 @@
       "email": "john_lennon@gmail.com",
       "gender": "M",
       "dob": "1987-05-06",
+      "age": 32,
       "address": "669D Jurong West Street 64 04-50",
       "postalcode": "644669",
       "contactnumber": "67909773"
@@ -31,6 +32,7 @@
       "email": "daniel_hawkings@gmail.com",
       "gender": "M",
       "dob": "1987-08-02",
+      "age": 32,
       "address": "68 Toa Payoh Street 12",
       "postalcode": "120988",
       "contactnumber": "90192837"
@@ -52,6 +54,7 @@
       "email": "johnathan_lam@yahoo.com",
       "gender": "M",
       "dob": "1995-05-07",
+      "age": 24,
       "address": "511 Guillemard Road #02-12 Grandlink Square",
       "postalcode": 399849,
       "contactnumber": 67449185
@@ -79,6 +82,7 @@
       "email": "percy_jackson@hotmail.com",
       "gender": "M",
       "dob": "1987-04-02",
+      "age": 32,
       "address": "148 Ang Mo Kio Avenue 2",
       "postalcode": 309826,
       "contactnumber": 91820563
@@ -105,6 +109,7 @@
       "email": "john_lennon@gmail.com",
       "gender": "M",
       "dob": "1987-05-06",
+      "age": 32,
       "address": "669D Jurong West Street 64 04-50",
       "postalcode": "644669",
       "contactnumber": "67909773"
