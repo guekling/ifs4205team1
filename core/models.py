@@ -12,9 +12,10 @@ class User(AbstractUser):
   address = models.CharField(max_length=150)
   postalcode = models.CharField(max_length=6)
   contactnumber = models.PositiveIntegerField() # max digits = 8
-  android_id_hash = models.CharField(max_length=64)
-  device_id_hash = models.CharField(max_length=64)
-  sub_id_hash = models.CharField(max_length=64)
+  hashed_id = models.CharField(max_length=64)
+  hashed_last_six = models.CharField(max_length=64)
+  latest_nonce = models.CharField(max_length=64)
+  nonce_timestamp = models.DateTimeField(default=None, blank=True, null=True)
   uid = models.UUIDField(default=uuid.uuid4, editable=False)
 
   USERNAME_FIELD = 'username'

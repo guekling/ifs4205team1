@@ -32,7 +32,7 @@ class UserLogin(LoginView):
       user = None
 
     if user is not None:
-      if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
+      if len(user.hashed_last_six) > 0 and len(user.hashed_id) > 0:
         return redirect("repeat_register", user_id=user.uid)
       else:
         auth_login(self.request, form.get_user())
@@ -55,7 +55,7 @@ def user_register(request, user_id):
   user = user_does_not_exists(user_id)
 
   # when user purposefully try to traverse to this url but they already registered
-  if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
+  if len(user.hashed_last_six) > 0 and len(user.hashed_id) > 0:
     return redirect("repeat_register", user_id=user.uid)
 
   form = DeviceInforForm(request.POST or None)
@@ -63,8 +63,8 @@ def user_register(request, user_id):
   if form.is_valid():
     cd = form.cleaned_data
     infor = cd.get('infor')
-    user.android_id_hash = infor[:64]
-    user.device_id_hash = infor[64:]
+    user.hashed_id = infor[:64]
+    user.hashed_last_six = infor[64:]
     user.save()
     return redirect('success_register', user_id=user.uid)
 
@@ -79,7 +79,7 @@ def repeat_register(request, user_id):
   user = user_does_not_exists(user_id)
 
   # when user purposefully try to traverse to this url but they haven't register
-  if len(user.device_id_hash) == 0 and len(user.android_id_hash) == 0:
+  if len(user.hashed_last_six) == 0 and len(user.hashed_id) == 0:
     return redirect("user_register", user_id=user.uid)
 
   return render(request, "repeat_register.html")
@@ -89,7 +89,7 @@ def success_register(request, user_id):
   user = user_does_not_exists(user_id)
 
   # when user purposefully try to traverse to this url but they haven't registered
-  if len(user.device_id_hash) == 0 and len(user.android_id_hash) == 0:
+  if len(user.hashed_last_six) == 0 and len(user.hashed_id) == 0:
     return redirect("user_register", user_id=user.uid)
 
   return render(request, "success_register.html")

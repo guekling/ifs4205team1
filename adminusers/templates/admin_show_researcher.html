@@ -1,0 +1,49 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+<h1>Healthcare: {{ researcher.username.username }}</h1>
+
+<table class="table text-center">
+  <tr>
+    <th>First Name</th>
+    <th>{{ researcher.username.first_name }}</th>
+  </tr>
+  <tr>
+    <th>Last Name</th>
+    <th>{{ researcher.username.last_name }}</th>
+  </tr>
+  <tr>
+    <th>Username</th>
+    <th>{{ researcher.username.username }}</th>
+  </tr>
+  <tr>
+    <th>Email</th>
+    <th>{{ researcher.username.email }}</th>
+  </tr>
+  <tr>
+    <th>Date of Birth</th>
+    <th>{{ researcher.username.dob }}</th>
+  </tr>
+  <tr>
+    <th>Address</th>
+    <th>{{ researcher.username.address }}</th>
+  </tr>
+  <tr>
+    <th>Postal Code</th>
+    <th>{{ researcher.username.postalcode }}</th>
+  </tr>
+  <tr>
+    <th>Contact Number</th>
+    <th>{{ researcher.username.contactnumber }}</th>
+  </tr>
+  <tr>
+    <th>Last Login</th>
+    <th>{{ researcher.username.last_login }}</th>
+  </tr>
+  <tr>
+    <th>Date Joined</th>
+    <th>{{ researcher.username.date_joined }}</th>
+  </tr>
+</table>
+
+{% endblock %}

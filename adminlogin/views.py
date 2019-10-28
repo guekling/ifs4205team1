@@ -41,8 +41,8 @@ class AdminLogin(LoginView):
       auth_login(self.request, form.get_user())
       nonce = get_random_string(length=16, allowed_chars=u'abcdefghijklmnopqrstuvwxyz0123456789')
       user = admin.username
-      # if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
-      user.sub_id_hash = nonce  # change field
+      # if len(user.hashed_last_six) > 0 and len(user.hashed_id) > 0:
+      user.latest_nonce = nonce  # change field
       user.save()  # this will update only
       Logs.objects.create(type='LOGIN', user_id=user.uid, interface='ADMIN', status=STATUS_OK, details='Admin Login')
       return redirect('admin_qr', admin_id=admin.id)
@@ -75,7 +75,7 @@ def admin_settings(request, admin_id):
   user = admin.username
 
   # the action has not gone through QR verification
-  if len(user.sub_id_hash) > 0:
+  if len(user.latest_nonce) > 0:
     return redirect('admin_login')
 
   Logs.objects.create(type='READ', user_id=user.uid, interface='ADMIN', status=STATUS_OK, details='Settings')
@@ -99,7 +99,7 @@ def admin_edit_settings(request, admin_id):
   user = admin.username
 
   # the action has not gone through QR verification
-  if len(user.sub_id_hash) > 0:
+  if len(user.latest_nonce) > 0:
     return redirect('admin_login')
 
   form = UserEditForm(request.POST or None, instance=user)
@@ -142,11 +142,11 @@ def admin_qr(request, admin_id):
   user = admin.username
 
   # when user purposefully try to traverse to this url but they haven't registered
-  # if len(user.device_id_hash) == 0 and len(user.android_id_hash) == 0:
+  # if len(user.hashed_last_six) == 0 and len(user.hashed_id) == 0:
   #   return redirect("admin_token_register", admin_id=admin.id)
 
-  if len(user.sub_id_hash) > 0:
-    nonce = user.sub_id_hash
+  if len(user.latest_nonce) > 0:
+    nonce = user.latest_nonce
   else:
     # if somehow bypassed login
     return redirect('admin_login')
@@ -157,10 +157,10 @@ def admin_qr(request, admin_id):
     cd = form.cleaned_data
     otp = cd.get('otp')
     if otp == '1234':
-    # if user.device_id_hash == recovered_value(user.android_id_hash, nonce, otp):
+    # if user.hashed_last_six == recovered_value(user.hashed_id, nonce, otp):
       # give HttpResponse only or render page you need to load on success
       # delete the nonce
-      user.sub_id_hash = ""
+      user.latest_nonce = ""
       user.save()
       return redirect('admin_dashboard', admin_id=admin.id)
     else:
@@ -186,7 +186,7 @@ def admin_dashboard(request, admin_id):
   user = admin.username
 
   # the action has not gone through QR verification
-  if len(user.sub_id_hash) > 0:
+  if len(user.latest_nonce) > 0:
     return redirect('admin_login')
 
   Logs.objects.create(type='READ', user_id=user.uid, interface='ADMIN', status=STATUS_OK, details='Dashboard')

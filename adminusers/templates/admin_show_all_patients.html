@@ -1,0 +1,55 @@
+{% extends "admin_base.html" %}
+
+{% load app_filters %}
+
+{% block content %}
+<h1>All Patients</h1>
+
+<table class="table text-center">
+  <thead>
+  <tr>
+    <th scope="col">Full Name</th>
+    <th scope="col">Username</th>
+    <th scope="col">Email</th>
+    <th scope="col">Last Login</th>
+    <th scope="col">Date Joined</th>
+    <th scope="col"></th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for patient in patients %}
+  <tr>
+    <th scope="row">{{ patient.username | get_full_name }}</th>
+    <th>{{ patient.username.username }}</th>
+    <th>{{ patient.username.email }}</th>
+    <th>{{ patient.username.last_login }}</th>
+    <th>{{ patient.username.date_joined }}</th>
+    <th><a href="{% url 'admin_show_patient' admin_id=admin.id patient_id=patient.id %}">More Details</a></th>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% if patients.has_other_pages %}
+  <ul class="pagination">
+    {% if patients.has_previous %}
+      <li><a href="?page={{ patients.previous_page_number }}">&laquo;</a></li>
+    {% else %}
+      <li class="disabled"><span>&laquo;</span></li>
+    {% endif %}
+    {% for i in patients.paginator.page_range %}
+      {% if patients.number == i %}
+        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+      {% else %}
+        <li><a href="?page={{ i }}">{{ i }}</a></li>
+      {% endif %}
+    {% endfor %}
+    {% if patients.has_next %}
+      <li><a href="?page={{ patients.next_page_number }}">&raquo;</a></li>
+    {% else %}
+      <li class="disabled"><span>&raquo;</span></li>
+    {% endif %}
+  </ul>
+{% endif %}
+
+{% endblock %}

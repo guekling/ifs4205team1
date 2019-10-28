@@ -22,9 +22,9 @@ from django.views.static import serve
 from ifs4205team1 import views
 
 urlpatterns = [
-    # path('admin/', admin.site.urls),
     path('', views.home, name="home"),
     path('protectedrecord/<uuid:record_id>', views.protected_record, name="protected_record"),
+    path('protectedrecord/<uuid:record_id>/download', views.download_protected_record, name="download_protected_record"),
     path('protectedmedia/', views.protected_media, name="protected_media"),
     path(settings.ADMIN_URL, include('adminlogin.urls')),
     path(settings.ADMIN_URL, include('adminusers.urls')),

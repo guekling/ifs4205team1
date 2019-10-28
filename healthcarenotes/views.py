@@ -3,6 +3,8 @@ from __future__ import division, unicode_literals
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
+from django.core.files import File
+from django.http import HttpResponse
 
 from healthcarenotes.forms import DocumentsPermissionEditForm, AddHealthcareNote, AddHealthcareNoteForPatient, EditHealthcareNote
 
@@ -12,9 +14,9 @@ from userlogs.models import Logs
 
 import bleach
 import os
-from os.path import join
 import codecs
 from bs4 import BeautifulSoup
+from mimetypes import guess_type
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
@@ -71,6 +73,39 @@ def show_healthcare_note(request, healthcare_id, note_id):
   }
 
   return render(request, 'show_healthcare_note.html', context)
+
+@login_required(login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+def download_healthcare_note(request, healthcare_id, note_id):
+  """
+  Downloads a single healthcare professional note
+  """
+  # checks if logged in healthcare professional has the same id as in the URL
+  if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Note] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    return redirect('/healthcare/login/')
+
+  healthcare = healthcare_does_not_exists(healthcare_id)
+
+  try:
+    note = Documents.objects.filter(id=note_id)
+    note = note[0]
+  except IndexError:
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Note] Note ID is invalid.')
+    return redirect('show_all_healthcare_notes', healthcare_id=healthcare_id)
+
+  file_path = note.data.path
+  file_name = note.data.name.split('/', 1)[1]
+
+  with open(file_path, 'rb') as note:
+    content_type = guess_type(file_path)[0]
+    response = HttpResponse(note, content_type=content_type)
+    response['Content-Length'] = os.path.getsize(file_path)
+    response['Content-Disposition'] = "attachment; filename=%s" %  file_name
+
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Download Note ' + str(note_id))
+
+    return response
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
@@ -237,7 +272,8 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
       save_note.close()
 
       # Add data into new note
-      note.data = data_path
+      note_title = title + ".html"
+      note.data.save(note_title, File(open(note_path, 'r')))
 
       # Set default permissions for note
       permission = DocumentsPerm.objects.create(docs_id=note, given_by=healthcare.username, perm_value=2)
@@ -317,14 +353,60 @@ def edit_healthcare_note(request, healthcare_id, note_id):
     if form.is_valid():
       title = bleach.clean(form.cleaned_data['title'], tags=[], attributes=[], protocols=[], strip=True)
       edit_note = bleach.clean(form.cleaned_data['note'], attributes=[], protocols=[], strip=True)
+      attach_readings = form.cleaned_data['attach_readings']
+      attach_timeseries = form.cleaned_data['attach_timeseries']
+      attach_images = form.cleaned_data['attach_images']
+      attach_videos = form.cleaned_data['attach_videos']
 
+      # Put new attachments for note
       edit_note = edit_note + "<p>Attachments:</p>"
-      edit_note = edit_note + split[1] # Attachments has not been edited + w/o HTML
-      
+      edit_note = edit_note + "<p>Readings:</p>"
+
+      # Clear previous saved attachments in database
+      note.attach_readings.clear()
+      note.attach_images.clear()
+      note.attach_timeseries.clear()
+      note.attach_videos.clear()
+
+      for reading in attach_readings:
+        datetime = reading.timestamp.strftime("%a, %d %b %Y %I:%M %p")
+        url = "/protectedrecord/" + str(reading.id)
+        edit_note = edit_note + "<p><a href=" + url + ">" + datetime + " " + reading.type + "</a></p>"
+        note.attach_readings.add(reading) # Saved attachment to database
+
+      edit_note = edit_note + "<p>TimeSeries:</p>"
+      for timeseries in attach_timeseries:
+        datetime = timeseries.timestamp.strftime("%a, %d %b %Y %I:%M %p")
+        url = "/protectedrecord/" + str(timeseries.id)
+        edit_note = edit_note + "<p><a href=" + url + ">" + datetime + "</a></p>"
+        note.attach_timeseries.add(timeseries) # Saved attachment to database
+
+      edit_note = edit_note + "<p>Images:</p>"
+      for image in attach_images:
+        datetime = image.timestamp.strftime("%a, %d %b %Y %I:%M %p")
+        url = "/protectedrecord/" + str(image.id)
+        edit_note = edit_note + "<p><a href=" + url + ">" + datetime + " Type: " + image.type + " Title: " + image.title + "</a></p>"
+        note.attach_images.add(image) # Saved attachment to database
+
+      edit_note = edit_note + "<p>Videos:</p>"
+      for video in attach_videos:
+        datetime = timeseries.timestamp.strftime("%a, %d %b %Y %I:%M %p")
+        url = "/protectedrecord/" + str(video.id)
+        edit_note = edit_note + "<p><a href=" + url + ">" + datetime + " Type: " + video.type + " Title: " + video.title + "</a></p>"
+        note.attach_videos.add(video) # Saved attachment to database
+
+      note_path = note.data.path
+
+      # Create HTML file for edited note
       save_note = open(note_path,"w")
       save_note.write(edit_note)
       save_note.close()
 
+      # Add data into edited note
+      note_title = title + ".html"
+      note.data.save(note_title, File(open(note_path, 'r')))
+
+      # Update note title
       note.title = title
       note.save()
 

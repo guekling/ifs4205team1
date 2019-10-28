@@ -1,9 +1,13 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
+from django.http import HttpResponse
 
 from core.models import Patient, Healthcare
 from patientrecords.models import Documents, DocumentsPerm
 from userlogs.models import Logs
+
+import os
+from mimetypes import guess_type
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
@@ -55,6 +59,38 @@ def show_note(request, patient_id, note_id):
   Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Show Note ' + str(note_id))
 
   return render(request, 'show_note.html', context)
+
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+def download_note(request, patient_id, note_id):
+  """
+  Downloads a single healthcare professional note
+  """
+  if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='UPDATE', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Note] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    return redirect('/patient/login/')
+
+  patient = patient_does_not_exists(patient_id)
+
+  try:
+    note = Documents.objects.filter(id=note_id)
+    note = note[0]
+  except IndexError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Note] Note ID is invalid.')
+    return redirect('show_all_notes', patient_id=patient_id)
+
+  file_path = note.data.path
+  file_name = note.data.name.split('/', 1)[1]
+
+  with open(file_path, 'rb') as note:
+    content_type = guess_type(file_path)[0]
+    response = HttpResponse(note, content_type=content_type)
+    response['Content-Length'] = os.path.getsize(file_path)
+    response['Content-Disposition'] = "attachment; filename=%s" %  file_name
+
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Download Note ' + str(note_id))
+
+    return response
 
 ##########################################
 ############ Helper Functions ############
