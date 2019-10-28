@@ -19,6 +19,7 @@ from userlogs.models import Logs
 
 import hashlib
 import qrcode
+import datetime
 
 class PatientLogin(LoginView):
   """
@@ -40,8 +41,9 @@ class PatientLogin(LoginView):
       auth_login(self.request, form.get_user())
       nonce = get_random_string(length=16, allowed_chars=u'abcdefghijklmnopqrstuvwxyz0123456789')
       user = patient.username
-      # if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
-      user.sub_id_hash = nonce  # change field
+      # if len(user.hashed_last_six) > 0 and len(user.hashed_id) > 0:
+      user.latest_nonce = nonce  # change field
+      user.nonce_timestamp = datetime.datetime.now()
       user.save()  # this will update only
       Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Patient Login')
       return redirect('patient_qr', patient_id=patient.id)
@@ -92,7 +94,7 @@ def patient_settings(request, patient_id):
   user = patient.username
 
   # the action has not gone through QR verification
-  if len(user.sub_id_hash) > 0:
+  if len(user.latest_nonce) > 0:
     return redirect('patient_login')
 
   Logs.objects.create(type='READ', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Settings')
@@ -116,7 +118,7 @@ def patient_edit_settings(request, patient_id):
   user = patient.username
 
   # the action has not gone through QR verification
-  if len(user.sub_id_hash) > 0:
+  if len(user.latest_nonce) > 0:
     return redirect('patient_login')
 
   form = UserEditForm(request.POST or None, instance=user)
@@ -157,7 +159,7 @@ def patient_change_password(request, patient_id):
   user = patient.username
 
   # the action has not gone through QR verification
-  if len(user.sub_id_hash) > 0:
+  if len(user.latest_nonce) > 0:
     return redirect('patient_login')
 
   change_password = PatientChangePassword.as_view(
@@ -180,7 +182,7 @@ def patient_change_password_complete(request, patient_id):
   user = patient.username
 
   # the action has not gone through QR verification
-  if len(user.sub_id_hash) > 0:
+  if len(user.latest_nonce) > 0:
     return redirect('patient_login')
 
   change_password_complete = PatientChangePasswordComplete.as_view(
@@ -204,13 +206,13 @@ def patient_qr(request, patient_id):
   user = patient.username
 
   # when user purposefully try to traverse to this url but they haven't registered
-  # if len(user.device_id_hash) == 0 and len(user.android_id_hash) == 0:
+  # if len(user.hashed_last_six) == 0 and len(user.hashed_id) == 0:
   #   Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_ERROR, details='[2FA] URL traversal. Not Registered yet.')
   #   return redirect("patient_token_register", patient_id=patient.id)
 
   # require a valid nonce (exists and not expired)
-  if len(user.sub_id_hash) > 0:
-    nonce = user.sub_id_hash
+  if len(user.latest_nonce) > 0:
+    nonce = user.latest_nonce
   else:
     # if somehow bypassed login
     Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_ERROR, details='[2FA] Username-password login bypassed. No valid nonce.')
@@ -222,10 +224,10 @@ def patient_qr(request, patient_id):
     cd = form.cleaned_data
     otp = cd.get('otp')
     if otp == '1234':
-    # if user.device_id_hash == recovered_value(user.android_id_hash, nonce, otp):
+    # if user.hashed_last_six == recovered_value(user.hashed_id, nonce, otp):
       # give HttpResponse only or render page you need to load on success
       # delete the nonce
-      user.sub_id_hash = ""
+      user.latest_nonce = ""
       user.save()
       Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='[2FA] Login successful. Nonce deleted.')
       return redirect('patient_dashboard', patient_id=patient.id)
@@ -256,7 +258,7 @@ def patient_token_register(request, patient_id):
   user = patient.username
 
   # device already linked
-  if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
+  if len(user.hashed_last_six) > 0 and len(user.hashed_id) > 0:
     Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_ERROR, details='[2FA_Reminder] URL traversal. Already registered.')
     return redirect("repeat_register", user_id=user.uid)
 
@@ -274,7 +276,7 @@ def patient_dashboard(request, patient_id):
   user = patient.username
 
   # the action has not gone through QR verification
-  if len(user.sub_id_hash) > 0:
+  if len(user.latest_nonce) > 0:
     return redirect('patient_login')
 
   Logs.objects.create(type='READ', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Dashboard')
