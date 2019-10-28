@@ -36,7 +36,6 @@ urlpatterns = [
     path('healthcare/', include('healthcarenotes.urls')),
     path('researcher/', include('researcherlogin.urls')),
     path('researcher/', include('researcherquery.urls')),
-    path('researcher/', include('researcheranonymise.urls')), # Change to admin
     path('mobileregister/', include('mobileregister.urls')),
     # path('userlogs/', include('userlogs.urls'))
 ] 

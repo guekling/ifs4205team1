@@ -197,6 +197,7 @@ def patient_qr(request, patient_id):
 
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[2FA] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/patient/login/')
 
   patient = patient_does_not_exists(patient_id)
@@ -204,12 +205,15 @@ def patient_qr(request, patient_id):
 
   # when user purposefully try to traverse to this url but they haven't registered
   # if len(user.device_id_hash) == 0 and len(user.android_id_hash) == 0:
+  #   Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_ERROR, details='[2FA] URL traversal. Not Registered yet.')
   #   return redirect("patient_token_register", patient_id=patient.id)
 
+  # require a valid nonce (exists and not expired)
   if len(user.sub_id_hash) > 0:
     nonce = user.sub_id_hash
   else:
     # if somehow bypassed login
+    Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_ERROR, details='[2FA] Username-password login bypassed. No valid nonce.')
     return redirect('patient_login')
 
   form = UserQrForm(request.POST or None)
@@ -223,9 +227,11 @@ def patient_qr(request, patient_id):
       # delete the nonce
       user.sub_id_hash = ""
       user.save()
+      Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='[2FA] Login successful. Nonce deleted.')
       return redirect('patient_dashboard', patient_id=patient.id)
     else:
       # if fails, then redirect to custom url/page
+      Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_ERROR, details='[2FA] Wrong OTP.')
       return redirect('patient_login')
 
   else:
@@ -243,6 +249,7 @@ def patient_token_register(request, patient_id):
 
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[2FA Reminder] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/patient/login/')
 
   patient = patient_does_not_exists(patient_id)
@@ -250,6 +257,7 @@ def patient_token_register(request, patient_id):
 
   # device already linked
   if len(user.device_id_hash) > 0 and len(user.android_id_hash) > 0:
+    Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_ERROR, details='[2FA_Reminder] URL traversal. Already registered.')
     return redirect("repeat_register", user_id=user.uid)
 
   return render(request, "patient_token_register.html")

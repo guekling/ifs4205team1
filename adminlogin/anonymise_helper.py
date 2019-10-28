@@ -1,6 +1,4 @@
-from core.models import Researcher
-
-### Helper functions related to researcher e.g. login & anonymisation
+### Helper functions related to anonymisation
 
 AGE_NAME = "age"
 POSTALCODE_NAME = "postalcode"
@@ -254,12 +252,3 @@ def map_age_to_decade(age):
 
 	if 91 <= age <= 100:
 		return '91-100'
-
-def check_researcher_exists(researcher_id):
-	"""
-	Redirects to login if researcher_id is invalid
-	"""
-	try:
-		return Researcher.objects.get(id=researcher_id)
-	except Researcher.DoesNotExist:
-		redirect('researcher_login')

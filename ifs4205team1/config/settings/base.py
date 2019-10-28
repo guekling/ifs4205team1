@@ -58,7 +58,6 @@ INSTALLED_APPS = [
     'healthcarenotes',
     'researcherlogin',
     'researcherquery',
-    'researcheranonymise', # Change to admin
     'mobileregister',
     'userlogs',
 ]

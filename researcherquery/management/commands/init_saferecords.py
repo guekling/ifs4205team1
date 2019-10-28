@@ -9,6 +9,6 @@ class Command(BaseCommand):
     database_name = 'safedb'
     # call_command('loaddata', fixture_name, app_label=app_name, database=database_name) # Load JSON file to create safe records
     
-    call_command('loaddata', fixture_name, '--database', database_name) # Load JSON file to create safe 
+    call_command('loaddata', fixture_name, '--database', database_name) # Load JSON file to create safe records
 
     print("Loading of data completed.")

@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 
 class QiInfo(models.Model):
@@ -23,7 +24,7 @@ class QiInfo(models.Model):
 		return self.suppression_rate
 
 class SafeUsers(models.Model): 
-	uid = models.PositiveIntegerField(primary_key=True, unique=True)
+	uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 	age = models.CharField(max_length=8)
 	postalcode = models.CharField(max_length=6)
 

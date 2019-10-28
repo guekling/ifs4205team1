@@ -1,15 +1,26 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
-from core.models import Researcher
+from core.models import User, Researcher
 from researcherquery.models import QiInfo, SafeUsers, SafeDiagnosis, SafeReadings, SafeImages, SafeVideos
+from userlogs.models import Logs
 from researcherquery.forms import SearchRecordsForm
-from researcherquery.helper import *
 import datetime
 
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
 def search_records(request, researcher_id):
+	# Checks if logged in researcher has the same id as in the URL
+	if (request.user.researcher_username.id != researcher_id):
+		Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Search Records] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
+		return redirect('researcher_login')
+
 	researcher = check_researcher_exists(researcher_id)
+	user = researcher.username
+
+	# the action has not gone through QR verification
+	if len(user.sub_id_hash) > 0:
+		return redirect('researcher_login')
+
 	today_date = datetime.datetime.now().strftime("%Y-%m-%d")
 	reset_recordtypes_choices_checkbox()
 	submitted = False
@@ -49,6 +60,8 @@ def search_records(request, researcher_id):
 
 			users = process_age_postalcode(combi_age, combi_postalcode, ages, postalcodes)
 			process_recordtypes(recordtypes)
+
+			Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Search Records')
 
 			context = {
 				'form': form,
@@ -98,6 +111,19 @@ def search_records(request, researcher_id):
 ##########################################
 ############ Helper Functions ############
 ##########################################
+
+STATUS_OK = 1
+STATUS_ERROR = 0
+
+COMBI_AGE_EXACT = 'A'
+COMBI_AGE_DECADE = 'D'
+COMBI_AGE_ALL = '*'
+COMBI_POSTALCODE_EXACT = 'P'
+COMBI_POSTALCODE_SECTOR = 'XX'
+COMBI_POSTALCODE_ALL = '*'
+COMBI_DATE_LM = 'LM'
+COMBI_DATE_LY = 'LY'
+COMBI_DATE_ALL = '*'
 
 DIAGNOSIS_NAME = 'diagnosis'
 BP_READING_NAME = 'bp_reading'
@@ -254,6 +280,37 @@ def process_age_decade(ages):
 			processed_ages.append(age_decade)
 	return processed_ages
 
+def map_age_to_decade(age):
+	if 0 <= age <= 10:
+		return '0-10'
+
+	if 11 <= age <= 20:
+		return '11-20'
+
+	if 21 <= age <= 30:
+		return '21-30'
+
+	if 31 <= age <= 40:
+		return '31-40'
+
+	if 41 <= age <= 50:
+		return '41-50'
+
+	if 51 <= age <= 60:
+		return '51-60'
+
+	if 61 <= age <= 70:
+		return '61-70'
+
+	if 71 <= age <= 80:
+		return '71-80'
+
+	if 81 <= age <= 90:
+		return '81-90'
+
+	if 91 <= age <= 100:
+		return '91-100'
+
 def process_postalcode_sector(postalcodes):
 	processed_postalcodes = []
 	for postalcode in postalcodes:
@@ -267,3 +324,12 @@ def process_recordtypes(recordtypes):
 	# Do not have to validate if researcher has perm for each type as only permitted record types are available as checkbox choices
 	for recordtype in recordtypes:
 		RECORD_TYPES_SELECTED[recordtype] = True
+
+def check_researcher_exists(researcher_id):
+	"""
+	Redirects to login if researcher_id is invalid
+	"""
+	try:
+		return Researcher.objects.get(id=researcher_id)
+	except Researcher.DoesNotExist:
+		redirect('researcher_login')

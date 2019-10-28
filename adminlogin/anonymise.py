@@ -1,40 +1,13 @@
 from __future__ import division
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.shortcuts import render, redirect
 from django.utils import timezone
 from datetime import timedelta
 import pytz
-from core.models import Researcher, Patient, User # Change to admin
+from core.models import Patient, User
 from patientrecords.models import Diagnosis, Readings, Images, Videos # Production DB
 from researcherquery.models import QiInfo, SafeUsers, SafeDiagnosis, SafeReadings, SafeImages, SafeVideos # SAFE DB
-from researcherquery.helper import *
+from adminlogin.anonymise_helper import *
 
-# Change to admin login
-@login_required(login_url='/researcher/login/')
-@user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
-def anonymise_records(request, researcher_id): # Change to admin_id
-	researcher = check_researcher_exists(researcher_id)
-
-	context = {
-		'researcher': researcher
-	}
-
-	# Check if GET (first load) or POST (subsequent load)
-	if request.method == 'POST':
-		# Pre-Process DB
-		anonymise()
-
-		return render(request, 'anonymise_records.html', context)
-
-	# GET - First load
-	else:
-		return render(request, 'anonymise_records.html', context)
-
-##########################################
-############ Helper Functions ############
-##########################################
-
-def anonymise():
+def anonymise_and_store():
 	k_value = 3
 	patients = Patient.objects.all()
 	total_patients = patients.count()
@@ -94,7 +67,6 @@ def anonymise():
 
 				if not (patients_left >= k_value):
 					for user in users_copy:
-						print("LINE 145")
 						patients = patients.exclude(username=user.username)
 
 				# After this if:
@@ -129,8 +101,7 @@ def store_qi_combi(qi_combi, k_value, suppression_rate):
 	if qiinfo_data.count() != 0:
 		QiInfo.objects.all().delete()
 
-	qiinfo_obj = QiInfo(combi_age=combi_age, combi_postalcode=combi_postalcode, combi_date=combi_date, k_value=k_value, suppression_rate=suppression_rate)
-	qiinfo_obj.save()
+	QiInfo.objects.create(combi_age=combi_age, combi_postalcode=combi_postalcode, combi_date=combi_date, k_value=k_value, suppression_rate=suppression_rate)
 
 	print("DONE_SAVING_QI_COMBI")
 
@@ -148,9 +119,7 @@ def store_anonymised_records(qi_combi, patients):
 
 	print("STORE_ANONYMISED_RECORDS")
 
-	uid = 0
 	for patient in patients:
-		uid += 1
 		user = User.objects.get(username=patient.username)
 
 		# Convert age & postalcode based on current QI combi
@@ -164,21 +133,18 @@ def store_anonymised_records(qi_combi, patients):
 		if qi_combi[POSTALCODE_NAME] == COMBI_POSTALCODE_ALL:
 			user.postalcode = '*'
 
-		safeusers_obj = SafeUsers(uid=uid, age=user.age, postalcode=user.postalcode)
-		safeusers_obj.save()
+		safeusers_obj = SafeUsers.objects.create(uid=user.uid, age=user.age, postalcode=user.postalcode)
 
 		# print(safeusers_obj.uid)
 
 		# Get all readings associated with current patient
 		readings = patient.readings_patient.all()
 		for reading in readings:
-			safereadings_obj = SafeReadings(uid=safeusers_obj, type=reading.type, value=reading.data)
-			safereadings_obj.save()
+			safereadings_obj = SafeReadings.objects.create(uid=safeusers_obj, type=reading.type, value=reading.data)
 
 			# print(safereadings_obj.id)
 
 	print("DONE_SAVING_RECORDS")
-
 
 def generalise_and_get_users(qi_combi, user):
 	combi_age = qi_combi[AGE_NAME]
