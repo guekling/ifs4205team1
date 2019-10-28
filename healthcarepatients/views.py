@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
+from django.http import HttpResponse
 
 from healthcarepatients.forms import TransferPatientForm
 
@@ -7,7 +8,9 @@ from core.models import Healthcare
 from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
 from userlogs.models import Logs
 
+import os
 from itertools import chain
+from mimetypes import guess_type
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
@@ -147,6 +150,45 @@ def show_patient_record(request, healthcare_id, patient_id, record_id):
   Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Show Patient ' + str(patient_id) + ' Record ' + str(record_id))
 
   return render(request, 'show_patient_record.html', context)
+
+@login_required(login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+def download_patient_record(request, healthcare_id, patient_id, record_id):
+  """
+  Download a single medical record
+  """
+  if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Patient Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    return redirect('/healthcare/login/')
+
+  healthcare = healthcare_does_not_exists(healthcare_id)
+
+  try:
+    patient = healthcare.patients.all().filter(id=patient_id)
+    patient = patient[0]
+  except IndexError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Patient Record] Patient ID is invalid.')
+    return redirect('show_all_patients', healthcare_id=healthcare_id)
+
+  try:
+    record = get_record(record_id)
+    record = record[0]
+  except IndexError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Patient Record] Record ID is invalid.')
+    return redirect('show_patient_records', healthcare_id=healthcare_id, patient_id=patient_id)
+
+  file_path = record.data.path
+  file_name = record.data.name.split('/', 1)[1]
+
+  with open(file_path, 'rb') as record:
+    content_type = guess_type(file_path)[0]
+    response = HttpResponse(record, content_type=content_type)
+    response['Content-Length'] = os.path.getsize(file_path)
+    response['Content-Disposition'] = "attachment; filename=%s" %  file_name
+
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Download Patient ' + str(patient_id) + ' Record ' + str(record_id))
+
+    return response
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')

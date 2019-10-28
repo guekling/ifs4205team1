@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
+from django.http import HttpResponse
 
 from patientrecords.forms import ReadingsPermissionEditForm, TimeSeriesPermissionEditForm, DocumentsPermissionEditForm, VideosPermissionEditForm, ImagesPermissionEditForm, CreateNewRecord, CreateReadingsRecord, CreateTimeSeriesRecord, CreateImagesRecord, CreateVideosRecord, CreateDocumentsRecord
 
@@ -7,7 +8,9 @@ from core.models import Patient
 from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
 from userlogs.models import Logs
 
+import os
 from itertools import chain
+from mimetypes import guess_type
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
@@ -81,6 +84,38 @@ def show_record(request, patient_id, record_id):
   }
 
   return render(request, 'show_record.html', context)
+
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+def download_record(request, patient_id, record_id):
+  """
+  Download a single medical record
+  """
+  if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    return redirect('/patient/login/')
+
+  patient = patient_does_not_exists(patient_id)
+
+  try:
+    record = get_record(record_id)
+    record = record[0]
+  except IndexError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Record] Record ID is invalid.')
+    return redirect('show_all_records', patient_id=patient_id)
+
+  file_path = record.data.path
+  file_name = record.data.name.split('/', 1)[1]
+
+  with open(file_path, 'rb') as record:
+    content_type = guess_type(file_path)[0]
+    response = HttpResponse(record, content_type=content_type)
+    response['Content-Length'] = os.path.getsize(file_path)
+    response['Content-Disposition'] = "attachment; filename=%s" %  file_name
+
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Donwload Record ' + str(record_id))
+
+    return response
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')

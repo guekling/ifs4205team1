@@ -5,6 +5,7 @@
 {% block content %}
 <h1>{{ record.type }} Record</h1>
 
+{% to_model_name record as to_record_model_name_result %}
 <table class="table text-center">
   <tr>
     <th>Date</th>
@@ -16,7 +17,11 @@
   </tr>
   <tr>
     <th>Data</th>
-    <th>{{ record.data }}</th>
+    {% if to_record_model_name_result == 'Readings' %}
+      <th>{{ record.data }}</th>
+    {% else %}
+      <th>{{ record.data }} || <a href="{% url 'download_record' patient_id=patient.id record_id=record.id %}">Download Data</a></th>
+    {% endif %}
   </tr>
 </table>
 
