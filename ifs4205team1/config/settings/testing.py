@@ -28,6 +28,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 MEDIA_URL = '/media/'
 
+PROTECTED_MEDIA_URL = 'protected_media/'
+PROTECTED_MEDIA_PATH = 'protected_media/'
+
 # Admin page
 
 ADMIN_URL = 'admin/'
