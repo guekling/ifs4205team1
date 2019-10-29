@@ -320,7 +320,7 @@ def admin_show_researcher(request, admin_id, researcher_id):
 STATUS_OK = 1
 STATUS_ERROR = 0
 
-def admin_admin_does_not_exists(admin_id):
+def admin_does_not_exists(admin_id):
   """
   Redirects to login if admin_id is invalid
   """
