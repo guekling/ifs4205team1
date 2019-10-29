@@ -77,9 +77,9 @@ LOGGING = {
     },
   },
   'loggers': {
-    'root': {
+    'django': {
       'handlers': ['FILE_CONSOLE'],
-      'level': 'DEBUG',
+      'level': 'INFO',
       'propagate': True,
     },
   },
