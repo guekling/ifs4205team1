@@ -283,7 +283,7 @@ def get_records_in_range(combi_date, recordtype, patient):
 			return diagnosis
 
 		if recordtype == READINGS_NAME:
-			readings = patient.readings_patient.filter(type__in=['Blood Pressure', 'Heart Rate', 'Temperature'], time_start__gte=duration)
+			readings = patient.readings_patient.filter(type__in=['Blood Pressure', 'Heart Rate', 'Temperature'], timestamp__gte=duration)
 			return readings
 
 		if recordtype == IMAGES_NAME:
