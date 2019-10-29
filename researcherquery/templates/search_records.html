@@ -236,81 +236,121 @@
 						<!-- Diagnosis -->
 						<th>
 						{% if diagnosis %}
-							{% for diag in user.get_diagnosis %}
-								{{ diag.value | linebreaks }}
-							{% endfor %}
+							{% if user.get_diagnosis.count != 0 %}
+								{% for diag in user.get_diagnosis %}
+									{{ diag.value | linebreaks }}
+								{% endfor %}
+							{% else %}
+								-
+							{% endif %}
 						{% endif %}
 						</th>
 						<!-- BP Readings -->
 						<th>
 						{% if bp_reading %}
-							{% for bp_reading in user.get_bp_readings %}
-								{{ bp_reading.value | linebreaks }}
-							{% endfor %}
+							{% if user.get_bp_readings.count != 0 %}
+								{% for bp_reading in user.get_bp_readings %}
+									{{ bp_reading.value | linebreaks }}
+								{% endfor %}
+							{% else %}
+								-
+							{% endif %}
 						{% endif %}
 						</th>
 						<!-- HeartRate Readings -->
 						<th>
 						{% if hr_reading %}
-							{% for hr_reading in user.get_hr_readings %}
-								{{ hr_reading.value | linebreaks }}
-							{% endfor %}
+							{% if user.get_hr_readings.count != 0 %}
+								{% for hr_reading in user.get_hr_readings %}
+									{{ hr_reading.value | linebreaks }}
+								{% endfor %}
+							{% else %}
+								-
+							{% endif %}
 						{% endif %}
 						</th>
 						<!-- Temp Readings -->
 						<th>
 						{% if temp_reading %}
-							{% for temp_reading in user.get_temp_readings %}
-								{{ temp_reading.value | linebreaks }}
-							{% endfor %}
+							{% if user.get_temp_readings.count != 0 %}
+								{% for temp_reading in user.get_temp_readings %}
+									{{ temp_reading.value | linebreaks }}
+								{% endfor %}
+							{% else %}
+								-
+							{% endif %}
 						{% endif %}
 						</th>
 						<!-- Cancer Images -->
 						<th>
 						{% if cancer_img %}
-							{% for cancer_image in user.get_cancer_images %}
-								{{ cancer_image.value | linebreaks }}
-							{% endfor %}
+							{% if user.get_cancer_images.count != 0 %}
+								{% for cancer_image in user.get_cancer_images %}
+									{{ cancer_image.value | linebreaks }}
+								{% endfor %}
+							{% else %}
+								-
+							{% endif %}
 						{% endif %}
 						</th>
 						<!-- MRI Images -->
 						<th>
 						{% if mri_img %}
-							{% for mri_image in user.get_mri_images %}
-								{{ mri_image.value | linebreaks }}
-							{% endfor %}
+							{% if user.get_mri_images.count != 0 %}
+								{% for mri_image in user.get_mri_images %}
+									{{ mri_image.value | linebreaks }}
+								{% endfor %}
+							{% else %}
+								-
+							{% endif %}
 						{% endif %}
 						</th>
 						<!-- Ultrasound Images -->
 						<th>
 						{% if ultrasound_img %}
-							{% for ultrasound_image in user.get_ultrasound_images %}
-								{{ ultrasound_image.value | linebreaks }}
-							{% endfor %}
+							{% if user.get_ultrasound_images.count != 0 %}
+								{% for ultrasound_image in user.get_ultrasound_images %}
+									{{ ultrasound_image.value | linebreaks }}
+								{% endfor %}
+							{% else %}
+								-
+							{% endif %}
 						{% endif %}
 						</th>
 						<!-- Xray Images -->
 						<th>
 						{% if xray_img %}
-							{% for xray_image in user.get_xray_images %}
-								{{ xray_image.value | linebreaks }}
-							{% endfor %}
+							{% if user.get_xray_images.count != 0 %}
+								{% for xray_image in user.get_xray_images %}
+									{{ xray_image.value | linebreaks }}
+								{% endfor %}
+							{% else %}
+								-
+							{% endif %}
 						{% endif %}
 						</th>
 						<!-- Gastroscope Videos -->
 						<th>
 						{% if gastroscope_vid %}
-							{% for gastroscope_video in user.get_gastroscope_videos %}
-								{{ gastroscope_video.value | linebreaks }}
-							{% endfor %}
+							{% if user.get_gastroscope_videos.count != 0 %}
+								{% for gastroscope_video in user.get_gastroscope_videos %}
+									{{ gastroscope_video.value | linebreaks }}
+								{% endfor %}
+							{% else %}
+								-
+							{% endif %}
 						{% endif %}
 						</th>
 						<!-- Gait Videos -->
 						<th>
 						{% if gait_vid %}
-							{% for gait_video in user.get_gait_videos %}
-								{{ gait_video.value | linebreaks }}
-							{% endfor %}
+							{% if user.get_gait_videos.count != 0 %}
+								{% for gait_video in user.get_gait_videos %}
+									{{ gait_video.value | linebreaks }}
+								{% endfor %}
+							{% else %}
+								-
+							{% endif %}
 						{% endif %}
 						</th>
 					</tr>

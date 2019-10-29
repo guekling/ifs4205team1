@@ -206,6 +206,12 @@ def show_all_logs(request, admin_id):
     return redirect('/')
 
   admin = admin_does_not_exists(admin_id)
+  user = admin.username
+
+  # the action has not gone through QR verification
+  if len(user.latest_nonce) > 0:
+    return redirect('admin_login')
+  
   logs_list = Logs.objects.all().order_by('-timestamp')
 
   paginator = Paginator(logs_list, 10)
@@ -236,6 +242,10 @@ def anonymise_records(request, admin_id):
 
   admin = admin_does_not_exists(admin_id)
   user = admin.username
+
+  # the action has not gone through QR verification
+  if len(user.latest_nonce) > 0:
+    return redirect('admin_login')
 
   context = {
     'admin': admin

@@ -36,6 +36,8 @@ def search_records(request, researcher_id):
 		form = SearchRecordsForm(request.POST, tday=today_date, perm=RECORD_TYPES_PERMISSION)
 
 		if form.is_valid():
+			
+
 			# Get values from POST request
 			ages = request.POST.getlist('age')
 			postalcode1 = request.POST.get('postalcode1')
@@ -127,7 +129,7 @@ def download_records_csv(request, researcher_id):
 	user = researcher.username
 
 	# the action has not gone through QR verification
-	if len(user.sub_id_hash) > 0:
+	if len(user.latest_nonce) > 0:
 		return redirect('researcher_login')
 
 	response = HttpResponse(content_type='text/csv')
@@ -210,7 +212,7 @@ def download_records_xls(request, researcher_id):
 	user = researcher.username
 
 	# the action has not gone through QR verification
-	if len(user.sub_id_hash) > 0:
+	if len(user.latest_nonce) > 0:
 		return redirect('researcher_login')
 
 
@@ -509,6 +511,7 @@ def process_postalcode_sector(postalcodes):
 def process_recordtypes(recordtypes):
 	# Update state only if selected in checkbox
 	# Do not have to validate if researcher has perm for each type as only permitted record types are available as checkbox choices
+	
 	for recordtype in recordtypes:
 		RECORD_TYPES_SELECTED[recordtype] = True
 

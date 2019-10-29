@@ -3,8 +3,8 @@ from django.utils import timezone
 from datetime import timedelta
 import pytz
 from core.models import Patient, User
-from patientrecords.models import Diagnosis, Readings, Images, Videos # Production DB
-from researcherquery.models import QiInfo, SafeUsers, SafeDiagnosis, SafeReadings, SafeImages, SafeVideos # SAFE DB
+from patientrecords.models import Diagnosis, Readings, Images, Videos
+from researcherquery.models import QiInfo, SafeUsers, SafeDiagnosis, SafeReadings, SafeImages, SafeVideos
 from adminlogin.anonymise_helper import *
 
 def anonymise_and_store():
@@ -80,7 +80,7 @@ def anonymise_and_store():
 
 		print("TOTAL PATIENT")
 		print(total_patients)
-		print(total_patients_left) #COMPARE WITH THIS
+		print(total_patients_left)
 		print(suppression_rate)
 
 		if suppression_rate <= 10.0:
@@ -109,9 +109,21 @@ def store_qi_combi(qi_combi, k_value, suppression_rate):
 
 def store_anonymised_records(qi_combi, patients):
 	# Remove all data from tables if not empty
+	safediagnosis_data = SafeDiagnosis.objects.all()
+	if safediagnosis_data.count() != 0:
+		SafeDiagnosis.objects.all().delete()
+
 	safereadings_data = SafeReadings.objects.all()
 	if safereadings_data.count() != 0:
 		SafeReadings.objects.all().delete()
+
+	safeimages_data = SafeImages.objects.all()
+	if safeimages_data.count() != 0:
+		SafeImages.objects.all().delete()
+
+	safevideos_data = SafeVideos.objects.all()
+	if safevideos_data.count() != 0:
+		SafeVideos.objects.all().delete()
 
 	safeusers_data = SafeUsers.objects.all()
 	if safeusers_data.count() != 0:
@@ -137,12 +149,26 @@ def store_anonymised_records(qi_combi, patients):
 
 		# print(safeusers_obj.uid)
 
-		# Get all readings associated with current patient
-		readings = patient.readings_patient.all()
+		# Get all diagnosis associated with current patient in range
+		diagnosis = get_records_in_range(qi_combi[DATE_NAME], DIAGNOSIS_NAME, patient)
+		for diag in diagnosis:
+			safediagnosis_obj = SafeDiagnosis.objects.create(uid=safeusers_obj, value=diag.title)
+
+		# Get all readings associated with current patient in range
+		readings = get_records_in_range(qi_combi[DATE_NAME], READINGS_NAME, patient)
 		for reading in readings:
 			safereadings_obj = SafeReadings.objects.create(uid=safeusers_obj, type=reading.type, value=reading.data)
-
 			# print(safereadings_obj.id)
+
+		# Get all images associated with current patient in range
+		images = get_records_in_range(qi_combi[DATE_NAME], IMAGES_NAME, patient)
+		for img in images:
+			safeimages_obj = SafeImages.objects.create(uid=safeusers_obj, type=img.type, value=img.title)
+
+		# Get all videos associated with current patient in range
+		videos = get_records_in_range(qi_combi[DATE_NAME], VIDEOS_NAME, patient)
+		for vid in videos:
+			safevideos_obj = SafeVideos.objects.create(uid=safeusers_obj, type=vid.type, value=vid.title)
 
 	print("DONE_SAVING_RECORDS")
 
@@ -195,7 +221,7 @@ def generalise_and_get_users(qi_combi, user):
 		users = User.objects.all().order_by('age', 'postalcode')
 		return users
 
-def generalise_date_and_check_record_exists(combi_date, patient):
+def generalise_date(combi_date):
 	duration = timezone.now()
 
 	if combi_date == COMBI_DATE_LM:
@@ -204,20 +230,87 @@ def generalise_date_and_check_record_exists(combi_date, patient):
 	if combi_date == COMBI_DATE_LY:
 		duration = duration - timedelta(days=365)
 
+	return duration
+
+# Generalise date and check if at least one record exists for each patient
+def generalise_date_and_check_record_exists(combi_date, patient):
+	duration = generalise_date(combi_date)
+
 	if combi_date == COMBI_DATE_LM or combi_date == COMBI_DATE_LY: # LM or LY
-		bp_readings = patient.readings_patient.filter(type='Blood Pressure', timestamp__gte=duration)
-		hr_readings = patient.readings_patient.filter(type='Heart Rate', timestamp__gte=duration)
-		temp_readings = patient.readings_patient.filter(type='Temperature', timestamp__gte=duration)
-
-		if bp_readings.count() != 0 or hr_readings.count() != 0 or temp_readings.count() != 0:
+		diagnosis = patient.diagnosis_patient.filter(time_start__gte=duration)
+		if diagnosis.count() != 0:
 			return True
-		return False
 
+		readings = patient.readings_patient.filter(type__in=['Blood Pressure', 'Heart Rate', 'Temperature'], timestamp__gte=duration)
+		if readings.count() != 0:
+			return True
+
+		images = patient.images_patient.filter(type__in=['Cancer', 'MRI', 'Ultrasound', 'Xray'], timestamp__gte=duration)
+		if images.count() != 0:
+			return True
+
+		videos = patient.videos_patient.filter(type__in=['Gastroscope', 'Gait'], timestamp__gte=duration)
+		if videos.count() != 0:
+			return True
+
+		return False
 	else:
-		bp_readings = patient.readings_patient.filter(type='Blood Pressure')
-		hr_readings = patient.readings_patient.filter(type='Heart Rate')
-		temp_readings = patient.readings_patient.filter(type='Temperature')
-
-		if bp_readings.count() != 0 or hr_readings.count() != 0 or temp_readings.count() != 0:
+		diagnosis = patient.diagnosis_patient.all()
+		if diagnosis.count() != 0:
 			return True
+
+		readings = patient.readings_patient.filter(type__in=['Blood Pressure', 'Heart Rate', 'Temperature'])
+		if readings.count() != 0:
+			return True
+
+		images = patient.images_patient.filter(type__in=['Cancer', 'MRI', 'Ultrasound', 'Xray'])
+		if images.count() != 0:
+			return True
+
+		videos = patient.videos_patient.filter(type__in=['Gastroscope', 'Gait'])
+		if videos.count() != 0:
+			return True
+
 		return False
+
+# Only get the 10 record types
+def get_records_in_range(combi_date, recordtype, patient):
+	duration = generalise_date(combi_date)
+
+	if combi_date == COMBI_DATE_LM or combi_date == COMBI_DATE_LY: # LM or LY
+		if recordtype == DIAGNOSIS_NAME:
+			diagnosis = patient.diagnosis_patient.filter(time_start__gte=duration)
+			return diagnosis
+
+		if recordtype == READINGS_NAME:
+			readings = patient.readings_patient.filter(type__in=['Blood Pressure', 'Heart Rate', 'Temperature'], time_start__gte=duration)
+			return readings
+
+		if recordtype == IMAGES_NAME:
+			images = patient.images_patient.filter(type__in=['Cancer', 'MRI', 'Ultrasound', 'Xray'], timestamp__gte=duration)
+			return images
+
+		if recordtype == VIDEOS_NAME:
+			videos = patient.videos_patient.filter(type__in=['Gastroscope', 'Gait'], timestamp__gte=duration)
+			return videos
+	else:
+		if recordtype == DIAGNOSIS_NAME:
+			diagnosis = patient.diagnosis_patient.all()
+			return diagnosis
+
+		if recordtype == READINGS_NAME:
+			readings = patient.readings_patient.filter(type__in=['Blood Pressure', 'Heart Rate', 'Temperature'])
+			return readings
+
+		if recordtype == IMAGES_NAME:
+			images = patient.images_patient.filter(type__in=['Cancer', 'MRI', 'Ultrasound', 'Xray'])
+			return images
+
+		if recordtype == VIDEOS_NAME:
+			videos = patient.videos_patient.filter(type__in=['Gastroscope', 'Gait'])
+			return videos
+
+DIAGNOSIS_NAME = 'diagnosis'
+READINGS_NAME = 'readings'
+IMAGES_NAME = 'images'
+VIDEOS_NAME = 'videos'
