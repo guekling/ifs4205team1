@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'django_select2',
     'qr_code',
+    'axes',
 
   	# APPS
     'ifs4205team1',
@@ -66,6 +67,12 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = 'core.User'
 
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesBackend',
+    # Default Django authentication backend
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -74,6 +81,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
 
 ROOT_URLCONF = 'ifs4205team1.urls'
@@ -159,3 +167,6 @@ PROTECTED_MEDIA_PATH = os.environ.get("PROTECTED_MEDIA_PATH")
 
 # Admin Page
 ADMIN_URL = os.environ.get("ADMIN_URL")
+
+# Axes Configuration
+AXES_FAILURE_LIMIT = 5
