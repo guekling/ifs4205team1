@@ -254,14 +254,20 @@ class Diagnosis(models.Model):
   title = models.CharField(max_length=64)
   time_start = models.DateTimeField(auto_now_add=True)
   time_end = models.DateTimeField(null=True)
-  username = models.ManyToManyField(
+  owner_id = models.ForeignKey( # many diagnosis related to one user
+    User,
+    on_delete=models.PROTECT,
+    related_name='diagnosis_owner'
+  )
+  patient_id = models.ForeignKey( # many readings related to one patient
     Patient,
-    related_name='diagnosis_username'
+    on_delete=models.CASCADE,
+    related_name='diagnosis_patient'
   )
 
   def has_permission(self, healthcare):
     """
-    Checks if a user has permissions to view the reading.
+    Checks if a user has permissions to view the diagnosis.
     """
 
     diagnosis = DiagnosisPerm.objects.filter(diag_id = self, username=healthcare)
