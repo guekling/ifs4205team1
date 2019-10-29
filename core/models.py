@@ -8,7 +8,7 @@ class User(AbstractUser):
   username = models.CharField(primary_key=True, max_length=64, unique=True)
   gender = models.CharField(max_length=1) # only allow M/F
   dob = models.DateField()
-  age = models.PositiveIntegerField() # max digits = 3
+  age = models.PositiveIntegerField(default=None, blank=True, null=True) # max digits = 3
   address = models.CharField(max_length=150)
   postalcode = models.CharField(max_length=6)
   contactnumber = models.PositiveIntegerField() # max digits = 8

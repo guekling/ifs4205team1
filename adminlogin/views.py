@@ -107,7 +107,7 @@ def admin_edit_settings(request, admin_id):
   if request.method == 'POST':
     if form.is_valid():
       user.save()
-      Logs.objects.create(type='UPDATE', user_id=user.id, interface='ADMIN', status=STATUS_OK, details='Edit Settings')
+      Logs.objects.create(type='UPDATE', user_id=user.uid, interface='ADMIN', status=STATUS_OK, details='Edit Settings')
       return redirect('admin_settings', admin_id=admin_id)
     else:
       Logs.objects.create(type='UPDATE', user_id=user.id, interface='ADMIN', status=STATUS_ERROR, details='[Edit Settings] Invalid Form')
@@ -118,7 +118,7 @@ def admin_edit_settings(request, admin_id):
       }
       return render(request, 'admin_edit_settings.html', context)
 
-    Logs.objects.create(type='READ', user_id=user.id, interface='ADMIN', status=STATUS_OK, details='[Edit Settings] Render Settings Form')
+    Logs.objects.create(type='READ', user_id=user.uid, interface='ADMIN', status=STATUS_OK, details='[Edit Settings] Render Settings Form')
 
   context = {
     'form': form,

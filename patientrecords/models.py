@@ -382,3 +382,29 @@ class DocumentsPerm(models.Model):
   )
   perm_value = models.PositiveSmallIntegerField(choices=PERMISSION_CHOICES)
   (('docs_id', 'username'),)
+
+# only viewable to the patients themselves
+class Notifications(models.Model):
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  timestamp = models.DateTimeField(auto_now=True)
+  # 1 patient transfer, 2 uploading files for comatose patients, 3 attach to a new doctor under emergency
+  type = models.IntegerField()
+  from_id = models.ForeignKey(  # many notifications triggered by the same user
+    User,
+    on_delete=models.PROTECT,
+    related_name='notifications_from'
+  )
+  to_id = models.ForeignKey(  # many notifications showing a patient transfer to the same healthcare professional
+    Healthcare,
+    on_delete=models.PROTECT,
+    related_name='notifications_to'
+  )
+  patient_id = models.ForeignKey(  # many notifications related to one patient
+    Patient,
+    on_delete=models.CASCADE,
+    related_name='notifications_patient'
+  )
+  # filename for type 2, empty for 1 and 3.
+  content = models.CharField(max_length=64)
+  # True means unread yet. False means already seen. cards will be displayed with different colours
+  status = models.BooleanField(default=True)

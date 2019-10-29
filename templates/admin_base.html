@@ -28,8 +28,8 @@
           Create Users
         </a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <a class="dropdown-item" href="{% url 'new_patient' admin_id=admin.id %}">Create New Patients</a>
-          <a class="dropdown-item" href="{% url 'new_healthcare' admin_id=admin.id %}">Create New Healthcare Professionals</a>
+          <a class="dropdown-item" href="{% url 'admin_new_patient' admin_id=admin.id %}">Create New Patients</a>
+          <a class="dropdown-item" href="{% url 'admin_new_healthcare' admin_id=admin.id %}">Create New Healthcare Professionals</a>
         </div>
       </li>
       <li class="nav-item dropdown">
