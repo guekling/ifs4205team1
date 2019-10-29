@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
@@ -125,6 +126,9 @@ def show_patient_record(request, healthcare_id, patient_id, record_id):
     Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient Record] Record ID is invalid.')
     return redirect('show_patient_records', healthcare_id=healthcare_id, patient_id=patient_id)
 
+  # Path to view restricted record
+  record_path = os.path.join(settings.PROTECTED_MEDIA_PATH, str(record_id))
+
   model = get_model(record)
 
   if (model == "Readings"):
@@ -144,7 +148,8 @@ def show_patient_record(request, healthcare_id, patient_id, record_id):
     'healthcare': healthcare,
     'patient': patient,
     'record': record,
-    'permissions': permissions
+    'permissions': permissions,
+    'record_path': record_path,
   }
 
   Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Show Patient ' + str(patient_id) + ' Record ' + str(record_id))

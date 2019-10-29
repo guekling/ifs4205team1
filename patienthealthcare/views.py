@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
@@ -51,9 +52,13 @@ def show_note(request, patient_id, note_id):
     Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Show Note] Note ID is invalid.')
     return redirect('show_all_notes', patient_id=patient_id)
 
+  # Path to view restricted record
+  note_path = os.path.join(settings.PROTECTED_MEDIA_PATH, str(note_id))
+
   context = {
     'patient': patient,
     'note': note,
+    'note_path': note_path,
   }
 
   Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Show Note ' + str(note_id))

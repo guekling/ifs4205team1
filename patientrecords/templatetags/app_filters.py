@@ -1,5 +1,9 @@
+from django.conf import settings
+
 from django import template
 from core.models import User, Patient, Healthcare, Researcher, Admin
+
+import os
 
 register = template.Library()
 
@@ -77,3 +81,7 @@ def get_log_user(id):
     return admin.first()
   
   return None
+
+@register.filter
+def get_record_path(id):
+  return os.path.join(settings.PROTECTED_MEDIA_PATH, str(id))
