@@ -150,5 +150,8 @@ STATICFILES_DIRS = [
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+PROTECTED_MEDIA_URL = os.environ.get("PROTECTED_MEDIA_URL")
+PROTECTED_MEDIA_PATH = os.environ.get("PROTECTED_MEDIA_PATH")
+
 # Admin Page
 ADMIN_URL = os.environ.get("ADMIN_URL")
