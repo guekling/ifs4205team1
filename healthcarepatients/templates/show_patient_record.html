@@ -20,7 +20,7 @@
     {% if to_record_model_name_result == 'Readings' %}
       <th>{{ record.data }}</th>
     {% else %}
-      <th>{{ record.data }} || <a href="{% url 'download_patient_record' healthcare_id=healthcare.id patient_id=patient.id record_id=record.id %}">Download Data</a></th>
+      <th><a href="{{ record_path }}">View Data</a> | <a href="{% url 'download_patient_record' healthcare_id=healthcare.id patient_id=patient.id record_id=record.id %}">Download Data</a></th>
     {% endif %}
   </tr>
 </table>

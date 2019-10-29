@@ -32,6 +32,16 @@ class Readings(models.Model):
     else:
       return True
 
+  def is_patient(self, patient):
+    """
+    Checks if the record belongs to the patient.
+    """
+
+    if (self.patient_id == patient):
+      return True
+    else:
+      return False
+
 class ReadingsPerm(models.Model):
   PERMISSION_CHOICES = [
     (1, 'No Access'),
@@ -81,6 +91,16 @@ class TimeSeries(models.Model):
       return False
     else:
       return True
+
+  def is_patient(self, patient):
+    """
+    Checks if the record belongs to the patient.
+    """
+
+    if (self.patient_id == patient):
+      return True
+    else:
+      return False
 
 class TimeSeriesPerm(models.Model):
   PERMISSION_CHOICES = [
@@ -134,6 +154,16 @@ class Videos(models.Model):
     else:
       return True
 
+  def is_patient(self, patient):
+    """
+    Checks if the record belongs to the patient.
+    """
+
+    if (self.patient_id == patient):
+      return True
+    else:
+      return False
+
 class VideosPerm(models.Model):
   PERMISSION_CHOICES = [
     (1, 'No Access'),
@@ -186,6 +216,16 @@ class Images(models.Model):
     else:
       return True
 
+  def is_patient(self, patient):
+    """
+    Checks if the record belongs to the patient.
+    """
+
+    if (self.patient_id == patient):
+      return True
+    else:
+      return False
+
 class ImagesPerm(models.Model):
   PERMISSION_CHOICES = [
     (1, 'No Access'),
@@ -230,6 +270,16 @@ class Diagnosis(models.Model):
       return False
     else:
       return True
+
+  def is_patient(self, patient):
+    """
+    Checks if the record belongs to the patient.
+    """
+
+    if (self.patient_id == patient):
+      return True
+    else:
+      return False
 
 class DiagnosisPerm(models.Model):
   PERMISSION_CHOICES = [
@@ -287,6 +337,22 @@ class Documents(models.Model):
       return False
     else:
       return True
+
+  def is_owner_healthcare_note(self, user):
+    if (self.owner_id == user) and (self.type == 'Healthcare Professional Note'):
+      return True
+    else:
+      return False
+
+  def is_patient(self, patient):
+    """
+    Checks if the record belongs to the patient.
+    """
+
+    if (self.patient_id == patient):
+      return True
+    else:
+      return False
 
 class DocumentsPerm(models.Model):
   PERMISSION_CHOICES = [

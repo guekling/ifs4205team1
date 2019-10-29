@@ -62,6 +62,9 @@ def show_healthcare_note(request, healthcare_id, note_id):
     Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Note] Note ID is invalid.')
     return redirect('show_all_healthcare_notes', healthcare_id=healthcare_id)
 
+  # Path to view restricted record
+  note_path = os.path.join(settings.PROTECTED_MEDIA_PATH, str(note_id))
+
   permissions = DocumentsPerm.objects.filter(docs_id=note_id)
 
   Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Show Note ' + str(note_id))
@@ -70,6 +73,7 @@ def show_healthcare_note(request, healthcare_id, note_id):
     'healthcare': healthcare,
     'note': note,
     'permissions': permissions,
+    'note_path': note_path,
   }
 
   return render(request, 'show_healthcare_note.html', context)

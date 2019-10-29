@@ -22,7 +22,7 @@
     <th>{{ note.title }}</th>
     <th>{{ note.patient_id | get_patient_full_name }}</th>
     <th>
-      <a href="{{ note.data }}">View Note</a>
+      <a href="{{ note.id | get_record_path }}">View Note</a>
     </th>
     <th><a href="{% url 'show_healthcare_note' healthcare_id=healthcare.id note_id=note.id %}">More Details</a></th>
   </tr>

@@ -22,7 +22,7 @@
     <th>{{ record.type }}</th>
     <th>
       {% if to_model_name_record == 'Documents' or to_model_name_record == 'Images' or to_model_name_record == 'TimeSeries' or to_model_name_record == 'Videos' %}
-        <a href="{{ record.data }}">View Data</a>
+        <a href="{{ record.id | get_record_path }}">View Data</a>
       {% else %}
         {{ record.data }}
       {% endif %}
