@@ -155,7 +155,8 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
 	os.path.join(BASE_DIR, "static"),
-	'/researcherquery/static'
+    '/adminlogin/static',
+	'/researcherquery/static',
 ]
 
 # Media Files

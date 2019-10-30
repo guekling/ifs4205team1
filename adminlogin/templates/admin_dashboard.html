@@ -40,6 +40,17 @@
     </div>
 
     <div class="col-sm-3">
+      <a href="{% url 'show_all_researchers' admin_id=admin.id %}">
+        <div class="card text-white bg-info mb-3" style="max-width: 18rem;">
+          <div class="card-body">
+            <h5 class="card-title">Permissions</h5>
+            <p class="card-text">Edit record types permission for researchers.</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-sm-3">
       <a href="{% url 'admin_settings' admin_id=admin.id %}">
         <div class="card text-white bg-info mb-3" style="max-width: 18rem;">
           <div class="card-body">

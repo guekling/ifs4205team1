@@ -13,4 +13,6 @@ urlpatterns = [
   # path('<uuid:admin_id>/token-register/', views.admin_token_register, name="admin_token_register")
   path('<uuid:admin_id>/logs/', views.show_all_logs, name="show_all_logs"),
   path("<uuid:admin_id>/records/anonymise/", views.anonymise_records, name="anonymise_records"),
+  path("<uuid:admin_id>/perm/researchers/", views.show_all_researchers, name="show_all_researchers"),
+  path("<uuid:admin_id>/perm/researchers/<uuid:researcher_id>/recordtypes/edit/", views.edit_recordtypes_perm, name="edit_recordtypes_perm")
 ]

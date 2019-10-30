@@ -1,0 +1,9 @@
+ul#id_recordtypesperm {
+    list-style-type: none;
+    padding: .2rem;
+}
+
+#btn_submit_editperm {
+	margin-left: 45%;
+	margin-right: 10px;
+}

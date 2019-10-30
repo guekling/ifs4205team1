@@ -1,0 +1,106 @@
+{% extends "admin_base.html" %}
+
+{% load app_filters %}
+
+{% block content %}
+<h1>Permissions</h1>
+
+<table class="table text-center">
+  <thead>
+    <tr>
+      <th scope="col">Researcher</th>
+      <th scope="col">Diagnosis</th>
+      <th scope="col">BP Readings</th>
+      <th scope="col">HR Readings</th>
+      <th scope="col">TEMP Readings</th>
+      <th scope="col">Cancer Images</th>
+      <th scope="col">MRI Images</th>
+      <th scope="col">Ultrasound Images</th>
+      <th scope="col">Xray Images</th>
+      <th scope="col">Gastroscope Videos</th>
+      <th scope="col">Gait Videos</th>
+      <th scope="col"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for researcher in researchers %}
+    <tr>
+      <th scope="row">{{ researcher.get_username }}</th>
+      <th>
+        {% if researcher.get_diagnosis_perm %}
+          &#10003;
+        {% else %}
+          &#10005;
+        {% endif %}
+      </th>
+      <th>
+        {% if researcher.get_bp_reading_perm %}
+          &#10003;
+        {% else %}
+          &#10005;
+        {% endif %}
+      </th>
+      <th>
+        {% if researcher.get_hr_reading_perm %}
+          &#10003;
+        {% else %}
+          &#10005;
+        {% endif %}
+      </th>
+      <th>
+        {% if researcher.get_temp_reading_perm %}
+          &#10003;
+        {% else %}
+          &#10005;
+        {% endif %}
+      </th>
+      <th>
+        {% if researcher.get_cancer_img_perm %}
+          &#10003;
+        {% else %}
+          &#10005;
+        {% endif %}
+      </th>
+      <th>
+        {% if researcher.get_mri_img_perm %}
+          &#10003;
+        {% else %}
+          &#10005;
+        {% endif %}
+      </th>
+      <th>
+        {% if researcher.get_ultrasound_img_perm %}
+          &#10003;
+        {% else %}
+          &#10005;
+        {% endif %}
+      </th>
+      <th>
+        {% if researcher.get_xray_img_perm %}
+          &#10003;
+        {% else %}
+          &#10005;
+        {% endif %}
+      </th>
+      <th>
+        {% if researcher.get_gastroscope_vid_perm %}
+          &#10003;
+        {% else %}
+          &#10005;
+        {% endif %}
+      </th>
+      <th>
+        {% if researcher.get_gait_vid_perm %}
+          &#10003;
+        {% else %}
+          &#10005;
+        {% endif %}
+      </th>
+      <th>
+        <a href="{% url 'edit_recordtypes_perm' admin_id=admin.id researcher_id=researcher.get_id %}">Edit Permission</a>
+      </th>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

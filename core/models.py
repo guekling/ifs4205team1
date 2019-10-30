@@ -128,6 +128,12 @@ class Researcher(models.Model):
   gastroscope_vid = models.BooleanField(default=False)
   gait_vid = models.BooleanField(default=False) 
 
+  def get_username(self):
+  	return self.username
+
+  def get_id(self):
+  	return self.id
+
   def get_diagnosis_perm(self):
     return self.diagnosis;
 

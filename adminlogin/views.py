@@ -1,4 +1,5 @@
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.forms.forms import NON_FIELD_ERRORS
 from django.shortcuts import render, redirect
 from django.template import RequestContext
 from django.urls import reverse_lazy
@@ -12,9 +13,9 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordChangeDoneView
 
-from adminlogin.forms import UserEditForm, UserQrForm
+from adminlogin.forms import UserEditForm, UserQrForm, EditRecordTypesPermForm
 
-from core.models import User, Admin
+from core.models import User, Admin, Researcher
 from userlogs.models import Logs
 from adminlogin.anonymise import anonymise_and_store
 
@@ -263,12 +264,250 @@ def anonymise_records(request, admin_id):
   else:
     return render(request, 'anonymise_records.html', context)
 
+@login_required(login_url='/')
+@user_passes_test(lambda u: u.is_admin(), login_url='/')
+def show_all_researchers(request, admin_id):
+  # Checks if logged in admin has the same id as in the URL
+  if (request.user.admin_username.id != admin_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[Show All Reseachers] Logged in user does not match ID in URL. URL ID: ' + str(admin_id))
+    return redirect('/')
+
+  admin = admin_does_not_exists(admin_id)
+  user = admin.username
+
+  # the action has not gone through QR verification
+  if len(user.latest_nonce) > 0:
+    return redirect('admin_login')
+
+  # UNDONE: ADD in logic
+  researchers = Researcher.objects.all().order_by('username')
+
+  Logs.objects.create(type='READ', user_id=user.uid, interface='ADMIN', status=STATUS_OK, details='Show All Researchers')
+
+  context = {
+    'admin': admin,
+    'researchers': researchers
+  }
+
+  return render(request, 'show_all_researchers.html', context)
+
+
+@login_required(login_url='/')
+@user_passes_test(lambda u: u.is_admin(), login_url='/')
+def edit_recordtypes_perm(request, admin_id, researcher_id):
+  # Checks if logged in admin has the same id as in the URL
+  if (request.user.admin_username.id != admin_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[Edit Researcher Record Types Permission] Logged in user does not match ID in URL. URL ID: ' + str(admin_id))
+    return redirect('/')
+
+  admin = admin_does_not_exists(admin_id)
+  user = admin.username
+  researcher = check_researcher_exists(researcher_id)
+
+  # the action has not gone through QR verification
+  if len(user.latest_nonce) > 0:
+    return redirect('admin_login')
+
+  recordtypes_choices = get_recordtypes_choices()
+  recordtypes_perm = get_recordtypes_perm(researcher)
+  form = EditRecordTypesPermForm(recordtypes_choices=recordtypes_choices, recordtypes_perm=recordtypes_perm)
+
+  if request.method == 'POST':
+    form = EditRecordTypesPermForm(request.POST, recordtypes_choices=recordtypes_choices, recordtypes_perm=recordtypes_perm)
+    if form.is_valid():
+      recordtypes_selected = form.cleaned_data['recordtypesperm']
+      # request.POST.getlist('recordtypesperm')
+
+      if isinstance(recordtypes_selected, list):
+        store_updated_perm(researcher, recordtypes_selected)
+        Logs.objects.create(type='UPDATE', user_id=user.uid, interface='ADMIN', status=STATUS_OK, details='Edit Researcher Record Types Permission')
+
+        context = {
+          'admin': admin
+        }
+        return redirect('show_all_researchers', admin_id=admin_id)
+      else:
+        form.add_error('recordtypesperm', 'Invalid record types selected')
+
+    else:
+      form.add_error(None, 'Invalid form')
+      context = {
+        'form': form,
+        'admin': admin,
+        'researcher': researcher
+      }
+      return render(request, 'edit_recordtypes_perm.html', context)
+  else:
+    context = {
+      'form': form,
+      'admin': admin,
+      'researcher': researcher
+    }
+    return render(request, 'edit_recordtypes_perm.html', context)
+
+
 ##########################################
 ############ Helper Functions ############
 ##########################################
 
 STATUS_OK = 1
 STATUS_ERROR = 0
+
+DIAGNOSIS_NAME = 'diagnosis'
+BP_READING_NAME = 'bp_reading'
+HR_READING_NAME = 'hr_reading'
+TEMP_READING_NAME = 'temp_reading'
+CANCER_IMG_NAME = 'cancer_img'
+MRI_IMG_NAME = 'mri_img'
+ULTRASOUND_IMG_NAME = 'ultrasound_img'
+XRAY_IMG_NAME = 'xray_img'
+GASTROSCOPE_VID_NAME = 'gastroscope_vid'
+GAIT_VID_NAME = 'gait_vid'
+
+RECORD_TYPES_NAME_LIST = [
+  DIAGNOSIS_NAME,
+  BP_READING_NAME,
+  HR_READING_NAME,
+  TEMP_READING_NAME,
+  CANCER_IMG_NAME,
+  MRI_IMG_NAME,
+  ULTRASOUND_IMG_NAME,
+  XRAY_IMG_NAME,
+  GASTROSCOPE_VID_NAME,
+  GAIT_VID_NAME
+]
+
+DIAGNOSIS_DISPLAY_NAME = 'Diagnosis'
+BP_READING_DISPLAY_NAME = 'Blood Pressure (BP) Readings'
+HR_READING_DISPLAY_NAME = 'Heart Rate (HR) Readings'
+TEMP_READING_DISPLAY_NAME = 'Temperature (TEMP) Readings'
+CANCER_IMG_DISPLAY_NAME = 'Cancer Images'
+MRI_IMG_DISPLAY_NAME = 'MRI Images'
+ULTRASOUND_IMG_DISPLAY_NAME = 'Ultrasound Images'
+XRAY_IMG_DISPLAY_NAME = 'Xray Images'
+GASTROSCOPE_VID_DISPLAY_NAME = 'Gastroscope Videos'
+GAIT_VID_DISPLAY_NAME = 'Gait Videos'
+
+def get_recordtypes_choices():
+  recordtypes_choices = []
+
+  recordtypes_choices.append((DIAGNOSIS_NAME, DIAGNOSIS_DISPLAY_NAME))
+  recordtypes_choices.append((BP_READING_NAME, BP_READING_DISPLAY_NAME))
+  recordtypes_choices.append((HR_READING_NAME, HR_READING_DISPLAY_NAME))
+  recordtypes_choices.append((TEMP_READING_NAME, TEMP_READING_DISPLAY_NAME))
+  recordtypes_choices.append((CANCER_IMG_NAME, CANCER_IMG_DISPLAY_NAME))
+  recordtypes_choices.append((MRI_IMG_NAME, MRI_IMG_DISPLAY_NAME))
+  recordtypes_choices.append((ULTRASOUND_IMG_NAME, ULTRASOUND_IMG_DISPLAY_NAME))
+  recordtypes_choices.append((XRAY_IMG_NAME, XRAY_IMG_DISPLAY_NAME))
+  recordtypes_choices.append((GASTROSCOPE_VID_NAME, GASTROSCOPE_VID_DISPLAY_NAME))
+  recordtypes_choices.append((GAIT_VID_NAME, GAIT_VID_DISPLAY_NAME))
+
+  return recordtypes_choices
+
+def get_recordtypes_perm(researcher):
+  recordtypes_perm = []
+
+  # Add record type to checkbox choices only if perm returns True
+  if (researcher.get_diagnosis_perm()):
+    recordtypes_perm.append(DIAGNOSIS_NAME)
+
+  if (researcher.get_bp_reading_perm()):
+    recordtypes_perm.append(BP_READING_NAME)
+
+  if (researcher.get_hr_reading_perm()):
+    recordtypes_perm.append(HR_READING_NAME)
+
+  if (researcher.get_temp_reading_perm()):
+    recordtypes_perm.append(TEMP_READING_NAME)
+
+  if (researcher.get_cancer_img_perm()):
+    recordtypes_perm.append(CANCER_IMG_NAME)
+
+  if (researcher.get_mri_img_perm()):
+    recordtypes_perm.append(MRI_IMG_NAME)
+
+  if (researcher.get_ultrasound_img_perm()):
+    recordtypes_perm.append(ULTRASOUND_IMG_NAME)
+
+  if (researcher.get_xray_img_perm()):
+    recordtypes_perm.append(XRAY_IMG_NAME)
+
+  if (researcher.get_gastroscope_vid_perm()):
+    recordtypes_perm.append(GASTROSCOPE_VID_NAME)
+
+  if (researcher.get_gait_vid_perm()):
+    recordtypes_perm.append(GAIT_VID_NAME)
+
+  return recordtypes_perm
+
+def store_updated_perm(researcher, recordtypes_selected):
+  print("STORE_UPDATED_PERM")
+  print(RECORD_TYPES_NAME_LIST)
+  print(recordtypes_selected)
+
+  for recordtype in RECORD_TYPES_NAME_LIST:
+    if recordtype == DIAGNOSIS_NAME:
+      if recordtype in recordtypes_selected:
+        researcher.diagnosis = True
+      else:
+        researcher.diagnosis = False
+
+    if recordtype == BP_READING_NAME:
+      if recordtype in recordtypes_selected:
+        researcher.bp_reading = True
+      else:
+        researcher.bp_reading = False
+
+    if recordtype == HR_READING_NAME:
+      if recordtype in recordtypes_selected:
+        researcher.hr_reading = True
+      else:
+        researcher.hr_reading = False
+
+    if recordtype == TEMP_READING_NAME:
+      if recordtype in recordtypes_selected:
+        researcher.temp_reading = True
+      else:
+        researcher.temp_reading = False
+
+    if recordtype == CANCER_IMG_NAME:
+      if recordtype in recordtypes_selected:
+        researcher.cancer_img = True
+      else:
+        researcher.cancer_img = False
+
+    if recordtype == MRI_IMG_NAME:
+      if recordtype in recordtypes_selected:
+        researcher.mri_img = True
+      else:
+        researcher.mri_img = False
+
+    if recordtype == ULTRASOUND_IMG_NAME:
+      if recordtype in recordtypes_selected:
+        researcher.ultrasound_img = True
+      else:
+        researcher.ultrasound_img = False
+
+    if recordtype == XRAY_IMG_NAME:
+      if recordtype in recordtypes_selected:
+         researcher.xray_img = True
+      else:
+        researcher.xray_img = False
+
+    if recordtype == GASTROSCOPE_VID_NAME:
+      if recordtype in recordtypes_selected:
+        researcher.gastroscope_vid = True
+      else:
+        researcher.gastroscope_vid = False
+
+    if recordtype == GAIT_VID_NAME:
+      if recordtype in recordtypes_selected:
+        researcher.gait_vid = True
+      else:
+        researcher.gait_vid = False
+
+  researcher.save()
+  print("DONE")
 
 def admin_does_not_exists(admin_id):
   """
@@ -279,3 +518,12 @@ def admin_does_not_exists(admin_id):
   except Admin.DoesNotExist:
     Logs.objects.create(type='READ', user_id=admin_id, interface='ADMIN', status=STATUS_ERROR, details='Admin ID is invalid.')
     redirect('admin_login')
+
+def check_researcher_exists(researcher_id):
+  """
+  Redirects to show_all_researchers if researcher_id is invalid
+  """
+  try:
+    return Researcher.objects.get(id=researcher_id)
+  except Researcher.DoesNotExist:
+    redirect('show_all_researchers')
