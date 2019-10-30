@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 
 from django.contrib.auth.decorators import login_required, user_passes_test
 
-from adminusers.forms import CreateNewPatient, CreateNewHealthcare
+from adminusers.forms import CreateNewPatient, CreateNewHealthcare, CreateNewResearcher
 
 from core.models import User, Admin, Patient, Healthcare, Researcher
 from userlogs.models import Logs
@@ -312,6 +312,46 @@ def admin_show_researcher(request, admin_id, researcher_id):
   Logs.objects.create(type='READ', user_id=admin.username.uid, interface='ADMIN', status=STATUS_OK, details='[Show Researcher] Page: ' + str(researcher_id))
 
   return render(request, 'admin_show_researcher.html', context)
+
+@login_required(login_url='/')
+@user_passes_test(lambda u: u.is_admin(), login_url='/')
+def admin_new_researcher(request, admin_id):
+  # checks if logged in admin has the same id as in the URL
+  if (request.user.admin_username.id != admin_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[New Researcher] Logged in user does not match ID in URL. URL ID: ' + str(admin_id))
+    return redirect('/')
+
+  admin = admin_does_not_exists(admin_id)
+
+  form = CreateNewResearcher(request.POST or None)
+
+  if request.method == 'POST':
+    if form.is_valid():
+      user = form.save(commit=False)
+      gender = form.cleaned_data['gender']
+      user.gender = gender
+      user.save()
+
+      researcher = Researcher.objects.create(username=user)
+
+      Logs.objects.create(type='UPDATE', user_id=admin.username.uid, interface='ADMIN', status=STATUS_OK, details='New Researcher')
+      return redirect('admin_show_researcher', admin_id=admin_id, researcher_id=researcher.id)
+    else:
+      Logs.objects.create(type='UPDATE', user_id=admin.username.uid, interface='ADMIN', status=STATUS_ERROR, details='[New Researcher] Invalid Form')
+      context = {
+        'form': form,
+        'admin': admin,
+      }
+      return render(request, 'admin_new_researcher.html', context)
+
+  Logs.objects.create(type='READ', user_id=admin.username.uid, interface='ADMIN', status=STATUS_OK, details='[New Researcher] Render Form')
+
+  context = {
+    'form': form,
+    'admin': admin,
+  }
+
+  return render(request, 'admin_new_researcher.html', context)
 
 ##########################################
 ############ Helper Functions ############

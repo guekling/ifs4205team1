@@ -60,3 +60,28 @@ class CreateNewHealthcare(forms.ModelForm):
       raise forms.ValidationError(
         "password and confirm_password does not match"
       )
+
+class CreateNewResearcher(forms.ModelForm):
+  gender_choices = [
+    ('M', 'Male'),
+    ('F', 'Female'),
+  ]
+
+  gender = forms.ChoiceField(choices=gender_choices)
+  dob = forms.DateField(widget = forms.SelectDateWidget(years=range(1950, 2020)))
+  password=forms.CharField(widget=forms.PasswordInput())
+  confirm_password=forms.CharField(widget=forms.PasswordInput())
+
+  class Meta:
+    model = User
+    fields = ['first_name', 'last_name', 'email', 'username', 'dob', 'address', 'postalcode', 'contactnumber', 'password', 'gender']
+
+  def clean(self):
+    cleaned_data = super(CreateNewResearcher, self).clean()
+    password = cleaned_data.get("password")
+    confirm_password = cleaned_data.get("confirm_password")
+
+    if password != confirm_password:
+      raise forms.ValidationError(
+        "password and confirm_password does not match"
+      )

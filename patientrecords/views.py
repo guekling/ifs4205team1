@@ -118,7 +118,7 @@ def download_record(request, patient_id, record_id):
     response['Content-Length'] = os.path.getsize(file_path)
     response['Content-Disposition'] = "attachment; filename=%s" %  file_name
 
-    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Donwload Record ' + str(record_id))
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Download Record ' + str(record_id))
 
     return response
 

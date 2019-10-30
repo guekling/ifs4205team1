@@ -12,4 +12,5 @@ urlpatterns = [
   path('<uuid:admin_id>/healthcare/new/', views.admin_new_healthcare, name="admin_new_healthcare"),
   path('<uuid:admin_id>/researchers/', views.admin_show_all_researchers, name="admin_show_all_researchers"),
   path('<uuid:admin_id>/researchers/<uuid:researcher_id>', views.admin_show_researcher, name="admin_show_researcher"),
+  path('<uuid:admin_id>/researchers/new/', views.admin_new_researcher, name="admin_new_researcher"),
 ]
