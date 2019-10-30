@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 
 from core.models import User
 from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos
+from researcherquery.models import SafeImages, SafeVideos
 from userlogs.models import Logs
 
 import os
@@ -138,6 +139,47 @@ def protected_media(request, record_id):
   response['X-Accel-Redirect'] = '/media/%s' % data_path
   return response
 
+def researcher_image(request, record_id):
+  """
+  Serves a single anonymised medical record file.
+  """
+  print("RESEARCHER IMAGE")
+  try:
+    record = get_safe_image(record_id)
+    record = record[0]
+  except IndexError:
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[View Researcher Image] Record ID is invalid.')
+    return redirect('search_records')
+
+  Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_OK, details='View Record ' + str(record_id))
+
+  filename = record.value
+  
+  response = HttpResponse()
+  response['Content-Type'] = ''
+  response['X-Accel-Redirect'] = '/media/images/%s' % filename
+  return response
+
+def researcher_video(request, record_id):
+  """
+  Serves a single anonymised medical record file.
+  """
+  try:
+    record = get_safe_video(record_id)
+    record = record[0]
+  except IndexError:
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[View Researcher Video] Record ID is invalid.')
+    return redirect('search_records')
+
+  Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_OK, details='View Record ' + str(record_id))
+
+  filename = record.value
+
+  response = HttpResponse()
+  response['Content-Type'] = ''
+  response['X-Accel-Redirect'] = '/media/videos/%s' % filename
+  return response
+
 ##########################################
 ############ Helper Functions ############
 ##########################################
@@ -153,6 +195,14 @@ def get_record(record_id):
   videos = Videos.objects.filter(id=record_id)
 
   return list(chain(readings, timeseries, documents, images, videos))
+
+def get_safe_image(record_id):
+  safeimages = SafeImages.objects.filter(id=record_id)
+  return safeimages
+
+def get_safe_video(record_id):
+  safevideos = SafeVideos.objects.filter(id=record_id)
+  return safevideos
 
 def get_model(record):
   return record._meta.object_name

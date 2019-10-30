@@ -2,10 +2,13 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.core import serializers
+
 from core.models import User, Researcher
 from researcherquery.models import QiInfo, SafeUsers, SafeDiagnosis, SafeReadings, SafeImages, SafeVideos
 from userlogs.models import Logs
+
 from researcherquery.forms import SearchRecordsForm
+
 import datetime
 import csv
 import xlwt

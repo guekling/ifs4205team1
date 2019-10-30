@@ -27,6 +27,8 @@ urlpatterns = [
     path(settings.PROTECTED_MEDIA_URL, views.protected_media, name="protected_media"),
     path(settings.ADMIN_URL, include('adminlogin.urls')),
     path(settings.ADMIN_URL, include('adminusers.urls')),
+    path(settings.RESEARCHER_IMAGE_URL, views.researcher_image, name="researcher_image"),
+    path(settings.RESEARCHER_VIDEO_URL, views.researcher_video, name="researcher_video"),
     path('patient/', include('patientlogin.urls')),
     path('patient/', include('patientrecords.urls')),
     path('patient/', include('patienthealthcare.urls')),
