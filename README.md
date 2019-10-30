@@ -8,24 +8,74 @@
 
 ```
 ifs4205team1
+├── adminlogin
+│   ├── anonymise.py
+│   ├── anonymise_helper.py
+│   ├── forms.py
+│   ├── static
+│   │   └── astyle.css
+│   ├── templates
+│   ├── urls.py
+│   ├── views.py
+├── adminusers
+│   ├── templates
+│   ├── forms.py
+│   ├── urls.py
+│   ├── views.py
 ├── core
 │   ├── fixtures
-│   │   └── initial_users.json
+│   │   ├── initial_core.json
+│   │   ├── initial_users.json
+│   │   └── test_users.json
 │   ├── management
 │   │   ├── commands
+│   │   │   ├── clear_users.py
 │   │   │   ├── initusers.py
 │   │   │   ├── load_csv.py
+│   │   │   ├── load_users_csv.py
 │   │   └── files
-│   │       └── test_users.csv
-│   └── models.py
-├── healthcarelogin
+│   │       ├── images.csv
+│   │       ├── test_users.csv
+│   │       ├── test_users_less.csv
+│   │       ├── time_series.csv
+│   │       └── videos.csv
 │   ├── models.py
+├── healthcarelogin
 │   ├── templates
+│   │   ├── healthcare_change_password_complete.html
+│   │   ├── healthcare_change_password.html
+│   │   ├── healthcare_dashboard.html
+│   │   ├── healthcare_edit_settings.html
+│   │   ├── healthcare_login.html
+│   │   ├── healthcare_qr.html
+│   │   ├── healthcare_settings.html
+│   │   └── healthcare_token_register.html
+│   ├── urls.py
+│   └── views.py
+├── healthcarenotes
+│   ├── forms.py
+│   ├── templates
+│   │   ├── create_healthcare_note_for_patient.html
+│   │   ├── create_healthcare_note.html
+│   │   ├── edit_healthcare_note.html
+│   │   ├── edit_healthcare_note_permission.html
+│   │   ├── show_all_healthcare_notes.html
+│   │   └── show_healthcare_note.html
 │   ├── urls.py
 │   └── views.py
 ├── healthcarepatients
-│   ├── models.py
+│   ├── forms.py
 │   ├── templates
+│   │   ├── new_patient_images_record.html
+│   │   ├── new_patient_readings_record.html
+│   │   ├── new_patient_record.html
+│   │   ├── new_patient_timeseries_record.html
+│   │   ├── new_patient_videos_record.html
+│   │   ├── show_all_patients.html
+│   │   ├── show_patient.html
+│   │   ├── show_patient_record.html
+│   │   ├── show_patient_records.html
+│   │   └── transfer_patient.html
 │   ├── urls.py
 │   └── views.py
 ├── ifs4205team1
@@ -35,22 +85,31 @@ ifs4205team1
 │   │       ├── development.py
 │   │       ├── production.py
 │   │       └── testing.py
+│   ├── templates
+│   │   └── protected_record.html
 │   ├── urls.py
 │   ├── views.py
 │   └── wsgi.py
 ├── manage.py
 ├── media
-│   ├── documents
 │   ├── images
 │   ├── timeseries
 │   └── videos
+├── mobileregister
+│   ├── forms.py
+│   ├── templates
+│   │   ├── repeat_register.html
+│   │   ├── success_register.html
+│   │   ├── user_login.html
+│   │   └── user_register.html
+│   ├── urls.py
+│   └── views.py
 ├── patienthealthcare
 │   ├── fixtures
 │   │   └── initial_notes.json
 │   ├── management
 │   │   └── commands
 │   │       └── initnotes.py
-│   ├── models.py
 │   ├── templates
 │   │   ├── show_all_notes.html
 │   │   └── show_note.html
@@ -58,25 +117,92 @@ ifs4205team1
 │   └── views.py
 ├── patientlogin
 │   ├── forms.py
-│   ├── models.py
 │   ├── templates
+│   │   ├── patient_change_password_complete.html
+│   │   ├── patient_change_password.html
+│   │   ├── patient_dashboard.html
+│   │   ├── patient_edit_settings.html
+│   │   ├── patient_login.html
+│   │   ├── patient_qr.html
+│   │   ├── patient_settings.html
+│   │   └── patient_token_register.html
 │   ├── urls.py
 │   └── views.py
 ├── patientrecords
 │   ├── fixtures
+│   │   ├── initial_data_readings.json
+│   │   ├── initial_data_readingsperm.tar.xz
 │   │   └── initial_records.json
 │   ├── forms.py
 │   ├── management
-│   │   └── commands
-│   │       └── initrecords.py
+│   │   ├── commands
+│   │   │   ├── clear_records.py
+│   │   │   ├── generate_records.py
+│   │   │   ├── initrecords.py
+│   │   └── files
+│   │       ├── diagnosis_random.csv
+│   │       ├── diagnosis_random_less.csv
+│   │       ├── readings.csv
+│   │       └── readings_less.csv
 │   ├── models.py
 │   ├── templates
+│   │   ├── edit_permission.html
+│   │   ├── new_documents_record.html
+│   │   ├── new_images_record.html
+│   │   ├── new_readings_record.html
+│   │   ├── new_record.html
+│   │   ├── new_timeseries_record.html
+│   │   ├── new_videos_record.html
+│   │   ├── show_all_records.html
+│   │   └── show_record.html
 │   ├── templatetags
+│   │   ├── app_filters.py
 │   ├── tests
+│   │   └── test_views.py
 │   ├── urls.py
 │   └── views.py
 ├── requirements.txt
-└── templates
+├── researcherlogin
+│   ├── forms.py
+│   ├── templates
+│   │   ├── researcher_change_password_complete.html
+│   │   ├── researcher_change_password.html
+│   │   ├── researcher_dashboard.html
+│   │   ├── researcher_edit_settings.html
+│   │   ├── researcher_login.html
+│   │   ├── researcher_qr.html
+│   │   ├── researcher_settings.html
+│   │   └── researcher_token_register.html
+│   ├── urls.py
+│   └── views.py
+├── researcherquery
+│   ├── fixtures
+│   │   └── initial_saferecords.json
+│   ├── forms.py
+│   ├── management
+│   │   └── commands
+│   │       ├── init_saferecords.py
+│   ├── models.py
+│   ├── router.py
+│   ├── static
+│   │   └── researcherstyle.css
+│   ├── templates
+│   │   └── search_records.html
+│   ├── templatetags
+│   │   ├── app_filters.py
+│   ├── urls.py
+│   └── views.py
+├── templates
+│   ├── admin_base.html
+│   ├── base.html
+│   ├── healthcare_base.html
+│   ├── home.html
+│   ├── patient_base.html
+│   └── researcher_base.html
+└── userlogs
+    ├── models.py
+    ├── router.py
+
 ```
 
 ### 0.1 `core`

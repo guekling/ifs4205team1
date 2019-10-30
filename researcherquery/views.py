@@ -9,6 +9,7 @@ from userlogs.models import Logs
 
 from researcherquery.forms import SearchRecordsForm
 
+import bleach
 import datetime
 import csv
 import xlwt
@@ -39,12 +40,11 @@ def search_records(request, researcher_id):
 		form = SearchRecordsForm(request.POST, tday=today_date, perm=recordtypes_perm_choices)
 
 		if form.is_valid():	
-			# Get values from POST request
-			ages = request.POST.getlist('age')
-			postalcode1 = request.POST.get('postalcode1')
-			postalcode2 = request.POST.get('postalcode2')
-			postalcode3 = request.POST.get('postalcode3')
-			recordtypes_selected = request.POST.getlist('recordtypes')
+			ages = form.cleaned_data['age']
+			postalcode1 = bleach.clean(form.cleaned_data['postalcode1'], tags=[], attributes=[], protocols=[], strip=True)
+			postalcode2 = bleach.clean(form.cleaned_data['postalcode2'], tags=[], attributes=[], protocols=[], strip=True)
+			postalcode3 = bleach.clean(form.cleaned_data['postalcode3'], tags=[], attributes=[], protocols=[], strip=True)
+			recordtypes_selected = form.cleaned_data['recordtypes']
 			searched = request.POST.get('btn_search')
 
 			if searched == "Search": # btn is clicked
