@@ -287,6 +287,7 @@
 							{% if user.get_cancer_images.count != 0 %}
 								{% for cancer_image in user.get_cancer_images %}
 									{{ cancer_image.value | linebreaks }}
+									{# <a href="{% url 'show_record' patient_id=result.patient_id.id record_id=result.id %}">More Details</a> #}
 								{% endfor %}
 							{% else %}
 								-

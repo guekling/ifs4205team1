@@ -8,6 +8,10 @@ table#id_searchrecords_table td#id_recordtypes_heading {
     padding-left: 0px;
 }
 
+ul#id_recordtypesperm {
+    list-style-type: none;
+}
+
 ul#id_recordtypes.form-control {
     list-style-type: none;
 
@@ -43,5 +47,5 @@ ul#id_recordtypes li {
 }
 
 #btn_search {
-    margin-left: 190px;
+    margin-left: 10%;
 }

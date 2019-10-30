@@ -28,22 +28,20 @@ def search_records(request, researcher_id):
 
 	today_date = datetime.datetime.now().strftime("%Y-%m-%d")
 	reset_recordtypes_choices_checkbox()
+	recordtypes_perm_choices, recordtypes_perm_list = reset_recordtypes_perm(researcher)
 	submitted = False
 
 	# Check if GET (first load) or POST (subsequent load)
 	if request.method == 'POST':
-		set_recordtypes_perm_if_empty(researcher)
-		form = SearchRecordsForm(request.POST, tday=today_date, perm=RECORD_TYPES_PERMISSION)
+		form = SearchRecordsForm(request.POST, tday=today_date, perm=recordtypes_perm_choices)
 
-		if form.is_valid():
-			
-
+		if form.is_valid():	
 			# Get values from POST request
 			ages = request.POST.getlist('age')
 			postalcode1 = request.POST.get('postalcode1')
 			postalcode2 = request.POST.get('postalcode2')
 			postalcode3 = request.POST.get('postalcode3')
-			recordtypes = request.POST.getlist('recordtypes')
+			recordtypes_selected = request.POST.getlist('recordtypes')
 			searched = request.POST.get('btn_search')
 
 			if searched == "Search": # btn is clicked
@@ -68,7 +66,7 @@ def search_records(request, researcher_id):
 			users = process_age_postalcode(combi_age, combi_postalcode, ages, postalcodes)
 			users_list = list(users)
 			request.session['users_list'] = serializers.serialize("json", users_list)
-			process_recordtypes(recordtypes)
+			process_recordtypes(recordtypes_selected, recordtypes_perm_list)
 
 			Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Search Records')
 
@@ -80,24 +78,21 @@ def search_records(request, researcher_id):
 				'count': users.count(),
 				'date': process_date(combi_date),
 				'submitted': submitted,
-				DIAGNOSIS_NAME: RECORD_TYPES_SELECTED[DIAGNOSIS_NAME],
-				BP_READING_NAME: RECORD_TYPES_SELECTED[BP_READING_NAME],
-				HR_READING_NAME: RECORD_TYPES_SELECTED[HR_READING_NAME],
-				TEMP_READING_NAME: RECORD_TYPES_SELECTED[TEMP_READING_NAME],
-				CANCER_IMG_NAME: RECORD_TYPES_SELECTED[CANCER_IMG_NAME],
-				MRI_IMG_NAME: RECORD_TYPES_SELECTED[MRI_IMG_NAME],
-				ULTRASOUND_IMG_NAME: RECORD_TYPES_SELECTED[ULTRASOUND_IMG_NAME],
-				XRAY_IMG_NAME: RECORD_TYPES_SELECTED[XRAY_IMG_NAME],
-				GASTROSCOPE_VID_NAME: RECORD_TYPES_SELECTED[GASTROSCOPE_VID_NAME],
-				GAIT_VID_NAME: RECORD_TYPES_SELECTED[GAIT_VID_NAME]
+				DIAGNOSIS_NAME: recordtypes_state[DIAGNOSIS_NAME],
+				BP_READING_NAME: recordtypes_state[BP_READING_NAME],
+				HR_READING_NAME: recordtypes_state[HR_READING_NAME],
+				TEMP_READING_NAME: recordtypes_state[TEMP_READING_NAME],
+				CANCER_IMG_NAME: recordtypes_state[CANCER_IMG_NAME],
+				MRI_IMG_NAME: recordtypes_state[MRI_IMG_NAME],
+				ULTRASOUND_IMG_NAME: recordtypes_state[ULTRASOUND_IMG_NAME],
+				XRAY_IMG_NAME: recordtypes_state[XRAY_IMG_NAME],
+				GASTROSCOPE_VID_NAME: recordtypes_state[GASTROSCOPE_VID_NAME],
+				GAIT_VID_NAME: recordtypes_state[GAIT_VID_NAME]
 			}
 
 			return render(request, 'search_records.html', context)
 
 		# POST - Handle invalid form
-		set_recordtypes_perm_if_empty(researcher)
-		form = SearchRecordsForm(request.POST, tday=today_date, perm=RECORD_TYPES_PERMISSION)
-
 		context = {
 			'form': form,
 			'researcher': researcher
@@ -107,8 +102,7 @@ def search_records(request, researcher_id):
 
 	# GET - First load
 	else:
-		set_recordtypes_perm_if_empty(researcher)
-		form = SearchRecordsForm(tday=today_date, perm=RECORD_TYPES_PERMISSION)
+		form = SearchRecordsForm(tday=today_date, perm=recordtypes_perm_choices)
 
 		context = {
 			'form': form,
@@ -158,7 +152,7 @@ def download_records_csv(request, researcher_id):
 
 		safeuser_obj = SafeUsers.objects.get(pk=uid)
 
-		if RECORD_TYPES_SELECTED[DIAGNOSIS_NAME]:
+		if recordtypes_state[DIAGNOSIS_NAME]:
 			diagnosis_list = []
 			diagnosis_obj = safeuser_obj.get_diagnosis()
 			for diag in diagnosis_obj:
@@ -167,7 +161,7 @@ def download_records_csv(request, researcher_id):
 		else:
 			safeuser_list.append('')
 
-		if RECORD_TYPES_SELECTED[BP_READING_NAME]:
+		if recordtypes_state[BP_READING_NAME]:
 			bp_readings_list = []
 			bp_reading_obj = safeuser_obj.get_bp_readings()
 			for bp_reading in bp_reading_obj:
@@ -177,7 +171,7 @@ def download_records_csv(request, researcher_id):
 			safeuser_list.append('')
 
 		
-		if RECORD_TYPES_SELECTED[HR_READING_NAME]:
+		if recordtypes_state[HR_READING_NAME]:
 			hr_readings_list = []
 			hr_reading_obj = safeuser_obj.get_hr_readings()
 			for hr_reading in hr_reading_obj:
@@ -186,7 +180,7 @@ def download_records_csv(request, researcher_id):
 		else:
 			safeuser_list.append('')
 
-		if RECORD_TYPES_SELECTED[TEMP_READING_NAME]:
+		if recordtypes_state[TEMP_READING_NAME]:
 			temp_readings_list = []
 			temp_reading_obj = safeuser_obj.get_temp_readings()
 			for temp_reading in temp_reading_obj:
@@ -255,7 +249,7 @@ def download_records_xls(request, researcher_id):
 
 		safeuser_obj = SafeUsers.objects.get(pk=uid)
 
-		if RECORD_TYPES_SELECTED[DIAGNOSIS_NAME]:
+		if recordtypes_state[DIAGNOSIS_NAME]:
 			diagnosis_list = []
 			diagnosis_obj = safeuser_obj.get_diagnosis()
 			for diag in diagnosis_obj:
@@ -264,7 +258,7 @@ def download_records_xls(request, researcher_id):
 		else:
 			ws.write(row_num, 4, '', font_style)
 
-		if RECORD_TYPES_SELECTED[BP_READING_NAME]:
+		if recordtypes_state[BP_READING_NAME]:
 			bp_readings_list = []
 			bp_reading_obj = safeuser_obj.get_bp_readings()
 			for bp_reading in bp_reading_obj:
@@ -274,7 +268,7 @@ def download_records_xls(request, researcher_id):
 			ws.write(row_num, 5, '', font_style)
 
 		
-		if RECORD_TYPES_SELECTED[HR_READING_NAME]:
+		if recordtypes_state[HR_READING_NAME]:
 			hr_readings_list = []
 			hr_reading_obj = safeuser_obj.get_hr_readings()
 			for hr_reading in hr_reading_obj:
@@ -283,7 +277,7 @@ def download_records_xls(request, researcher_id):
 		else:
 			ws.write(row_num, 6, '', font_style)
 
-		if RECORD_TYPES_SELECTED[TEMP_READING_NAME]:
+		if recordtypes_state[TEMP_READING_NAME]:
 			temp_readings_list = []
 			temp_reading_obj = safeuser_obj.get_temp_readings()
 			for temp_reading in temp_reading_obj:
@@ -350,7 +344,7 @@ GASTROSCOPE_VID_DISPLAY_NAME = 'Gastroscope Videos'
 GAIT_VID_DISPLAY_NAME = 'Gait Videos'
 
 # Default display state of all record types in table
-RECORD_TYPES_SELECTED = {
+recordtypes_state = {
 	DIAGNOSIS_NAME: False,
 	BP_READING_NAME: False,
 	HR_READING_NAME: False,
@@ -363,49 +357,61 @@ RECORD_TYPES_SELECTED = {
 	GAIT_VID_NAME: False
 }
 
-RECORD_TYPES_PERMISSION = []
-
 def reset_recordtypes_choices_checkbox():
 	for recordtype in RECORD_TYPES_NAME_LIST:
-		RECORD_TYPES_SELECTED[recordtype] = False
+		recordtypes_state[recordtype] = False
 
-def set_recordtypes_perm_if_empty(researcher):
-	if len(RECORD_TYPES_PERMISSION) == 0:
-		get_recordtypes_perm(researcher)
+def reset_recordtypes_perm(researcher):
+	recordtypes_perm_choices = [] # For display [(name, display name)]
+	recordtypes_perm_list = [] # For checking [(name)]
+	recordtypes_perm_choices, recordtypes_perm_list = get_recordtypes_perm(researcher, recordtypes_perm_choices, recordtypes_perm_list)
+	return recordtypes_perm_choices, recordtypes_perm_list
 
-# Get record types perm from DB and append it to list for display as checkbox choices
+# Get record types perm from DB and display as checkbox choices
 # Prevents illegal access to record types which the researchers have no perm to
-def get_recordtypes_perm(researcher):
-	# Add record type to checkbox choices only if perm returns True
+def get_recordtypes_perm(researcher, recordtypes_perm_choices, recordtypes_perm_list):
+	# Add record type only if perm returns True
 	if (researcher.get_diagnosis_perm()):
-		RECORD_TYPES_PERMISSION.append((DIAGNOSIS_NAME, DIAGNOSIS_DISPLAY_NAME))
+		recordtypes_perm_choices.append((DIAGNOSIS_NAME, DIAGNOSIS_DISPLAY_NAME))
+		recordtypes_perm_list.append(DIAGNOSIS_NAME)
 
 	if (researcher.get_bp_reading_perm()):
-		RECORD_TYPES_PERMISSION.append((BP_READING_NAME, BP_READING_DISPLAY_NAME))
+		recordtypes_perm_choices.append((BP_READING_NAME, BP_READING_DISPLAY_NAME))
+		recordtypes_perm_list.append(BP_READING_NAME)
 
 	if (researcher.get_hr_reading_perm()):
-		RECORD_TYPES_PERMISSION.append((HR_READING_NAME, HR_READING_DISPLAY_NAME))
+		recordtypes_perm_choices.append((HR_READING_NAME, HR_READING_DISPLAY_NAME))
+		recordtypes_perm_list.append(HR_READING_NAME)
 
 	if (researcher.get_temp_reading_perm()):
-		RECORD_TYPES_PERMISSION.append((TEMP_READING_NAME, TEMP_READING_DISPLAY_NAME))
+		recordtypes_perm_choices.append((TEMP_READING_NAME, TEMP_READING_DISPLAY_NAME))
+		recordtypes_perm_list.append(TEMP_READING_NAME)
 
 	if (researcher.get_cancer_img_perm()):
-		RECORD_TYPES_PERMISSION.append((CANCER_IMG_NAME, CANCER_IMG_DISPLAY_NAME))
+		recordtypes_perm_choices.append((CANCER_IMG_NAME, CANCER_IMG_DISPLAY_NAME))
+		recordtypes_perm_list.append(CANCER_IMG_NAME)
 
 	if (researcher.get_mri_img_perm()):
-		RECORD_TYPES_PERMISSION.append((MRI_IMG_NAME, MRI_IMG_DISPLAY_NAME))
+		recordtypes_perm_choices.append((MRI_IMG_NAME, MRI_IMG_DISPLAY_NAME))
+		recordtypes_perm_list.append(MRI_IMG_NAME)
 
 	if (researcher.get_ultrasound_img_perm()):
-		RECORD_TYPES_PERMISSION.append((ULTRASOUND_IMG_NAME, ULTRASOUND_IMG_DISPLAY_NAME))
+		recordtypes_perm_choices.append((ULTRASOUND_IMG_NAME, ULTRASOUND_IMG_DISPLAY_NAME))
+		recordtypes_perm_list.append(ULTRASOUND_IMG_NAME)
 
 	if (researcher.get_xray_img_perm()):
-		RECORD_TYPES_PERMISSION.append((XRAY_IMG_NAME, XRAY_IMG_DISPLAY_NAME))
+		recordtypes_perm_choices.append((XRAY_IMG_NAME, XRAY_IMG_DISPLAY_NAME))
+		recordtypes_perm_list.append(XRAY_IMG_NAME)
 
 	if (researcher.get_gastroscope_vid_perm()):
-		RECORD_TYPES_PERMISSION.append((GASTROSCOPE_VID_NAME, GASTROSCOPE_VID_DISPLAY_NAME))
+		recordtypes_perm_choices.append((GASTROSCOPE_VID_NAME, GASTROSCOPE_VID_DISPLAY_NAME))
+		recordtypes_perm_list.append(GASTROSCOPE_VID_NAME)
 
 	if (researcher.get_gait_vid_perm()):
-		RECORD_TYPES_PERMISSION.append((GAIT_VID_NAME, GAIT_VID_DISPLAY_NAME))
+		recordtypes_perm_choices.append((GAIT_VID_NAME, GAIT_VID_DISPLAY_NAME))
+		recordtypes_perm_list.append(GAIT_VID_NAME)
+
+	return recordtypes_perm_choices, recordtypes_perm_list
 
 def process_date(combi_date):
 	if combi_date == COMBI_DATE_LM:
@@ -508,12 +514,11 @@ def process_postalcode_sector(postalcodes):
 			processed_postalcodes.append(postalcode_sector)
 	return processed_postalcodes
 
-def process_recordtypes(recordtypes):
-	# Update state only if selected in checkbox
-	# Do not have to validate if researcher has perm for each type as only permitted record types are available as checkbox choices
-	
-	for recordtype in recordtypes:
-		RECORD_TYPES_SELECTED[recordtype] = True
+def process_recordtypes(recordtypes_selected, recordtypes_perm_list):
+	# Update state only if researcher has perm for record type selected in checkbox
+	for recordtype in recordtypes_selected:
+		if recordtype in recordtypes_perm_list:
+			recordtypes_state[recordtype] = True
 
 def check_researcher_exists(researcher_id):
 	"""
