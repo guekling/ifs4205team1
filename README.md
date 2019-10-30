@@ -241,6 +241,17 @@ ifs4205team1
   - `initnotes`: Loads `initial_notes.json` fixture into database
 - `views.py`: Healthcare Professionals' Patients -related views
 
+### 0.4 Researcher Interface
+
+#### 0.4.1 `researcherlogin`
+
+- `views.py`: Researchers' Login, Settings -related views
+
+#### 0.4.2 `researcherquery`
+
+- `models.py`: `QiInfo`, `SafeUsers`, `SafeDiagnosis`, `SafeReadings`, `SafeImages`, `SafeVideos`
+- `views.py`: Researchers' Query, Download Anonymised Records -related views
+
 ## 1. Running Django
 
 ### 1.1 Running Django for the First Time
