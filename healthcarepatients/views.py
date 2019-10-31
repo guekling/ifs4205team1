@@ -213,7 +213,7 @@ def transfer_patient(request, healthcare_id, patient_id):
     Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Transfer Patient] Patient ID is invalid.')
     return redirect('show_all_patients', healthcare_id=healthcare_id)
 
-  form = TransferPatientForm(request.POST)
+  form = TransferPatientForm(request.POST, patient=patient)
 
   if request.method == 'POST':
     if form.is_valid():
