@@ -1,17 +1,22 @@
+from typing import Union
+from uuid import UUID
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db.models import UUIDField
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 
 from healthcarepatients.forms import TransferPatientForm, CreateNewPatientRecord, CreatePatientReadingsRecord, CreatePatientTimeSeriesRecord, CreatePatientImagesRecord, CreatePatientVideosRecord
 
-from core.models import Healthcare, Patient
-from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
+from core.models import Healthcare, Patient, User
+from patientrecords.models import Notifications, Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
 from userlogs.models import Logs
 
 import os
 from itertools import chain
 from mimetypes import guess_type
+
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
@@ -172,7 +177,7 @@ def download_patient_record(request, healthcare_id, patient_id, record_id):
     patient = healthcare.patients.all().filter(id=patient_id)
     patient = patient[0]
   except IndexError:
-    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Patient Record] Patient ID is invalid.')
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Patient Record] Patient ID is invalid.')
     return redirect('show_all_patients', healthcare_id=healthcare_id)
 
   try:
@@ -210,10 +215,10 @@ def transfer_patient(request, healthcare_id, patient_id):
     patient = healthcare.patients.all().filter(id=patient_id)
     patient = patient[0]
   except IndexError:
-    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Transfer Patient] Patient ID is invalid.')
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Transfer Patient] Patient ID is invalid.')
     return redirect('show_all_patients', healthcare_id=healthcare_id)
 
-  form = TransferPatientForm(request.POST)
+  form = TransferPatientForm(request.POST, patient=patient)
 
   if request.method == 'POST':
     if form.is_valid():
@@ -227,21 +232,31 @@ def transfer_patient(request, healthcare_id, patient_id):
       for record in records:
         model = get_model(record)
         
-      if (model == "Readings"):
-        permission = ReadingsPerm.objects.create(readings_id=record, given_by=healthcare_user, perm_value=2)
-        permission.username.add(transfer_healthcare)
-      elif (model == "TimeSeries"):
-        permission = TimeSeriesPerm.objects.create(timeseries_id=record, given_by=healthcare_user, perm_value=2)
-        permission.username.add(transfer_healthcare)
-      elif (model == "Documents"):
-        permission = DocumentsPerm.objects.create(docs_id=record, given_by=healthcare_user, perm_value=2)
-        permission.username.add(transfer_healthcare.username)
-      elif (model == "Videos"):
-        permission = VideosPerm.objects.create(videos_id=record, given_by=healthcare_user, perm_value=2)
-        permission.username.add(transfer_healthcare)
-      elif (model == "Images"):
-        permission = ImagesPerm.objects.create(img_id=record, given_by=healthcare_user, perm_value=2)
-        permission.username.add(transfer_healthcare)
+        if (model == "Readings"):
+          if(ReadingsPerm.objects.filter(readings_id=record, username=healthcare_user).count() > 0):
+            permission = ReadingsPerm.objects.create(readings_id=record, given_by=healthcare_user, perm_value=2)
+            permission.username.add(transfer_healthcare)
+        elif (model == "TimeSeries"):
+          if (TimeSeriesPerm.objects.filter(timeseries_id=record, username=healthcare_user).count() > 0):
+            permission = TimeSeriesPerm.objects.create(timeseries_id=record, given_by=healthcare_user, perm_value=2)
+            permission.username.add(transfer_healthcare)
+        elif (model == "Documents"):
+          if (DocumentsPerm.objects.filter(docs_id=record, username=healthcare_user).count() > 0):
+            permission = DocumentsPerm.objects.create(docs_id=record, given_by=healthcare_user, perm_value=2)
+            permission.username.add(transfer_healthcare.username)
+        elif (model == "Videos"):
+          if (VideosPerm.objects.filter(videos_id=record, username=healthcare_user).count() > 0):
+            permission = VideosPerm.objects.create(videos_id=record, given_by=healthcare_user, perm_value=2)
+            permission.username.add(transfer_healthcare)
+        elif (model == "Images"):
+          if (ImagesPerm.objects.filter(img_id=record, username=healthcare_user).count() > 0):
+            permission = ImagesPerm.objects.create(img_id=record, given_by=healthcare_user, perm_value=2)
+            permission.username.add(transfer_healthcare)
+
+      from_healthcare = healthcare.username  # a User object
+      notification = Notifications(type=1, from_user=from_healthcare, to_healthcare=transfer_healthcare,
+                                   patient=patient, content="", status=True)
+      notification.save()
 
       Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Transfer Patient ' + str(patient_id) + ' to Healthcare Prof ' + str(transfer_healthcare.id))
 

@@ -12,6 +12,9 @@
       <li class="nav-item">
         <a class="nav-link" href="{% url 'patient_dashboard' patient_id=patient.id %}">Home</a>
       </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'patient_notifications' patient_id=patient.id %}">Notifications</a>
+      </li>
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           Medical Records
