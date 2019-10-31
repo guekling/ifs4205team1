@@ -31,6 +31,13 @@ MEDIA_URL = '/media/'
 PROTECTED_MEDIA_URL = 'protected_media/'
 PROTECTED_MEDIA_PATH = 'protected_media/'
 
+RESEARCHER_IMAGE_URL = 'researcher_image/'
+RESEARCHER_IMAGE_PATH = 'researcher_image/'
+
+RESEARCHER_VIDEO_URL = 'researcher_video/'
+RESEARCHER_VIDEO_PATH = 'researcher_video/'
+
+
 # Admin page
 
 ADMIN_URL = 'admin/'
