@@ -255,7 +255,7 @@ def transfer_patient(request, healthcare_id, patient_id):
 
       from_healthcare = healthcare.username  # a User object
       notification = Notifications(type=1, from_user=from_healthcare, to_healthcare=transfer_healthcare,
-                                   patient=patient, content="", status=True)
+                                   patient=patient, content="", status=1)
       notification.save()
 
       Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Transfer Patient ' + str(patient_id) + ' to Healthcare Prof ' + str(transfer_healthcare.id))
@@ -356,10 +356,40 @@ def new_patient_readings_record(request, healthcare_id, patient_id):
       readings.type = type
       readings.save()
 
-      healthcare.patients.add(patient) # Tag patient (that record belongs to) to current healthcare
-
       # Get all patient's healthcare professional
       patient_healthcare = patient.healthcare_patients.all()
+
+      if (healthcare not in patient_healthcare):
+        healthcare.patients.add(patient)  # Tag patient (that record belongs to) to current healthcare
+
+        from_healthcare = healthcare.username  # a User object
+        notification1 = Notifications(type=3, from_user=from_healthcare, to_healthcare=healthcare,
+                                      patient=patient, content="", status=1)
+        notification1.save()
+
+        records = get_records(patient)
+        for record in records:
+          model = get_model(record)
+          if (model == "Readings"):
+            permission = ReadingsPerm.objects.create(readings_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare)
+          elif (model == "TimeSeries"):
+            permission = TimeSeriesPerm.objects.create(timeseries_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare)
+          elif (model == "Documents"):
+            permission = DocumentsPerm.objects.create(docs_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare.username)
+          elif (model == "Videos"):
+            permission = VideosPerm.objects.create(videos_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare)
+          elif (model == "Images"):
+            permission = ImagesPerm.objects.create(img_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare)
+
+      from_healthcare = healthcare.username  # a User object
+      notification2 = Notifications(type=2, from_user=from_healthcare, to_healthcare=healthcare,
+                                   patient=patient, content="a reading", status=1)
+      notification2.save()
 
       for healthcare_prof in patient_healthcare:
         permission = ReadingsPerm.objects.create(readings_id=readings, given_by=healthcare_prof.username, perm_value=2)
@@ -416,6 +446,38 @@ def new_patient_timeseries_record(request, healthcare_id, patient_id):
 
       # Get all patient's healthcare professional
       patient_healthcare = patient.healthcare_patients.all()
+
+      if (healthcare not in patient_healthcare):
+        healthcare.patients.add(patient)  # Tag patient (that record belongs to) to current healthcare
+
+        from_healthcare = healthcare.username  # a User object
+        notification1 = Notifications(type=3, from_user=from_healthcare, to_healthcare=healthcare,
+                                      patient=patient, content="", status=1)
+        notification1.save()
+
+        records = get_records(patient)
+        for record in records:
+          model = get_model(record)
+          if (model == "Readings"):
+            permission = ReadingsPerm.objects.create(readings_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare)
+          elif (model == "TimeSeries"):
+            permission = TimeSeriesPerm.objects.create(timeseries_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare)
+          elif (model == "Documents"):
+            permission = DocumentsPerm.objects.create(docs_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare.username)
+          elif (model == "Videos"):
+            permission = VideosPerm.objects.create(videos_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare)
+          elif (model == "Images"):
+            permission = ImagesPerm.objects.create(img_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare)
+
+      from_healthcare = healthcare.username  # a User object
+      notification2 = Notifications(type=2, from_user=from_healthcare, to_healthcare=healthcare,
+                                   patient=patient, content="a time series", status=1)
+      notification2.save()
 
       for healthcare_prof in patient_healthcare:
         permission = TimeSeriesPerm.objects.create(timeseries_id=timeseries, given_by=healthcare_prof.username, perm_value=2)
@@ -476,6 +538,38 @@ def new_patient_images_record(request, healthcare_id, patient_id):
       # Get all patient's healthcare professional
       patient_healthcare = patient.healthcare_patients.all()
 
+      if (healthcare not in patient_healthcare):
+        healthcare.patients.add(patient)  # Tag patient (that record belongs to) to current healthcare
+
+        from_healthcare = healthcare.username  # a User object
+        notification1 = Notifications(type=3, from_user=from_healthcare, to_healthcare=healthcare,
+                                      patient=patient, content="", status=1)
+        notification1.save()
+
+        records = get_records(patient)
+        for record in records:
+          model = get_model(record)
+          if (model == "Readings"):
+            permission = ReadingsPerm.objects.create(readings_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare)
+          elif (model == "TimeSeries"):
+            permission = TimeSeriesPerm.objects.create(timeseries_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare)
+          elif (model == "Documents"):
+            permission = DocumentsPerm.objects.create(docs_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare.username)
+          elif (model == "Videos"):
+            permission = VideosPerm.objects.create(videos_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare)
+          elif (model == "Images"):
+            permission = ImagesPerm.objects.create(img_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare)
+
+      from_healthcare = healthcare.username  # a User object
+      notification2 = Notifications(type=2, from_user=from_healthcare, to_healthcare=healthcare,
+                                   patient=patient, content="an image " + images.title, status=1)
+      notification2.save()
+
       for healthcare_prof in patient_healthcare:
         permission = ImagesPerm.objects.create(img_id=images, given_by=healthcare_prof.username, perm_value=2)
         permission.username.add(healthcare_prof)
@@ -534,6 +628,38 @@ def new_patient_videos_record(request, healthcare_id, patient_id):
 
       # Get all patient's healthcare professional
       patient_healthcare = patient.healthcare_patients.all()
+
+      if (healthcare not in patient_healthcare):
+        healthcare.patients.add(patient)  # Tag patient (that record belongs to) to current healthcare
+
+        from_healthcare = healthcare.username  # a User object
+        notification1 = Notifications(type=3, from_user=from_healthcare, to_healthcare=healthcare,
+                                      patient=patient, content="", status=1)
+        notification1.save()
+
+        records = get_records(patient)
+        for record in records:
+          model = get_model(record)
+          if (model == "Readings"):
+            permission = ReadingsPerm.objects.create(readings_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare)
+          elif (model == "TimeSeries"):
+            permission = TimeSeriesPerm.objects.create(timeseries_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare)
+          elif (model == "Documents"):
+            permission = DocumentsPerm.objects.create(docs_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare.username)
+          elif (model == "Videos"):
+            permission = VideosPerm.objects.create(videos_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare)
+          elif (model == "Images"):
+            permission = ImagesPerm.objects.create(img_id=record, given_by=patient.username, perm_value=2)
+            permission.username.add(healthcare)
+
+      from_healthcare = healthcare.username  # a User object
+      notification2 = Notifications(type=2, from_user=from_healthcare, to_healthcare=healthcare,
+                                   patient=patient, content="a video " + videos.title, status=1)
+      notification2.save()
 
       for healthcare_prof in patient_healthcare:
         permission = VideosPerm.objects.create(videos_id=videos, given_by=healthcare_prof.username, perm_value=2)

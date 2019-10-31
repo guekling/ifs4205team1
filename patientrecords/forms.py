@@ -1,4 +1,5 @@
 from django import forms
+from django.core.validators import RegexValidator
 
 from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
 
@@ -35,7 +36,7 @@ class CreateNewRecord(forms.Form):
     ('Videos', 'Videos'),
     ('Documents', 'Documents'),
   ]
-  type = forms.ChoiceField(choices=type_choices)
+  type = forms.ChoiceField(choices=type_choices, required=True)
 
 class CreateReadingsRecord(forms.ModelForm):
   type_choices = [
@@ -43,12 +44,21 @@ class CreateReadingsRecord(forms.ModelForm):
     ('Heartrate', 'Heartrate'),
     ('Temperature', 'Temperature'),
   ]
+  reading_data_validator = RegexValidator(r"^[0-9\.\-\/]+$", "Data should only contain integers, '.' and/or '/'.")
 
-  type = forms.ChoiceField(choices=type_choices)
+  type = forms.ChoiceField(
+    choices=type_choices,
+    required=True,
+  )
+  data = forms.CharField(
+    max_length=15,
+    required=True,
+    validators=[reading_data_validator]
+  )
 
   class Meta:
     model = Readings
-    fields = ['data']
+    fields = ['type']
 
 class CreateTimeSeriesRecord(forms.ModelForm):
   class Meta:
@@ -63,11 +73,12 @@ class CreateImagesRecord(forms.ModelForm):
     ('Xray', 'Xray'),
   ]
 
-  type = forms.ChoiceField(choices=type_choices)
+  type = forms.ChoiceField(choices=type_choices, required=True)
+  title = forms.CharField(max_length=64, required=True)
 
   class Meta:
     model = Images
-    fields = ['title', 'data']
+    fields = ['data', 'type']
 
 class CreateVideosRecord(forms.ModelForm):
   type_choices = [
@@ -75,13 +86,17 @@ class CreateVideosRecord(forms.ModelForm):
     ('Gait', 'Gait'),
   ]
 
-  type = forms.ChoiceField(choices=type_choices)
+  type = forms.ChoiceField(choices=type_choices, required=True)
+  title = forms.CharField(max_length=64, required=True)
 
   class Meta:
     model = Videos
-    fields = ['title', 'data']
+    fields = ['type', 'data']
 
 class CreateDocumentsRecord(forms.ModelForm):
+  title = forms.CharField(max_length=64, required=True)
+  type = forms.CharField(max_length=64, required=True)
+
   class Meta:
     model = Documents
-    fields = ['title', 'data', 'type']
+    fields = ['data']
