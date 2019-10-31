@@ -85,3 +85,11 @@ def get_log_user(id):
 @register.filter
 def get_record_path(id):
   return os.path.join(settings.PROTECTED_MEDIA_PATH, str(id))
+
+@register.filter
+def get_image_path(id):
+  return os.path.join(settings.RESEARCHER_IMAGE_PATH, str(id))
+
+@register.filter
+def get_video_path(id):
+  return os.path.join(settings.RESEARCHER_VIDEO_PATH, str(id))
