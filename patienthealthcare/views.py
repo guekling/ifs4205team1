@@ -92,8 +92,9 @@ def add_note_permission(request, patient_id, note_id):
 
   # Check patient's permission - ensure patient has set permission access
   try:
-    permission = DocumentsPerm.objects.filter(username__in=user, perm_value=3, docs_id__type='Healthcare Professional Note')
+    permission = DocumentsPerm.objects.filter(username__in=user, perm_value=3, docs_id=note)
     permission = permission[0]
+    print(permission)
   except IndexError:
     Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Add Note Permission] Patient does not have permission to add permission.')
     return redirect('show_note', patient_id=patient_id, note_id=note_id)
@@ -109,11 +110,11 @@ def add_note_permission(request, patient_id, note_id):
       new_permission.docs_id = note
       new_permission.given_by = patient.username
       new_permission.save()
-      new_permission.username.add(healthcare_professional)
+      new_permission.username.add(healthcare_professional.username)
 
       Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[New Note Permission] New Note ' + str(note.id) + ' Permission')
 
-      return redirect('show_note', patient_id=patient_id, record_id=note.id)
+      return redirect('show_note', patient_id=patient_id, note_id=note.id)
     else:
       Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Note Permission] Invalid Form')
 
