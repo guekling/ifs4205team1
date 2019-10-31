@@ -45,7 +45,7 @@ class PatientLogin(LoginView):
       user.latest_nonce = nonce  # change field
       user.nonce_timestamp = datetime.datetime.now()
       user.save()  # this will update only
-      Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Patient Login')
+      Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='[LOGIN] User(' + str(user.uid) + ') Patient Login')
       return redirect('patient_qr', patient_id=patient.id)
       # else:
       #   return redirect('patient_token_register', patient_id=patient.id)
@@ -294,14 +294,14 @@ def patient_dashboard(request, patient_id):
 STATUS_OK = 1
 STATUS_ERROR = 0
 
-def patient_does_not_exists(patient_id): # TODO: This function is never called?
+def patient_does_not_exists(patient_id):
   """
   Redirects to login if patient_id is invalid
   """
   try:
     return Patient.objects.get(id=patient_id)
   except Patient.DoesNotExist:
-    Logs.objects.create(type='READ', user_id=patient_id, interface='PATIENT', status=STATUS_ERROR, details='Patient ID is invalid.')
+    Logs.objects.create(type='READ', user_id=patient_id, interface='PATIENT', status=STATUS_ERROR, details='Patient ID is invalid. Patient ID: ' + str(patient_id))
     redirect('patient_login')
 
 def recovered_value(hash_id, nonce, otp):
