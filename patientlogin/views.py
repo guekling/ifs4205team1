@@ -14,7 +14,7 @@ from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView,
 from patientlogin.forms import UserEditForm, UserQrForm
 
 from core.models import User, Patient
-from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
+from patientrecords.models import Notifications
 from userlogs.models import Logs
 
 import hashlib
@@ -45,7 +45,7 @@ class PatientLogin(LoginView):
       user.latest_nonce = nonce  # change field
       user.nonce_timestamp = datetime.datetime.now()
       user.save()  # this will update only
-      Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Patient Login')
+      Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='[LOGIN] User(' + str(user.uid) + ') Patient Login')
       return redirect('patient_qr', patient_id=patient.id)
       # else:
       #   return redirect('patient_token_register', patient_id=patient.id)
@@ -81,6 +81,38 @@ class PatientChangePasswordComplete(PasswordChangeDoneView):
   Custom patient change password complete view that extends from Django's PasswordChangeDoneView
   """
   template_name = 'patient_change_password_complete.html'
+
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+def patient_notifications(request, patient_id):
+  # checks if logged in patient has the same id as in the URL
+  if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[Settings] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    return redirect('/patient/login/')
+
+  patient = patient_does_not_exists(patient_id)
+  user = patient.username
+
+  # the action has not gone through QR verification
+  if len(user.latest_nonce) > 0:
+    return redirect('patient_login')
+
+  Logs.objects.create(type='READ', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Notifications')
+
+  noti_list = Notifications.objects.filter(patient=patient).order_by('-timestamp', 'from_user')
+
+  context = {
+    'patient': patient,
+    'user': user,
+    'noti_list': noti_list,
+  }
+
+  for notif in noti_list:
+    if notif.status < 3:
+      notif.status += 1
+      notif.save()
+
+  return render(request, 'patient_notifications.html', context)
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
@@ -294,14 +326,14 @@ def patient_dashboard(request, patient_id):
 STATUS_OK = 1
 STATUS_ERROR = 0
 
-def patient_does_not_exists(patient_id): # TODO: This function is never called?
+def patient_does_not_exists(patient_id):
   """
   Redirects to login if patient_id is invalid
   """
   try:
     return Patient.objects.get(id=patient_id)
   except Patient.DoesNotExist:
-    Logs.objects.create(type='READ', user_id=patient_id, interface='PATIENT', status=STATUS_ERROR, details='Patient ID is invalid.')
+    Logs.objects.create(type='READ', user_id=patient_id, interface='PATIENT', status=STATUS_ERROR, details='Patient ID is invalid. Patient ID: ' + str(patient_id))
     redirect('patient_login')
 
 def recovered_value(hash_id, nonce, otp):

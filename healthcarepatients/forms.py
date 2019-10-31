@@ -20,6 +20,13 @@ class PatientModelChoiceField(forms.ModelChoiceField):
 class TransferPatientForm(forms.Form):
   healthcare_professional = HealthcareModelChoiceField(queryset=Healthcare.objects.all(), required=True)
 
+  def __init__(self, *args, **kwargs):
+    self.patient = kwargs.pop('patient')
+    super(TransferPatientForm, self).__init__(*args, **kwargs)
+    healthcarelist = self.patient.healthcare_patients.all().values_list('id')
+    print(healthcarelist)
+    self.fields['healthcare_professional'].queryset = Healthcare.objects.exclude(id__in=healthcarelist)
+
 class CreateNewPatientRecord(forms.Form):
   type_choices = [
     ('Readings', 'Readings'),
