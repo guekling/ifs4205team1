@@ -73,7 +73,7 @@ class PatientChangePassword(PasswordChangeView):
 
   def get_success_url(self):
     user = self.request.user
-    url = reverse_lazy('patient_change_password_complete', kwargs={'patient_id': user.patient.id})
+    url = reverse_lazy('patient_change_password_complete', kwargs={'patient_id':user.patient_username.id})
     return url
 
 class PatientChangePasswordComplete(PasswordChangeDoneView):

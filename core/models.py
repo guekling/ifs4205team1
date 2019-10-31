@@ -20,13 +20,13 @@ class User(AbstractUser):
 
   USERNAME_FIELD = 'username'
 
-  def save(self, *args, **kwargs):
-    born = self.dob
-    today = date.today()
-    compute_age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+  # def save(self, *args, **kwargs):
+  #   born = self.dob
+  #   today = date.today()
+  #   compute_age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
 
-    self.age = compute_age
-    return super(User, self).save(*args, **kwargs)
+  #   self.age = compute_age
+  #   return super(User, self).save(*args, **kwargs)
 
   def is_patient(self):
     """

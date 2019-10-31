@@ -7,6 +7,8 @@ from core.models import User, Patient, Healthcare
 from patientrecords.models import Documents, DocumentsPerm
 from userlogs.models import Logs
 
+from patienthealthcare.forms import AddNotePermission
+
 import os
 from mimetypes import guess_type
 
@@ -54,6 +56,8 @@ def show_note(request, patient_id, note_id):
     Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Show Note] Note ID is invalid.')
     return redirect('show_all_notes', patient_id=patient_id)
 
+  note_permissions = DocumentsPerm.objects.filter(docs_id=note, given_by=patient.username)
+
   # Path to view restricted record
   note_path = os.path.join(settings.PROTECTED_MEDIA_PATH, str(note_id))
 
@@ -61,11 +65,75 @@ def show_note(request, patient_id, note_id):
     'patient': patient,
     'note': note,
     'note_path': note_path,
+    'note_permissions': note_permissions,
   }
 
   Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Show Note ' + str(note_id))
 
   return render(request, 'show_note.html', context)
+
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+def add_note_permission(request, patient_id, note_id):
+  if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='UPDATE', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[Add Note Permission] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    return redirect('/patient/login/')
+
+  patient = patient_does_not_exists(patient_id)
+
+  try:
+    note = Documents.objects.filter(id=note_id)
+    note = note[0]
+  except IndexError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Add Note Permission] Note ID is invalid.')
+    return redirect('show_note', patient_id=patient_id, note_id=note_id)
+
+  user = User.objects.filter(patient_username=patient) # Returns a Queryset
+
+  # Check patient's permission - ensure patient has set permission access
+  try:
+    permission = DocumentsPerm.objects.filter(username__in=user, perm_value=3, docs_id__type='Healthcare Professional Note')
+    permission = permission[0]
+  except IndexError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Add Note Permission] Patient does not have permission to add permission.')
+    return redirect('show_note', patient_id=patient_id, note_id=note_id)
+
+  note_owner = note.owner_id
+  healthcare_profs = patient.healthcare_patients.exclude(username=note_owner)
+
+  form = AddNotePermission(request.POST or None, healthcare_list=healthcare_profs)
+  if request.method == 'POST':
+    if form.is_valid():
+      new_permission = form.save(commit=False)
+      healthcare_professional = form.cleaned_data['healthcare_professional']
+      new_permission.docs_id = note
+      new_permission.given_by = patient.username
+      new_permission.save()
+      new_permission.username.add(healthcare_professional)
+
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[New Note Permission] New Note ' + str(note.id) + ' Permission')
+
+      return redirect('show_note', patient_id=patient_id, record_id=note.id)
+    else:
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Note Permission] Invalid Form')
+
+      context = {
+        'form': form,
+        'patient': patient,
+        'note': note,
+      }
+
+    return render(request, 'add_note_permission.html', context)
+
+  Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[New Note Permission] Render Form')
+
+  context = {
+    'form': form,
+    'patient': patient,
+    'note': note,
+  }
+
+  return render(request, 'add_note_permission.html', context)
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
