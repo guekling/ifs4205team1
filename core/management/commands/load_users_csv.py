@@ -4,8 +4,6 @@ import random
 from django.core.management import BaseCommand
 from core.models import User, Patient, Healthcare, Researcher, Admin
 
-from datetime import date
-
 class Command(BaseCommand):
   help = "DEV COMMAND: Seed database with a set of user data from a CSV file for testing and development purposes."
 
@@ -31,8 +29,6 @@ def load_csv(path):
         print("{}{}".format("Currently processing ", fields_name[i]))
         print("{}{}".format("Currently processing ", field))
         setattr(user, fields_name[i], field)
-        if (fields_name[i] == 'dob'):
-          user.age = compute_age(field)
       user.save()
       user.set_password(user.password)
       user.save()
@@ -75,9 +71,3 @@ def generate_random_number(start, end, n):
     result.append(random.randint(start, end)) 
   
   return result
-
-def compute_age(dob):
-  today = date.today()
-  compute = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
-
-  return compute
