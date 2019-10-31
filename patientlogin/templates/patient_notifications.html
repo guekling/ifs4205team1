@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+{% extends "patient_base.html" %}
+
+{% block content %}
+<h1>Patient Notifications</h1>
+
+<table cellpadding="15">
+<tr>
+<td>Time</td>
+<td>Message</td>
+<td>status</td>
+
+{% for notif in noti_list %}
+<tr>
+<th>{{ notif.timestamp }}</th>
+
+{% if notif.type == 1 %}
+<th>{{ "You have been transferred to "|add:notif.to_healthcare.username.username|add:" by "|add:notif.from_user.username}}</th>
+{% elif notif.type == 2 %}
+<th>{{ "An emergency healthcare professional "|add:notif.from_user.username|add:" has been assigned to you"}}</th>
+{% elif notif.type == 2 %}
+<th>{{ "An emergency healthcare professional "|add:notif.from_user.username|add:" has uploaded a file for you: "|add:notif.content}}</th>
+{% endif %}
+
+{% if notif.status == 1 %}
+<th>{{ "New"}}</th>
+{% elif notif.status == 2 %}
+<th>{{ "New"}}</th>
+  {% elif notif.status == 3 %}
+<th>{{ "Seen"}}</th>
+{% endif %}
+</tr>
+
+{% endfor %}
+</table>
+
+{% endblock %}
