@@ -27,17 +27,19 @@
 					            </div>
 					        {% endfor %}
 					    {% endfor %}
-					    {% for error in form.non_field_errors %}
-					        <div class="alert alert-danger">
-					            <strong>{{ error | escape }}</strong>
-					        </div>
-					    {% endfor %}
 					{% endif %}
 				</td>
 			</tr>
 		</table>
+		{% if form.errors %}
+			{% for error in form.non_field_errors %}
+				<div class="alert alert-danger">
+					<strong>{{ error | escape }}</strong>
+				</div>
+			{% endfor %}
+		{% endif %}
 
-		<button type="submit" id="btn_submit_editperm" name="btn_submit" class="btn btn-primary" >Submit</button>
+		<button type="submit" id="btn_submit_editperm" name="btn_submit" class="btn btn-primary">Submit</button>
 		<a href="{% url 'show_all_researchers' admin_id=admin.id %}"><button type="button" name="btn_cancel" class="btn btn-secondary">Back</button></a>
 	</form>
 {% endblock %}

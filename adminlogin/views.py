@@ -316,20 +316,26 @@ def edit_recordtypes_perm(request, admin_id, researcher_id):
     form = EditRecordTypesPermForm(request.POST, recordtypes_choices=recordtypes_choices, recordtypes_perm=recordtypes_perm)
     if form.is_valid():
       recordtypes_selected = form.cleaned_data['recordtypesperm']
-      # request.POST.getlist('recordtypesperm')
 
       if isinstance(recordtypes_selected, list):
         store_updated_perm(researcher, recordtypes_selected)
         Logs.objects.create(type='UPDATE', user_id=user.uid, interface='ADMIN', status=STATUS_OK, details='Edit Researcher Record Types Permission')
-
         context = {
           'admin': admin
         }
         return redirect('show_all_researchers', admin_id=admin_id)
       else:
+        Logs.objects.create(type='UPDATE', user_id=user.uid, interface='ADMIN', status=STATUS_ERROR, details='[Edit Researcher Record Types Permission] Invalid record types selected')
         form.add_error('recordtypesperm', 'Invalid record types selected')
+        context = {
+          'form': form,
+          'admin': admin,
+          'researcher': researcher
+        }
+        return render(request, 'edit_recordtypes_perm.html', context)
 
     else:
+      Logs.objects.create(type='UPDATE', user_id=user.uid, interface='ADMIN', status=STATUS_ERROR, details='[Edit Researcher Record Types Permission] Invalid form')
       form.add_error(None, 'Invalid form')
       context = {
         'form': form,
