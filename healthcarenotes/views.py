@@ -26,14 +26,14 @@ def show_all_healthcare_notes(request, healthcare_id):
   """ 
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
-    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show All Notes] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show All Notes] Logged in user does not match ID in URL. URL ID: ' + str(healthcare_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
 
-  notes = Documents.objects.filter(owner_id_id=healthcare.username)
+  notes = Documents.objects.filter(owner_id_id=healthcare.username, type='Healthcare Professional Note')
 
-  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Show All Notes')
+  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='[Show All Notes]')
 
   context = {
     'healthcare': healthcare,
@@ -50,7 +50,7 @@ def show_healthcare_note(request, healthcare_id, note_id):
   """
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
-    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Note] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Note] Logged in user does not match ID in URL. URL ID: ' + str(healthcare_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -59,7 +59,7 @@ def show_healthcare_note(request, healthcare_id, note_id):
     note = Documents.objects.filter(id=note_id)
     note = note[0]
   except IndexError:
-    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Note] Note ID is invalid.')
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Note] Note ID is invalid. Invalid ID: ' + str(note_id))
     return redirect('show_all_healthcare_notes', healthcare_id=healthcare_id)
 
   # Path to view restricted record
@@ -67,7 +67,7 @@ def show_healthcare_note(request, healthcare_id, note_id):
 
   permissions = DocumentsPerm.objects.filter(docs_id=note_id)
 
-  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Show Note ' + str(note_id))
+  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='[Show Note] Show Note ' + str(note_id))
 
   context = {
     'healthcare': healthcare,
@@ -86,7 +86,7 @@ def download_healthcare_note(request, healthcare_id, note_id):
   """
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
-    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Note] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Note] Logged in user does not match ID in URL. URL ID: ' + str(healthcare_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -95,11 +95,17 @@ def download_healthcare_note(request, healthcare_id, note_id):
     note = Documents.objects.filter(id=note_id)
     note = note[0]
   except IndexError:
-    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Note] Note ID is invalid.')
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Note] Note ID is invalid. Invalid ID: ' + str(note_id))
     return redirect('show_all_healthcare_notes', healthcare_id=healthcare_id)
 
-  file_path = note.data.path
-  file_name = note.data.name.split('/', 1)[1]
+  try:
+    file_path = note.data.path
+  except ValueError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Notes] No data path in note ' + str(note_id))
+    return redirect('show_healthcare_note', healthcare_id=healthcare_id, note_id=note_id)
+
+  file_path = note.data.path # E.g. /home/sadm/Desktop/.../x.html
+  file_name = note.data.name.split('/', 1)[1] # x.html
 
   with open(file_path, 'rb') as note:
     content_type = guess_type(file_path)[0]
@@ -107,7 +113,7 @@ def download_healthcare_note(request, healthcare_id, note_id):
     response['Content-Length'] = os.path.getsize(file_path)
     response['Content-Disposition'] = "attachment; filename=%s" %  file_name
 
-    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Download Note ' + str(note_id))
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='[Download Note] Download Note ' + str(note_id))
 
     return response
 
@@ -119,7 +125,7 @@ def edit_healthcare_note_permission(request, healthcare_id, note_id, perm_id):
   """
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
-    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note Permission] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note Permission] Logged in user does not match ID in URL. URL ID: ' + str(healthcare_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -128,20 +134,22 @@ def edit_healthcare_note_permission(request, healthcare_id, note_id, perm_id):
     note = Documents.objects.filter(id=note_id)
     note = note[0]
   except IndexError:
-    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note Permission] Note ID is invalid.')
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note Permission] Note ID is invalid. Invalid ID: ' + str(note_id))
     return redirect('show_all_healthcare_notes', healthcare_id=healthcare_id)
 
   try:
-    permission = DocumentsPerm.objects.get(id = perm_id)
-  except DocumentsPerm.DoesNotExist:
+    permission = DocumentsPerm.objects.filter(id = perm_id)
+    permission = permission[0]
+  except IndexError:
     Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note Permission] Permission ID is invalid.')
-    redirect('show_healthcare_note.html', healthcare_id=healthcare_id, note_id=note_id)
+    return redirect('show_healthcare_note', healthcare_id=healthcare_id, note_id=note_id)
 
   form = DocumentsPermissionEditForm(request.POST or None, instance=permission)
+
   if request.method == 'POST':
     if form.is_valid():
       permission.save()
-      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Edit Note ' + str(note_id) + ' permission ' + str(perm_id))
+      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='[Edit Note Permission] Edit Note ' + str(note_id) + ' permission ' + str(perm_id))
       return redirect('show_healthcare_note', healthcare_id=healthcare_id, note_id=note_id)
     else:
       Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note Permission] Invalid Form')
@@ -153,7 +161,7 @@ def edit_healthcare_note_permission(request, healthcare_id, note_id, perm_id):
       }
       return render(request, 'edit_healthcare_note_permission.html', context)
 
-  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='[Edit Note Permission] Render Form')
+  Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='[Edit Note Permission] Render Form for Note ' + str(note.id))
 
   context = {
     'form': form,
@@ -172,7 +180,7 @@ def create_healthcare_note(request, healthcare_id):
   """
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
-    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Create Note] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Create Note] Logged in user does not match ID in URL. URL ID: ' + str(healthcare_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -182,7 +190,7 @@ def create_healthcare_note(request, healthcare_id):
   if request.method == 'POST':
     if form.is_valid():
       note_patient = form.cleaned_data['patient']
-      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Create new healthcare note')
+      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='[Create Note] Create new healthcare note')
       return redirect('create_healthcare_note_for_patient', healthcare_id=healthcare_id, patient_id=note_patient.id)
     else:
       Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Create Note] Invalid Form')
@@ -209,7 +217,7 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
   """
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
-    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Note for Patient] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Note for Patient] Logged in user does not match ID in URL. URL ID: ' + str(healthcare_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -241,28 +249,28 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
 
       for reading in attach_readings:
         datetime = reading.timestamp.strftime("%a, %d %b %Y %I:%M %p")
-        url = "/protectedrecord/" + str(reading.id)
+        url = settings.HOSTED_SITE_URL + "/protectedrecord/" + str(reading.id)
         new_note = new_note + "<p><a href=" + url + ">" + datetime + " " + reading.type + "</a></p>"
         note.attach_readings.add(reading)
 
       new_note = new_note + "<p>TimeSeries:</p>"
       for timeseries in attach_timeseries:
         datetime = timeseries.timestamp.strftime("%a, %d %b %Y %I:%M %p")
-        url = "/protectedrecord/" + str(timeseries.id)
+        url = settings.HOSTED_SITE_URL + "/protectedrecord/" + str(timeseries.id)
         new_note = new_note + "<p><a href=" + url + ">" + datetime + "</a></p>"
         note.attach_timeseries.add(timeseries)
 
       new_note = new_note + "<p>Images:</p>"
       for image in attach_images:
         datetime = image.timestamp.strftime("%a, %d %b %Y %I:%M %p")
-        url = "/protectedrecord/" + str(image.id)
+        url = settings.HOSTED_SITE_URL + "/protectedrecord/" + str(image.id)
         new_note = new_note + "<p><a href=" + url + ">" + datetime + " Type: " + image.type + " Title: " + image.title + "</a></p>"
         note.attach_images.add(image)
 
       new_note = new_note + "<p>Videos:</p>"
       for video in attach_videos:
-        datetime = timeseries.timestamp.strftime("%a, %d %b %Y %I:%M %p")
-        url = "/protectedrecord/" + str(video.id)
+        datetime = video.timestamp.strftime("%a, %d %b %Y %I:%M %p")
+        url = settings.HOSTED_SITE_URL + "/protectedrecord/" + str(video.id)
         new_note = new_note + "<p><a href=" + url + ">" + datetime + " Type: " + video.type + " Title: " + video.title + "</a></p>"
         note.attach_videos.add(video)
 
@@ -277,14 +285,15 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
 
       # Add data into new note
       note_title = title + ".html"
-      note.data.save(note_title, File(open(note_path, 'r')))
+      note.data = "{}{}".format("documents/", note_title)
+      note.save()
 
       # Set default permissions for note
       permission = DocumentsPerm.objects.create(docs_id=note, given_by=healthcare.username, perm_value=2)
       permission.username.add(patient.username)
-      permissions = DocumentsPerm.objects.filter(docs_id=note)
+      permissions = DocumentsPerm.objects.filter(docs_id=note) # List all permissions of the note
 
-      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Create new note for patient ' + str(patient_id))
+      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='[Create Note for Patient] Create new note for patient.')
 
       return redirect('show_healthcare_note', healthcare_id=healthcare.id, note_id=note.id)
     else:
@@ -293,9 +302,8 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
         'form': form,
         'healthcare': healthcare,
         'patient': patient,
-        'permissions': permissions,
       }
-      return render(request, 'show_healthcare_note.html', context)
+      return render(request, 'create_healthcare_note_for_patient.html', context)
 
   Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='[Create Note for Patient] Render Form')
 
@@ -315,7 +323,7 @@ def edit_healthcare_note(request, healthcare_id, note_id):
   """
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
-    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note] Logged in user does not match ID in URL. URL ID: ' + str(healthcare_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -329,16 +337,16 @@ def edit_healthcare_note(request, healthcare_id, note_id):
 
   patient = note.patient_id
 
-  base_dir = settings.BASE_DIR
-  note_path = os.path.join(base_dir, 'media', 'documents', note.title + ".html")
+  note_full_path = note.data.path # Eg. /home/sadm/Desktop/.../x.html
+  note_project_path = note.data.name # Eg. documents/x.html
 
   try: 
-    open_note = codecs.open(note_path, 'r', 'utf-8') # open note 
+    open_note = codecs.open(note_full_path, 'r', 'utf-8') # open note 
   except FileNotFoundError:
     Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Edit Note] File not found.')
     return redirect('show_healthcare_note', healthcare_id=healthcare.id, note_id=note.id)
 
-  open_note = codecs.open(note_path, 'r', 'utf-8') # open note
+  open_note = codecs.open(note_full_path, 'r', 'utf-8') # open note
   document = BeautifulSoup(open_note.read(), 'html.parser').get_text() # read note
   split_at = 'Attachments:'
   split = document.split(split_at, 1) # split the note to remove attachments
@@ -374,28 +382,28 @@ def edit_healthcare_note(request, healthcare_id, note_id):
 
       for reading in attach_readings:
         datetime = reading.timestamp.strftime("%a, %d %b %Y %I:%M %p")
-        url = "/protectedrecord/" + str(reading.id)
+        url = settings.HOSTED_SITE_URL + "/protectedrecord/" + str(reading.id)
         edit_note = edit_note + "<p><a href=" + url + ">" + datetime + " " + reading.type + "</a></p>"
         note.attach_readings.add(reading) # Saved attachment to database
 
       edit_note = edit_note + "<p>TimeSeries:</p>"
       for timeseries in attach_timeseries:
         datetime = timeseries.timestamp.strftime("%a, %d %b %Y %I:%M %p")
-        url = "/protectedrecord/" + str(timeseries.id)
+        url = settings.HOSTED_SITE_URL + "/protectedrecord/" + str(timeseries.id)
         edit_note = edit_note + "<p><a href=" + url + ">" + datetime + "</a></p>"
         note.attach_timeseries.add(timeseries) # Saved attachment to database
 
       edit_note = edit_note + "<p>Images:</p>"
       for image in attach_images:
         datetime = image.timestamp.strftime("%a, %d %b %Y %I:%M %p")
-        url = "/protectedrecord/" + str(image.id)
+        url = settings.HOSTED_SITE_URL + "/protectedrecord/" + str(image.id)
         edit_note = edit_note + "<p><a href=" + url + ">" + datetime + " Type: " + image.type + " Title: " + image.title + "</a></p>"
         note.attach_images.add(image) # Saved attachment to database
 
       edit_note = edit_note + "<p>Videos:</p>"
       for video in attach_videos:
-        datetime = timeseries.timestamp.strftime("%a, %d %b %Y %I:%M %p")
-        url = "/protectedrecord/" + str(video.id)
+        datetime = video.timestamp.strftime("%a, %d %b %Y %I:%M %p")
+        url = settings.HOSTED_SITE_URL + "/protectedrecord/" + str(video.id)
         edit_note = edit_note + "<p><a href=" + url + ">" + datetime + " Type: " + video.type + " Title: " + video.title + "</a></p>"
         note.attach_videos.add(video) # Saved attachment to database
 
@@ -407,14 +415,14 @@ def edit_healthcare_note(request, healthcare_id, note_id):
       save_note.close()
 
       # Add data into edited note
-      note_title = title + ".html"
-      note.data.save(note_title, File(open(note_path, 'r')))
+      new_note_title = title + ".html"
+      note.data = "{}{}".format("documents/", new_note_title)
 
       # Update note title
       note.title = title
       note.save()
 
-      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Edit Note ' + str(note_id) + ' for patient ' + str(patient.id))
+      Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='[Edit Note] Edit Note ' + str(note_id) + ' for patient ' + str(patient.id))
 
       return redirect('show_healthcare_note', healthcare_id=healthcare.id, note_id=note.id)
     else:
@@ -453,11 +461,12 @@ def edit_healthcare_note(request, healthcare_id, note_id):
 STATUS_OK = 1
 STATUS_ERROR = 0
 
-def healthcare_does_not_exists(healthcare_id): # TODO: This function is never called?
+def healthcare_does_not_exists(healthcare_id):
   """
   Redirects to login if healthcare_id is invalid
   """
   try:
     return Healthcare.objects.get(id=healthcare_id)
   except Healthcare.DoesNotExist:
+    Logs.objects.create(type='READ', user_id=patient_id, interface='HEALTHCARE', status=STATUS_ERROR, details='[HealthcareNotes] Healthcare ID is invalid ' + str(healthcare_id))
     redirect('healthcare_login')

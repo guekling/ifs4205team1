@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 
-from core.models import Patient, Healthcare
+from core.models import User, Patient, Healthcare
 from patientrecords.models import Documents, DocumentsPerm
 from userlogs.models import Logs
 
@@ -21,8 +21,10 @@ def show_all_notes(request, patient_id):
     return redirect('/patient/login/')
 
   patient = patient_does_not_exists(patient_id)
+  user = User.objects.filter(patient_username=patient) # Returns a Queryset
 
-  notes = Documents.objects.filter(patient_id=patient, type="Healthcare Professional Note")
+  # Only show notes that patients are allowed to read
+  notes = Documents.objects.filter(documentsperm_documents__username__in=user, documentsperm_documents__perm_value__in=[2,3], patient_id=patient, type="Healthcare Professional Note")
 
   Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Show All Notes')
 
@@ -84,6 +86,12 @@ def download_note(request, patient_id, note_id):
     Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Note] Note ID is invalid.')
     return redirect('show_all_notes', patient_id=patient_id)
 
+  try:
+    file_path = note.data.path
+  except ValueError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Note] No data path in note ' + str(note_id))
+    return redirect('show_note', patient_id=patient_id, note_id=note_id)
+
   file_path = note.data.path
   file_name = note.data.name.split('/', 1)[1]
 
@@ -93,7 +101,7 @@ def download_note(request, patient_id, note_id):
     response['Content-Length'] = os.path.getsize(file_path)
     response['Content-Disposition'] = "attachment; filename=%s" %  file_name
 
-    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Download Note ' + str(note_id))
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[Download Note] Download Note ' + str(note_id))
 
     return response
 
@@ -111,5 +119,5 @@ def patient_does_not_exists(patient_id): # TODO: This function is never called?
   try:
     return Patient.objects.get(id=patient_id)
   except Patient.DoesNotExist:
-    Logs.objects.create(type='READ', user_id=patient_id, interface='PATIENT', status=STATUS_ERROR, details='Patient ID is invalid.')
+    Logs.objects.create(type='READ', user_id=patient_id, interface='PATIENT', status=STATUS_ERROR, details='[PatientHealthcare] Patient ID is invalid.')
     redirect('patient_login')

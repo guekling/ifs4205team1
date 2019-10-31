@@ -10,6 +10,7 @@ from patientrecords.models import Readings, TimeSeries, Documents, Images, Video
 from userlogs.models import Logs
 
 import os
+import bleach
 from itertools import chain
 from mimetypes import guess_type
 
@@ -25,9 +26,10 @@ def show_all_records(request, patient_id):
 
   patient = patient_does_not_exists(patient_id)
 
+  # Get all records from Readings, TimeSeries, Documents, Images, and Videos
   readings = Readings.objects.filter(patient_id=patient)
   timeseries = TimeSeries.objects.filter(patient_id=patient)
-  documents = Documents.objects.filter(patient_id=patient)
+  documents = Documents.objects.filter(patient_id=patient).exclude(type='Healthcare Professional Note')
   images = Images.objects.filter(patient_id=patient)
   videos = Videos.objects.filter(patient_id=patient)
 
@@ -58,7 +60,7 @@ def show_record(request, patient_id, record_id):
     record = get_record(record_id)
     record = record[0]
   except IndexError:
-    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Show Record] Record ID is invalid.')
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Show Record] Record ID is invalid. Invalid ID: ' + str(record_id))
     return redirect('show_all_records', patient_id=patient_id)
 
   # Path to view restricted record
@@ -66,6 +68,7 @@ def show_record(request, patient_id, record_id):
 
   model = get_model(record)
 
+  # Retrieve permissions of the record
   if (model == "Readings"):
     permissions = ReadingsPerm.objects.filter(readings_id=record_id)
   elif (model == "TimeSeries"):
@@ -79,7 +82,7 @@ def show_record(request, patient_id, record_id):
   else:
     permissions = ReadingsPerm.objects.none()
 
-  Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Show Record ' + str(record_id))
+  Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[Show Record] Show Record ' + str(record_id))
 
   context = {
     'patient': patient,
@@ -106,11 +109,17 @@ def download_record(request, patient_id, record_id):
     record = get_record(record_id)
     record = record[0]
   except IndexError:
-    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Record] Record ID is invalid.')
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Record] Record ID is invalid. Invalid ID: ' + str(record_id))
     return redirect('show_all_records', patient_id=patient_id)
 
-  file_path = record.data.path
-  file_name = record.data.name.split('/', 1)[1]
+  try:
+    file_path = record.data.path
+  except ValueError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Record] No data path in record ' + str(note_id))
+    return redirect('show_record', patient_id=patient_id, record_id=record_id)
+
+  file_path = record.data.path # E.g. /home/sadm/Desktop/.../x.png
+  file_name = record.data.name.split('/', 1)[1] # x.png
 
   with open(file_path, 'rb') as record:
     content_type = guess_type(file_path)[0]
@@ -118,7 +127,7 @@ def download_record(request, patient_id, record_id):
     response['Content-Length'] = os.path.getsize(file_path)
     response['Content-Disposition'] = "attachment; filename=%s" %  file_name
 
-    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Download Record ' + str(record_id))
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[Download Record] Download Record ' + str(record_id))
 
     return response
 
@@ -138,18 +147,24 @@ def edit_permission(request, patient_id, record_id, perm_id):
     record = get_record(record_id)
     record = record[0]
   except IndexError:
-    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Record ID is invalid.')
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Record ID is invalid. Invalid ID: ' + str(record_id))
     return redirect('show_all_records', patient_id=patient_id)
 
   model = get_model(record)
 
   if (model == "Readings"):
-    permission = ReadingsPerm.objects.get(id = perm_id)
+    try:
+      permission = ReadingsPerm.objects.filter(id = perm_id)
+      permission = permission[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Permission ID is invalid. Invalid ID: ' + str(perm_id))
+      return redirect('show_all_records', patient_id=patient_id)
+
     form = ReadingsPermissionEditForm(request.POST or None, instance=permission)
     if request.method == 'POST':
       if form.is_valid():
         permission.save()
-        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Edit Permission ' + str(perm_id))
+        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[Edit Permission] Edit Permission ' + str(perm_id))
         return redirect('show_record', patient_id=patient_id, record_id=record_id)
       else:
         Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Invalid Form')
@@ -161,12 +176,18 @@ def edit_permission(request, patient_id, record_id, perm_id):
         }
         return render(request, 'edit_permission.html', context)
   elif (model == "TimeSeries"):
-    permission = TimeSeriesPerm.objects.get(id = perm_id)
+    try:
+      permission = TimeSeriesPerm.objects.filter(id = perm_id)
+      permission = permission[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Permission ID is invalid. Invalid ID: ' + str(perm_id))
+      return redirect('show_all_records', patient_id=patient_id)
+
     form = TimeSeriesPermissionEditForm(request.POST or None, instance=permission)
     if request.method == 'POST':
       if form.is_valid():
         permission.save()
-        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Edit Permission ' + str(perm_id))
+        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[Edit Permission] Edit Permission ' + str(perm_id))
         return redirect('show_record', patient_id=patient_id, record_id=record_id)
       else:
         Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Invalid Form')
@@ -178,12 +199,18 @@ def edit_permission(request, patient_id, record_id, perm_id):
         }
         return render(request, 'edit_permission.html', context)
   elif (model == "Documents"):
-    permission = DocumentsPerm.objects.get(id = perm_id)
+    try:
+      permission = DocumentsPerm.objects.filter(id = perm_id)
+      permission = permission[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Permission ID is invalid. Invalid ID: ' + str(perm_id))
+      return redirect('show_all_records', patient_id=patient_id)
+
     form = DocumentsPermissionEditForm(request.POST or None, instance=permission)
     if request.method == 'POST':
       if form.is_valid():
         permission.save()
-        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Edit Permission ' + str(perm_id))
+        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[Edit Permission] Edit Permission ' + str(perm_id))
         return redirect('show_record', patient_id=patient_id, record_id=record_id)
       else:
         Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Invalid Form')
@@ -195,12 +222,18 @@ def edit_permission(request, patient_id, record_id, perm_id):
         }
         return render(request, 'edit_permission.html', context)
   elif (model == "Videos"):
-    permission = VideosPerm.objects.get(id = perm_id)
+    try:
+      permission = VideosPerm.objects.filter(id = perm_id)
+      permission = permission[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Permission ID is invalid. Invalid ID: ' + str(perm_id))
+      return redirect('show_all_records', patient_id=patient_id)
+
     form = VideosPermissionEditForm(request.POST or None, instance=permission)
     if request.method == 'POST':
       if form.is_valid():
         permission.save()
-        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Edit Permission ' + str(perm_id))
+        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[Edit Permission] Edit Permission ' + str(perm_id))
         return redirect('show_record', patient_id=patient_id, record_id=record_id)
       else:
         Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Invalid Form')
@@ -212,12 +245,18 @@ def edit_permission(request, patient_id, record_id, perm_id):
         }
         return render(request, 'edit_permission.html', context)
   elif (model == "Images"):
-    permission = ImagesPerm.objects.get(id = perm_id)
+    try:
+      permission = ImagesPerm.objects.filter(id = perm_id)
+      permission = permission[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Permission ID is invalid. Invalid ID: ' + str(perm_id))
+      return redirect('show_all_records', patient_id=patient_id)
+
     form = ImagesPermissionEditForm(request.POST or None, instance=permission)
     if request.method == 'POST':
       if form.is_valid():
         permission.save()
-        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='Edit Permission ' + str(perm_id))
+        Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[Edit Permission] Edit Permission ' + str(perm_id))
         return redirect('show_record', patient_id=patient_id, record_id=record_id)
       else:
         Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Edit Permission] Invalid Form')
@@ -228,8 +267,6 @@ def edit_permission(request, patient_id, record_id, perm_id):
           'permission': permission
         }
         return render(request, 'edit_permission.html', context)
-  else:
-    permission = ReadingsPerm.objects.none()
 
   Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[Edit Permission] Render Form')
 
@@ -245,6 +282,9 @@ def edit_permission(request, patient_id, record_id, perm_id):
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
 def new_record(request, patient_id):
+  """
+  Choosing a type of record to create.
+  """
   if (request.user.patient_username.id != patient_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
     return redirect('/patient/login/')
@@ -268,7 +308,7 @@ def new_record(request, patient_id):
       elif (type == 'Documents'):
         return redirect('new_documents_record', patient_id=patient_id)
 
-      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='New Record')
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[New Record]')
     else:
       Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Record] Invalid Form')
 
@@ -304,8 +344,10 @@ def new_readings_record(request, patient_id):
       readings = form.save(commit=False)
       readings.owner_id = patient.username
       readings.patient_id = patient
+      data = bleach.clean(form.cleaned_data['data'], tags=[], attributes=[], protocols=[], strip=True)
       type = form.cleaned_data['type']
       readings.type = type
+      readings.data = data
       readings.save()
 
       # Get all patient's healthcare professional
@@ -315,7 +357,7 @@ def new_readings_record(request, patient_id):
         permission = ReadingsPerm.objects.create(readings_id=readings, given_by=patient.username, perm_value=2)
         permission.username.add(healthcare)
       
-      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='New Readings Record')
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[New Readings Record] New Readings Record ' + str(readings.id))
       return redirect('show_record', patient_id=patient_id, record_id=readings.id)
     else:
       Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Readings Record] Invalid Form')
@@ -359,7 +401,7 @@ def new_timeseries_record(request, patient_id):
         permission = TimeSeriesPerm.objects.create(timeseries_id=timeseries, given_by=patient.username, perm_value=2)
         permission.username.add(healthcare)
       
-      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='New TimeSeries Record')
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[New TimeSeries Record] New TimeSeries Record ' + str(timeseries.id))
       return redirect('show_record', patient_id=patient_id, record_id=timeseries.id)
     else:
       Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[New TimeSeries Record] Invalid Form')
@@ -395,6 +437,8 @@ def new_images_record(request, patient_id):
       images.owner_id = patient.username
       images.patient_id = patient
       type = form.cleaned_data['type']
+      title = bleach.clean(form.cleaned_data['title'], tags=[], attributes=[], protocols=[], strip=True)
+      images.title = title
       images.type = type
       images.save()
 
@@ -405,7 +449,7 @@ def new_images_record(request, patient_id):
         permission = ImagesPerm.objects.create(img_id=images, given_by=patient.username, perm_value=2)
         permission.username.add(healthcare)
       
-      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='New Images Record')
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[New Images Record] New Images Record ' + str(images.id))
       return redirect('show_record', patient_id=patient_id, record_id=images.id)
     else:
       Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Images Record] Invalid Form')
@@ -441,6 +485,8 @@ def new_videos_record(request, patient_id):
       videos.owner_id = patient.username
       videos.patient_id = patient
       type = form.cleaned_data['type']
+      title = bleach.clean(form.cleaned_data['title'], tags=[], attributes=[], protocols=[], strip=True)
+      videos.title = title
       videos.type = type
       videos.save()
 
@@ -451,7 +497,7 @@ def new_videos_record(request, patient_id):
         permission = VideosPerm.objects.create(videos_id=videos, given_by=patient.username, perm_value=2)
         permission.username.add(healthcare)
       
-      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='New Videos Record')
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[New Videos Record] New Videos Record ' + str(videos.id))
       return redirect('show_record', patient_id=patient_id, record_id=videos.id)
     else:
       Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Videos Record] Invalid Form')
@@ -486,8 +532,10 @@ def new_documents_record(request, patient_id):
       docs = form.save(commit=False)
       docs.owner_id = patient.username
       docs.patient_id = patient
-      type = form.cleaned_data['type']
+      type = bleach.clean(form.cleaned_data['type'], tags=[], attributes=[], protocols=[], strip=True)
+      title = bleach.clean(form.cleaned_data['title'], tags=[], attributes=[], protocols=[], strip=True)
       docs.type = type
+      docs.title = title
       docs.save()
 
       # Get all patient's healthcare professional
@@ -497,7 +545,7 @@ def new_documents_record(request, patient_id):
         permission = DocumentsPerm.objects.create(docs_id=docs, given_by=patient.username, perm_value=2)
         permission.username.add(healthcare.username)
       
-      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='New Documents Record')
+      Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[New Documents Record] New Documents Record ' + str(docs.id))
       return redirect('show_record', patient_id=patient_id, record_id=docs.id)
     else:
       Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Documents Record] Invalid Form')
@@ -523,14 +571,14 @@ def new_documents_record(request, patient_id):
 STATUS_OK = 1
 STATUS_ERROR = 0
 
-def patient_does_not_exists(patient_id): # TODO: This function is never called?
+def patient_does_not_exists(patient_id):
   """
   Redirects to login if patient_id is invalid
   """
   try:
     return Patient.objects.get(id=patient_id)
   except Patient.DoesNotExist:
-    Logs.objects.create(type='READ', user_id=patient_id, interface='PATIENT', status=STATUS_ERROR, details='Patient ID is invalid.')
+    Logs.objects.create(type='READ', user_id=patient_id, interface='PATIENT', status=STATUS_ERROR, details='[PatientRecords] Patient ID is invalid.')
     redirect('patient_login')
 
 def get_record(record_id):
