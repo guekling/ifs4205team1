@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.forms.forms import NON_FIELD_ERRORS
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.core import serializers
@@ -14,6 +15,7 @@ import datetime
 import csv
 import xlwt
 import json
+import re
 
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
@@ -57,61 +59,68 @@ def search_records(request, researcher_id):
 			combi_date = qiinfo.get_combi_date()
 
 			# Process the QIs & Record Types
-			##### Add in exception checking codes
 			postalcodes = []
-			if postalcode1:
+			if check_postalcode(postalcode1):
 				postalcodes.append(postalcode1)
-			if postalcode2:
+			if check_postalcode(postalcode2):
 				postalcodes.append(postalcode2)
-			if postalcode3:
+			if check_postalcode(postalcode3):
 				postalcodes.append(postalcode3)
 
-			users = process_age_postalcode(combi_age, combi_postalcode, ages, postalcodes)
-			users_list = list(users)
-			request.session['users_list'] = serializers.serialize("json", users_list)
-			process_recordtypes(recordtypes_selected, recordtypes_perm_list)
+			# ages contain at least 1 digit string and postalcodes contain at least 1 valid postalcode
+			if (all(x.isdigit() for x in ages)) and (len(ages) != 0) and (len(postalcodes) != 0):
+				users = process_age_postalcode(combi_age, combi_postalcode, ages, postalcodes)
+				users_list = list(users)
+				request.session['users_list'] = serializers.serialize("json", users_list)
+				process_recordtypes(recordtypes_selected, recordtypes_perm_list)
 
-			Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Search Records')
+				Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Search Records')
 
+				context = {
+					'form': form,
+					'researcher': researcher,
+					'qiinfo': qiinfo,
+					'users': users,
+					'count': users.count(),
+					'date': process_date(combi_date),
+					'submitted': submitted,
+					DIAGNOSIS_NAME: recordtypes_state[DIAGNOSIS_NAME],
+					BP_READING_NAME: recordtypes_state[BP_READING_NAME],
+					HR_READING_NAME: recordtypes_state[HR_READING_NAME],
+					TEMP_READING_NAME: recordtypes_state[TEMP_READING_NAME],
+					CANCER_IMG_NAME: recordtypes_state[CANCER_IMG_NAME],
+					MRI_IMG_NAME: recordtypes_state[MRI_IMG_NAME],
+					ULTRASOUND_IMG_NAME: recordtypes_state[ULTRASOUND_IMG_NAME],
+					XRAY_IMG_NAME: recordtypes_state[XRAY_IMG_NAME],
+					GASTROSCOPE_VID_NAME: recordtypes_state[GASTROSCOPE_VID_NAME],
+					GAIT_VID_NAME: recordtypes_state[GAIT_VID_NAME]
+				}
+				return render(request, 'search_records.html', context)
+			else:
+				Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='[Search Records] Invalid form')
+				form.add_error(None, 'Invalid form')
+				context = {
+					'form': form,
+					'researcher': researcher
+				}
+				return render(request, 'search_records.html', context)
+
+		else: # POST - Handle invalid form
+			Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='[Search Records] Invalid form')
+			form.add_error(None, 'Invalid form')
 			context = {
 				'form': form,
-				'researcher': researcher,
-				'qiinfo': qiinfo,
-				'users': users,
-				'count': users.count(),
-				'date': process_date(combi_date),
-				'submitted': submitted,
-				DIAGNOSIS_NAME: recordtypes_state[DIAGNOSIS_NAME],
-				BP_READING_NAME: recordtypes_state[BP_READING_NAME],
-				HR_READING_NAME: recordtypes_state[HR_READING_NAME],
-				TEMP_READING_NAME: recordtypes_state[TEMP_READING_NAME],
-				CANCER_IMG_NAME: recordtypes_state[CANCER_IMG_NAME],
-				MRI_IMG_NAME: recordtypes_state[MRI_IMG_NAME],
-				ULTRASOUND_IMG_NAME: recordtypes_state[ULTRASOUND_IMG_NAME],
-				XRAY_IMG_NAME: recordtypes_state[XRAY_IMG_NAME],
-				GASTROSCOPE_VID_NAME: recordtypes_state[GASTROSCOPE_VID_NAME],
-				GAIT_VID_NAME: recordtypes_state[GAIT_VID_NAME]
+				'researcher': researcher
 			}
-
 			return render(request, 'search_records.html', context)
-
-		# POST - Handle invalid form
-		context = {
-			'form': form,
-			'researcher': researcher
-		}
-		
-		return render(request, 'search_records.html', context)
 
 	# GET - First load
 	else:
 		form = SearchRecordsForm(tday=today_date, perm=recordtypes_perm_choices)
-
 		context = {
 			'form': form,
 			'researcher': researcher
 		}
-
 		return render(request, 'search_records.html', context)
 
 @login_required(login_url='researcher_login')
@@ -270,7 +279,6 @@ def download_records_xls(request, researcher_id):
 		else:
 			ws.write(row_num, 5, '', font_style)
 
-		
 		if recordtypes_state[HR_READING_NAME]:
 			hr_readings_list = []
 			hr_reading_obj = safeuser_obj.get_hr_readings()
@@ -359,6 +367,10 @@ recordtypes_state = {
 	GASTROSCOPE_VID_NAME: False,
 	GAIT_VID_NAME: False
 }
+
+# Check if postalcode contains 6 digits with a valid postal sector
+def check_postalcode(postalcode):
+	return bool(re.search('([0][1-9]|[1-6][0-9]|[7][0-3]|[7][5-9]|[8][0-2])[0-9]{4}', postalcode))
 
 def reset_recordtypes_choices_checkbox():
 	for recordtype in RECORD_TYPES_NAME_LIST:
