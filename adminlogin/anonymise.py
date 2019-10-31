@@ -2,6 +2,8 @@ from __future__ import division
 from django.utils import timezone
 from datetime import timedelta
 import pytz
+import os
+
 from core.models import Patient, User
 from patientrecords.models import Diagnosis, Readings, Images, Videos
 from researcherquery.models import QiInfo, SafeUsers, SafeDiagnosis, SafeReadings, SafeImages, SafeVideos
@@ -9,11 +11,11 @@ from adminlogin.anonymise_helper import *
 
 def anonymise_and_store():
 	k_value = 3
-	patients = Patient.objects.all()
-	total_patients = patients.count()
 
 	# Step 1: For each QI combi e.g. (A, P, LM)
 	for key in QI_COMBI:
+		print(key)
+		print(QI_COMBI[key])
 		# Step 2: For each set of unique QIs
 		# Step 2a: Retrieve each set of unique QIs from DB
 		# Step 2b: Loop the list
@@ -22,6 +24,9 @@ def anonymise_and_store():
 		# Only get 1st entry of distinct pairs
 		# Will not get all patients if each set of distinct pair has multiple rows
 		unique_entries = User.objects.distinct('age', 'postalcode').order_by('age', 'postalcode')
+
+		patients = Patient.objects.all()
+		total_patients = patients.count()
 
 		for unique_entry in unique_entries:
 			if unique_entry.is_patient():
@@ -54,7 +59,7 @@ def anonymise_and_store():
 						users = users.exclude(username=user.username)
 						users_copy = users_copy.exclude(username=user.username)
 
-				# After this for loop:
+				# After for loop:
 				# users = all patients with at least 1 record in current set of unique QIs
 				# users_copy = all patients with or without at least 1 record in current set of unique QIs
 
@@ -69,7 +74,7 @@ def anonymise_and_store():
 					for user in users_copy:
 						patients = patients.exclude(username=user.username)
 
-				# After this if:
+				# After if:
 				# patients = all patients that satisfy at least k patients in current set of unique QIs
 
 		# Step 8: Compute suppression rate
@@ -78,10 +83,10 @@ def anonymise_and_store():
 		total_patients_left = patients.count()
 		suppression_rate = ((total_patients - total_patients_left) / total_patients) * 100
 
-		print("TOTAL PATIENT")
-		print(total_patients)
-		print(total_patients_left)
-		print(suppression_rate)
+		# print("TOTAL PATIENT")
+		# print(total_patients)
+		# print(total_patients_left)
+		# print(suppression_rate)
 
 		if suppression_rate <= 10.0:
 			# Step 9: Store anonymised records into SAFE DB
@@ -94,7 +99,7 @@ def store_qi_combi(qi_combi, k_value, suppression_rate):
 	combi_postalcode = qi_combi[POSTALCODE_NAME]
 	combi_date = qi_combi[DATE_NAME]
 
-	print("STORE_QI_COMBI")
+	# print("STORE_QI_COMBI")
 
 	# Remove all data from table if not empty
 	qiinfo_data = QiInfo.objects.all()
@@ -103,9 +108,7 @@ def store_qi_combi(qi_combi, k_value, suppression_rate):
 
 	QiInfo.objects.create(combi_age=combi_age, combi_postalcode=combi_postalcode, combi_date=combi_date, k_value=k_value, suppression_rate=suppression_rate)
 
-	print("DONE_SAVING_QI_COMBI")
-
-	# print(qiinfo_obj.id)
+	# print("DONE_SAVING_QI_COMBI")
 
 def store_anonymised_records(qi_combi, patients):
 	# Remove all data from tables if not empty
@@ -129,7 +132,7 @@ def store_anonymised_records(qi_combi, patients):
 	if safeusers_data.count() != 0:
 		SafeUsers.objects.all().delete()
 
-	print("STORE_ANONYMISED_RECORDS")
+	# print("STORE_ANONYMISED_RECORDS")
 
 	for patient in patients:
 		user = User.objects.get(username=patient.username)
@@ -147,8 +150,6 @@ def store_anonymised_records(qi_combi, patients):
 
 		safeusers_obj = SafeUsers.objects.create(uid=user.uid, age=user.age, postalcode=user.postalcode)
 
-		# print(safeusers_obj.uid)
-
 		# Get all diagnosis associated with current patient in range
 		diagnosis = get_records_in_range(qi_combi[DATE_NAME], DIAGNOSIS_NAME, patient)
 		for diag in diagnosis:
@@ -163,14 +164,16 @@ def store_anonymised_records(qi_combi, patients):
 		# Get all images associated with current patient in range
 		images = get_records_in_range(qi_combi[DATE_NAME], IMAGES_NAME, patient)
 		for img in images:
-			safeimages_obj = SafeImages.objects.create(uid=safeusers_obj, type=img.type, value=img.title)
+			filename = os.path.basename(img.data.name)
+			safeimages_obj = SafeImages.objects.create(uid=safeusers_obj, type=img.type, value=filename)
 
 		# Get all videos associated with current patient in range
 		videos = get_records_in_range(qi_combi[DATE_NAME], VIDEOS_NAME, patient)
 		for vid in videos:
-			safevideos_obj = SafeVideos.objects.create(uid=safeusers_obj, type=vid.type, value=vid.title)
+			filename = os.path.basename(vid.data.name)
+			safevideos_obj = SafeVideos.objects.create(uid=safeusers_obj, type=vid.type, value=filename)
 
-	print("DONE_SAVING_RECORDS")
+	# print("DONE_SAVING_RECORDS")
 
 def generalise_and_get_users(qi_combi, user):
 	combi_age = qi_combi[AGE_NAME]

@@ -88,7 +88,7 @@ class SafeImages(models.Model):
 		on_delete=models.CASCADE,
 	)
 	type = models.CharField(max_length=64)
-	value = models.CharField(max_length=128)
+	value = models.CharField(max_length=128) # store filename
 
 class SafeVideos(models.Model):
 	uid = models.ForeignKey(
@@ -96,4 +96,4 @@ class SafeVideos(models.Model):
 		on_delete=models.CASCADE,
 	)
 	type = models.CharField(max_length=64)
-	value = models.CharField(max_length=128)
+	value = models.CharField(max_length=128) # store filename
