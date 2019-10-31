@@ -325,7 +325,7 @@ class Documents(models.Model):
     on_delete=models.CASCADE,
     related_name='documents_patient'
   )
-  data = models.FileField(upload_to='documents/')
+  data = models.FileField(upload_to='documents/', validators=[FileExtensionValidator(allowed_extensions=['txt'])])
   attach_readings = models.ManyToManyField(Readings)
   attach_timeseries = models.ManyToManyField(TimeSeries)
   attach_videos = models.ManyToManyField(Videos)

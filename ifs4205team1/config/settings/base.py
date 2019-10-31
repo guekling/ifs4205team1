@@ -175,5 +175,9 @@ RESEARCHER_VIDEO_PATH = os.environ.get("RESEARCHER_VIDEO_PATH")
 # Admin Page
 ADMIN_URL = os.environ.get("ADMIN_URL")
 
+# Server
+
+HOSTED_SITE_URL = 'https://ifs4205team1-3.comp.nus.edu.sg'
+
 # Axes Configuration
 AXES_FAILURE_LIMIT = 5

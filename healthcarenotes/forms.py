@@ -50,8 +50,8 @@ class AddHealthcareNote(forms.Form):
     self.fields['patient'].queryset = Patient.objects.filter(healthcare_patients=self.healthcare)
 
 class AddHealthcareNoteForPatient(forms.Form):
-  title = forms.CharField()
-  note = forms.CharField(widget=forms.Textarea(attrs={"rows":5, "cols":20}))
+  title = forms.CharField(max_length=64, required=True)
+  note = forms.CharField(widget=forms.Textarea(attrs={"rows":5, "cols":20}), required=True)
   attach_readings = ReadingsMultipleChoiceField(queryset=Readings.objects.all(), required=False)
   attach_timeseries = TimeSeriesMultipleChoiceField(queryset=TimeSeries.objects.all(), required=False)
   attach_images = ImgVidMultipleChoiceField(queryset=Images.objects.all(), required=False)
@@ -66,8 +66,8 @@ class AddHealthcareNoteForPatient(forms.Form):
     self.fields['attach_videos'].queryset = Videos.objects.filter(patient_id=self.patient)
 
 class EditHealthcareNote(forms.Form):
-  title = forms.CharField()
-  note = forms.CharField(widget=forms.Textarea(attrs={"rows":5, "cols":20}))
+  title = forms.CharField(max_length=64, required=True)
+  note = forms.CharField(widget=forms.Textarea(attrs={"rows":5, "cols":20}), required=True)
   attach_readings = ReadingsMultipleChoiceField(queryset=Readings.objects.all(), required=False)
   attach_timeseries = TimeSeriesMultipleChoiceField(queryset=TimeSeries.objects.all(), required=False)
   attach_images = ImgVidMultipleChoiceField(queryset=Images.objects.all(), required=False)

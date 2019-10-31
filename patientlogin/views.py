@@ -301,7 +301,7 @@ def patient_does_not_exists(patient_id):
   try:
     return Patient.objects.get(id=patient_id)
   except Patient.DoesNotExist:
-    Logs.objects.create(type='READ', user_id=patient_id, interface='PATIENT', status=STATUS_ERROR, details='Patient ID is invalid. Patient ID: ' + str(patient_id))
+    Logs.objects.create(type='READ', user_id=patient_id, interface='PATIENT', status=STATUS_ERROR, details='[PatientLogin] Patient ID is invalid. Patient ID: ' + str(patient_id))
     redirect('patient_login')
 
 def recovered_value(hash_id, nonce, otp):

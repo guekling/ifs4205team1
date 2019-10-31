@@ -19,8 +19,12 @@
   {% to_model_name result as to_model_name_result %}
 	<tr>
 	  <th scope="row">{{ result.timestamp | get_datetime }}</th>
-	  <th>{{ result.type }}</th>
-	  <th>
+	  {% if to_model_name_result == 'TimeSeries' %}
+      <th>{{ to_model_name_result }}</th>
+    {% else %}  
+      <th>{{ result.type }}</th>
+	  {% endif %}
+    <th>
       {% if to_model_name_result == 'Documents' or to_model_name_result == 'Images' or to_model_name_result == 'TimeSeries' or to_model_name_result == 'Videos' %}
         <a href="{{ result.id | get_record_path }}">View Data</a>
       {% else %}
