@@ -17,9 +17,9 @@
 {% if notif.type == 1 %}
 <th>{{ "You have been transferred to "|add:notif.to_healthcare.username.username|add:" by "|add:notif.from_user.username}}</th>
 {% elif notif.type == 2 %}
+<th>{{ "An emergency healthcare professional "|add:notif.from_user.username|add:" has uploaded something for you: "|add:notif.content}}</th>
+{% elif notif.type == 3 %}
 <th>{{ "An emergency healthcare professional "|add:notif.from_user.username|add:" has been assigned to you"}}</th>
-{% elif notif.type == 2 %}
-<th>{{ "An emergency healthcare professional "|add:notif.from_user.username|add:" has uploaded a file for you: "|add:notif.content}}</th>
 {% endif %}
 
 {% if notif.status == 1 %}
