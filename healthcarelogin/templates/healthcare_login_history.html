@@ -1,0 +1,42 @@
+{% extends "healthcare_base.html" %}
+
+{% block content %}
+<h1>Healthcare Login History</h1>
+
+<table class="table text-center">
+  <thead>
+  <tr>
+    <th scope="col">Time</th>
+    <th scope="col">IP Address</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <th>{{ user.login1 }}</th>
+    <th>{{ user.ip1 }}</th>
+  </tr>
+  <tr>
+    <th>{{ user.login2 }}</th>
+    <th>{{ user.ip2 }}</th>
+  </tr>
+  <tr>
+    <th>{{ user.login3 }}</th>
+    <th>{{ user.ip3 }}</th>
+  </tr>
+  <tr>
+    <th>{{ user.login4 }}</th>
+    <th>{{ user.ip4 }}</th>
+  </tr>
+  <tr>
+    <th>{{ user.login5 }}</th>
+    <th>{{ user.ip5 }}</th>
+  </tr>
+  <tr>
+    <th>{{ user.login6 }}</th>
+    <th>{{ user.ip6 }}</th>
+  </tr>
+
+  </tbody>
+</table>
+
+{% endblock %}

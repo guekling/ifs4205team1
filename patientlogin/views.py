@@ -114,6 +114,27 @@ def patient_notifications(request, patient_id):
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
 @user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
+def patient_login_history(request, patient_id):
+  # checks if logged in patient has the same id as in the URL
+  if (request.user.patient_username.id != patient_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[Settings] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    return redirect('/patient/login/')
+
+  patient = patient_does_not_exists(patient_id)
+  user = patient.username
+
+  Logs.objects.create(type='READ', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Login History')
+
+  context = {
+    'patient': patient,
+    'user': user,
+  }
+
+  return render(request, 'patient_login_history.html', context)
+
+@login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def patient_settings(request, patient_id):
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
@@ -248,6 +269,18 @@ def patient_qr(request, patient_id):
       # give HttpResponse only or render page you need to load on success
       # delete the nonce
       user.latest_nonce = ""
+      user.login6 = user.login5
+      user.login5 = user.login4
+      user.login4 = user.login3
+      user.login3 = user.login2
+      user.login2 = user.login1
+      user.login1 = datetime.now()
+      user.ip6 = user.ip5
+      user.ip5 = user.ip4
+      user.ip4 = user.ip3
+      user.ip3 = user.ip2
+      user.ip2 = user.ip1
+      user.ip1 = visitor_ip_address(request)
       user.save()
       Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='[2FA] Login successful. Nonce deleted.')
       return redirect('patient_dashboard', patient_id=patient.id)
@@ -339,3 +372,14 @@ def make_qr(nonce):
   img = qr.make_image(fill='black', back_color='white')
 
   return img
+
+def visitor_ip_address(request):
+
+  x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+
+  if x_forwarded_for:
+    ip = x_forwarded_for.split(',')[0]
+  else:
+    ip = request.META.get('REMOTE_ADDR')
+  return ip
+

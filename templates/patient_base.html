@@ -41,6 +41,9 @@
           <a class="dropdown-item" href="{% url 'patient_change_password' patient_id=patient.id %}">Change Password</a>
         </div>
       </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'patient_login_history' patient_id=patient.id %}">Login History</a>
+      </li>
     </ul>
   </div>
 
