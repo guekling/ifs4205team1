@@ -20,13 +20,14 @@ from mimetypes import guess_type
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def show_all_patients(request, healthcare_id):
   """
   List all patients the healthcare professional has
   """ 
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
-    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show All Patients] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show All Patients] Logged in user does not match ID in URL. URL ID: ' + str(healthcare_id))
     return redirect('/healthcare/login/')
 
   healthcare = healthcare_does_not_exists(healthcare_id)
@@ -44,6 +45,7 @@ def show_all_patients(request, healthcare_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def show_patient(request, healthcare_id, patient_id):
   """
   Show information of a single patient
@@ -73,6 +75,7 @@ def show_patient(request, healthcare_id, patient_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def show_patient_records(request, healthcare_id, patient_id):
   """
   List all medical records belonging to a single patient
@@ -106,6 +109,7 @@ def show_patient_records(request, healthcare_id, patient_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def show_patient_record(request, healthcare_id, patient_id, record_id):
   """
   Show information of a single record belonging to a single patient
@@ -163,6 +167,7 @@ def show_patient_record(request, healthcare_id, patient_id, record_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def download_patient_record(request, healthcare_id, patient_id, record_id):
   """
   Download a single medical record
@@ -202,6 +207,7 @@ def download_patient_record(request, healthcare_id, patient_id, record_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def transfer_patient(request, healthcare_id, patient_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
@@ -282,10 +288,11 @@ def transfer_patient(request, healthcare_id, patient_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def new_patient_record(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
-    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[New Patient Readings Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[New Patient Readings Record] Logged in user does not match ID in URL. URL ID: ' + str(healthcare_id))
 
     return redirect('/healthcare/login/')
 
@@ -329,6 +336,7 @@ def new_patient_record(request, healthcare_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def new_patient_readings_record(request, healthcare_id, patient_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
@@ -417,6 +425,7 @@ def new_patient_readings_record(request, healthcare_id, patient_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def new_patient_timeseries_record(request, healthcare_id, patient_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
@@ -506,6 +515,7 @@ def new_patient_timeseries_record(request, healthcare_id, patient_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def new_patient_images_record(request, healthcare_id, patient_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
@@ -597,6 +607,7 @@ def new_patient_images_record(request, healthcare_id, patient_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def new_patient_videos_record(request, healthcare_id, patient_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):

@@ -14,8 +14,6 @@ def anonymise_and_store():
 
 	# Step 1: For each QI combi e.g. (A, P, LM)
 	for key in QI_COMBI:
-		print(key)
-		print(QI_COMBI[key])
 		# Step 2: For each set of unique QIs
 		# Step 2a: Retrieve each set of unique QIs from DB
 		# Step 2b: Loop the list
@@ -33,8 +31,8 @@ def anonymise_and_store():
 				unique_qi_age = unique_entry.age
 				unique_qi_postalcode = unique_entry.postalcode
 
-				print(unique_qi_age)
-				print(unique_qi_postalcode)
+				# print(unique_qi_age)
+				# print(unique_qi_postalcode)
 
 				# Step 3: Generalise QIs (age & postalcode) based on QIs combi
 				# Step 4: Get all users including non-patients with current set of unique QIs (set QIs as filter)
@@ -46,7 +44,7 @@ def anonymise_and_store():
 						patient = user.patient_username
 
 						# Step 5: Generalise date
-						# Step 6: Check if patient has at least 1 record (readings) within the combi_date (LM, LY or *)
+						# Step 6: Check if patient has at least 1 record within the combi_date (LM, LY or *)
 						# Step 6a: If exists at least 1 record, continue (keep patient)
 						# Step 6b: Else, remove patient from list then continue
 						record_exists = generalise_date_and_check_record_exists(QI_COMBI[key][DATE_NAME], patient)

@@ -17,7 +17,7 @@ from userlogs.models import Logs
 
 import hashlib
 import qrcode
-import datetime
+from datetime import datetime, timezone
 
 class HealthcareLogin(LoginView):
   """
@@ -41,7 +41,7 @@ class HealthcareLogin(LoginView):
       user = healthcare.username
       # if len(user.hashed_last_six) > 0 and len(user.hashed_id) > 0:
       user.latest_nonce = nonce  # change field
-      user.nonce_timestamp = datetime.datetime.now()
+      user.nonce_timestamp = datetime.now()
       user.save()  # this will update only
       Logs.objects.create(type='LOGIN', user_id=user.uid, interface='HEALTHCARE', status=STATUS_OK, details='Healthcare Login')
       return redirect('healthcare_qr', healthcare_id=healthcare.id)
@@ -82,6 +82,29 @@ class HealthcareChangePasswordComplete(PasswordChangeDoneView):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
+def healthcare_login_history(request, healthcare_id):
+  # checks if logged in healthcare professional has the same id as in the URL
+  if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR,
+                        details='[Settings] Logged in user does not match ID in URL. URL ID: ' + str(healthcare_id))
+    return redirect('/healthcare/login/')
+
+  healthcare = healthcare_does_not_exists(healthcare_id)
+  user = healthcare.username
+
+  Logs.objects.create(type='READ', user_id=user.uid, interface='HEALTHCARE', status=STATUS_OK, details='Login History')
+
+  context = {
+    'healthcare': healthcare,
+    'user': user,
+  }
+
+  return render(request, 'healthcare_login_history.html', context)
+
+@login_required(login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def healthcare_settings(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
@@ -90,10 +113,6 @@ def healthcare_settings(request, healthcare_id):
 
   healthcare = healthcare_does_not_exists(healthcare_id)
   user = healthcare.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('healthcare_login')
 
   Logs.objects.create(type='READ', user_id=user.uid, interface='HEALTHCARE', status=STATUS_OK, details='Settings')
 
@@ -106,6 +125,7 @@ def healthcare_settings(request, healthcare_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def healthcare_edit_settings(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
@@ -114,10 +134,6 @@ def healthcare_edit_settings(request, healthcare_id):
 
   healthcare = healthcare_does_not_exists(healthcare_id)
   user = healthcare.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('healthcare_login')
 
   form = UserEditForm(request.POST or None, instance=user)
 
@@ -147,6 +163,7 @@ def healthcare_edit_settings(request, healthcare_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def healthcare_change_password(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
@@ -155,10 +172,6 @@ def healthcare_change_password(request, healthcare_id):
 
   healthcare = healthcare_does_not_exists(healthcare_id)
   user = healthcare.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('healthcare_login')
 
   change_password = HealthcareChangePassword.as_view(
     extra_context={'healthcare': healthcare}
@@ -170,6 +183,7 @@ def healthcare_change_password(request, healthcare_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def healthcare_change_password_complete(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
@@ -178,10 +192,6 @@ def healthcare_change_password_complete(request, healthcare_id):
 
   healthcare = healthcare_does_not_exists(healthcare_id)
   user = healthcare.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('healthcare_login')
 
   change_password_complete = HealthcareChangePasswordComplete.as_view(
     extra_context={'healthcare': healthcare}
@@ -208,8 +218,8 @@ def healthcare_qr(request, healthcare_id):
   #   Logs.objects.create(type='LOGIN', user_id=user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[2FA] URL traversal. Not Registered yet.')
   #   return redirect("healthcare_token_register", healthcare_id=healthcare.id)
 
-  # require a valid nonce (exists and not expired)
-  if len(user.latest_nonce) > 0:
+  # require a valid nonce (exists and not expired). a nonce expires after 3 minutes
+  if len(user.latest_nonce) > 0 and (datetime.now(timezone.utc) - user.nonce_timestamp).total_seconds() <= 180:
     nonce = user.latest_nonce
   else:
     # if somehow bypassed login
@@ -221,11 +231,26 @@ def healthcare_qr(request, healthcare_id):
   if form.is_valid():
     cd = form.cleaned_data
     otp = cd.get('otp')
+    # timeout, nonce expires
+    if (datetime.now(timezone.utc) - user.nonce_timestamp).total_seconds() > 180:
+      return redirect('patient_login')
     if otp == '1234':
     # if user.hashed_last_six == recovered_value(user.hashed_id, nonce, otp):
       # give HttpResponse only or render page you need to load on success
       # delete the nonce
       user.latest_nonce = ""
+      user.login6 = user.login5
+      user.login5 = user.login4
+      user.login4 = user.login3
+      user.login3 = user.login2
+      user.login2 = user.login1
+      user.login1 = datetime.now()
+      user.ip6 = user.ip5
+      user.ip5 = user.ip4
+      user.ip4 = user.ip3
+      user.ip3 = user.ip2
+      user.ip2 = user.ip1
+      user.ip1 = visitor_ip_address(request)
       user.save()
       Logs.objects.create(type='LOGIN', user_id=user.uid, interface='HEALTHCARE', status=STATUS_OK, details='[2FA] Login successful. Nonce deleted.')
       return redirect('healthcare_dashboard', healthcare_id=healthcare.id)
@@ -264,6 +289,7 @@ def healthcare_token_register(request, healthcare_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def healthcare_dashboard(request, healthcare_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
@@ -272,10 +298,6 @@ def healthcare_dashboard(request, healthcare_id):
 
   healthcare = healthcare_does_not_exists(healthcare_id)
   user = healthcare.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('healthcare_login')
 
   Logs.objects.create(type='READ', user_id=user.uid, interface='HEALTHCARE', status=STATUS_OK, details='Dashboard')
 
@@ -320,3 +342,14 @@ def make_qr(nonce):
   img = qr.make_image(fill='black', back_color='white')
 
   return img
+
+def visitor_ip_address(request):
+
+  x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+
+  if x_forwarded_for:
+    ip = x_forwarded_for.split(',')[0]
+  else:
+    ip = request.META.get('REMOTE_ADDR')
+  return ip
+

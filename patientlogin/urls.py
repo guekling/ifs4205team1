@@ -10,6 +10,7 @@ urlpatterns = [
   path('<uuid:patient_id>/settings/change-password-complete/', views.patient_change_password_complete, name="patient_change_password_complete"),
   path('<uuid:patient_id>/dashboard/', views.patient_dashboard, name="patient_dashboard"),
   path('<uuid:patient_id>/notifications/', views.patient_notifications, name="patient_notifications"),
+  path('<uuid:patient_id>/login-history/', views.patient_login_history, name="patient_login_history"),
   path('<uuid:patient_id>/qr-login/', views.patient_qr, name="patient_qr"),
   path('<uuid:patient_id>/token-register/', views.patient_token_register, name="patient_token_register")
 ]

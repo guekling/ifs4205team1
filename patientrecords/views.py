@@ -16,6 +16,7 @@ from mimetypes import guess_type
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def show_all_records(request, patient_id):
   """
   List all medical records belonging to the patient
@@ -46,6 +47,7 @@ def show_all_records(request, patient_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def show_record(request, patient_id, record_id):
   """
   Show information of a single medical record, and the permissions of the medical record
@@ -95,6 +97,7 @@ def show_record(request, patient_id, record_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def download_record(request, patient_id, record_id):
   """
   Download a single medical record
@@ -115,7 +118,7 @@ def download_record(request, patient_id, record_id):
   try:
     file_path = record.data.path
   except ValueError:
-    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Record] No data path in record ' + str(note_id))
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Record] No data path in record ' + str(record_id))
     return redirect('show_record', patient_id=patient_id, record_id=record_id)
 
   file_path = record.data.path # E.g. /home/sadm/Desktop/.../x.png
@@ -133,6 +136,7 @@ def download_record(request, patient_id, record_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def edit_permission(request, patient_id, record_id, perm_id):
   """
   Edit a permission of a single medical record
@@ -281,6 +285,7 @@ def edit_permission(request, patient_id, record_id, perm_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def new_record(request, patient_id):
   """
   Choosing a type of record to create.
@@ -330,6 +335,7 @@ def new_record(request, patient_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def new_readings_record(request, patient_id):
   if (request.user.patient_username.id != patient_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Readings Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
@@ -378,6 +384,7 @@ def new_readings_record(request, patient_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def new_timeseries_record(request, patient_id):
   if (request.user.patient_username.id != patient_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[New TimeSeries Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
@@ -422,6 +429,7 @@ def new_timeseries_record(request, patient_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def new_images_record(request, patient_id):
   if (request.user.patient_username.id != patient_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Images Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
@@ -470,6 +478,7 @@ def new_images_record(request, patient_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def new_videos_record(request, patient_id):
   if (request.user.patient_username.id != patient_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Videos Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
@@ -518,6 +527,7 @@ def new_videos_record(request, patient_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def new_documents_record(request, patient_id):
   if (request.user.patient_username.id != patient_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[New Documents Record] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
