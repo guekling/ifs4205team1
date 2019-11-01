@@ -20,6 +20,7 @@ from mimetypes import guess_type
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def show_all_healthcare_notes(request, healthcare_id):
   """
   List all healthcare notes the healthcare professional has written for his patients
@@ -44,6 +45,7 @@ def show_all_healthcare_notes(request, healthcare_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def show_healthcare_note(request, healthcare_id, note_id):
   """
   Show information of a single healthcare professional note
@@ -80,6 +82,7 @@ def show_healthcare_note(request, healthcare_id, note_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def download_healthcare_note(request, healthcare_id, note_id):
   """
   Downloads a single healthcare professional note
@@ -101,7 +104,7 @@ def download_healthcare_note(request, healthcare_id, note_id):
   try:
     file_path = note.data.path
   except ValueError:
-    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Notes] No data path in note ' + str(note_id))
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Notes] No data path in note ' + str(note_id))
     return redirect('show_healthcare_note', healthcare_id=healthcare_id, note_id=note_id)
 
   file_path = note.data.path # E.g. /home/sadm/Desktop/.../x.html
@@ -119,6 +122,7 @@ def download_healthcare_note(request, healthcare_id, note_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def edit_healthcare_note_permission(request, healthcare_id, note_id, perm_id):
   """
   Edit a permission of a single healthcare_professional_note
@@ -174,6 +178,7 @@ def edit_healthcare_note_permission(request, healthcare_id, note_id, perm_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def create_healthcare_note(request, healthcare_id):
   """
   Create a new healthcare professional note
@@ -211,6 +216,7 @@ def create_healthcare_note(request, healthcare_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
   """
   Create a new healthcare professional note for a single patient
@@ -317,6 +323,7 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def edit_healthcare_note(request, healthcare_id, note_id):
   """
   Edit healthcare professional note for a single patient
@@ -468,5 +475,5 @@ def healthcare_does_not_exists(healthcare_id):
   try:
     return Healthcare.objects.get(id=healthcare_id)
   except Healthcare.DoesNotExist:
-    Logs.objects.create(type='READ', user_id=patient_id, interface='HEALTHCARE', status=STATUS_ERROR, details='[HealthcareNotes] Healthcare ID is invalid ' + str(healthcare_id))
+    Logs.objects.create(type='READ', user_id=healthcare_id, interface='HEALTHCARE', status=STATUS_ERROR, details='[HealthcareNotes] Healthcare ID is invalid ' + str(healthcare_id))
     redirect('healthcare_login')

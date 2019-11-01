@@ -19,6 +19,7 @@ import re
 
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/researcher/login/')
 def search_records(request, researcher_id):
 	# Checks if logged in researcher has the same id as in the URL
 	if (request.user.researcher_username.id != researcher_id):
@@ -125,6 +126,7 @@ def search_records(request, researcher_id):
 
 @login_required(login_url='researcher_login')
 @user_passes_test(lambda u: u.is_researcher(), login_url='researcher_login')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/researcher/login/')
 def download_records_csv(request, researcher_id):
 	# Checks if logged in researcher has the same id as in the URL
 	if (request.user.researcher_username.id != researcher_id):
@@ -208,6 +210,7 @@ def download_records_csv(request, researcher_id):
 
 @login_required(login_url='researcher_login')
 @user_passes_test(lambda u: u.is_researcher(), login_url='researcher_login')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/researcher/login/')
 def download_records_xls(request, researcher_id):
 	# Checks if logged in researcher has the same id as in the URL
 	if (request.user.researcher_username.id != researcher_id):

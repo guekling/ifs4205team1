@@ -18,7 +18,7 @@ from userlogs.models import Logs
 
 import hashlib
 import qrcode
-import datetime
+from datetime import datetime, timezone
 
 class ResearcherLogin(LoginView):
 	"""
@@ -83,6 +83,7 @@ class ResearcherChangePasswordComplete(PasswordChangeDoneView):
 
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/researcher/login/')
 def researcher_settings(request, researcher_id):
 	# Checks if logged in researcher has the same id as in the URL
 	if (request.user.researcher_username.id != researcher_id):
@@ -91,10 +92,6 @@ def researcher_settings(request, researcher_id):
 
 	researcher = researcher_does_not_exists(researcher_id)
 	user = researcher.username
-
-	# the action has not gone through QR verification
-	if len(user.latest_nonce) > 0:
-		return redirect('researcher_login')
 
 	Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Settings')
 
@@ -107,6 +104,7 @@ def researcher_settings(request, researcher_id):
 
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/researcher/login/')
 def researcher_edit_settings(request, researcher_id):
 	# Checks if logged in researcher has the same id as in the URL
 	if (request.user.researcher_username.id != researcher_id):
@@ -115,10 +113,6 @@ def researcher_edit_settings(request, researcher_id):
 
 	researcher = researcher_does_not_exists(researcher_id)
 	user = researcher.username
-
-	# the action has not gone through QR verfication
-	if len(user.latest_nonce) > 0:
-		return redirect('researcher_login')
 
 	form = UserEditForm(request.POST or None, instance=user)
 
@@ -148,6 +142,7 @@ def researcher_edit_settings(request, researcher_id):
 
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/researcher/login/')
 def researcher_change_password(request, researcher_id):
 	# Checks if logged in researcher has the same id as in the URL
 	if (request.user.researcher_username.id != researcher_id):
@@ -156,10 +151,6 @@ def researcher_change_password(request, researcher_id):
 
 	researcher = researcher_does_not_exists(researcher_id)
 	user = researcher.username
-
-	# the action has not gone through QR verification
-	if len(user.latest_nonce) > 0:
-		return redirect('researcher_login')
 
 	change_password = ResearcherChangePassword.as_view(
 		extra_context={'researcher': researcher}
@@ -171,6 +162,7 @@ def researcher_change_password(request, researcher_id):
 
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/researcher/login/')
 def researcher_change_password_complete(request, researcher_id):
 	# Checks if logged in researcher has the same id as in the URL
 	if (request.user.researcher_username.id != researcher_id):
@@ -179,10 +171,6 @@ def researcher_change_password_complete(request, researcher_id):
 
 	researcher = researcher_does_not_exists(researcher_id)
 	user = researcher.username
-
-	# the action has not gone through QR verification
-	if len(user.latest_nonce) > 0:
-		return redirect('researcher_login')
 
 	change_password_complete = ResearcherChangePasswordComplete.as_view(
 			extra_context={'researcher': researcher}
@@ -209,8 +197,8 @@ def researcher_qr(request, researcher_id):
 	# 	Logs.objects.create(type='LOGIN', user_id=user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[2FA] URL traversal. Not Registered yet.')
 	# 	return redirect("researcher_token_register")
 
-	# require a valid nonce (exists and not expired)
-	if len(user.latest_nonce) > 0:
+	# require a valid nonce (exists and not expired). a nonce expires after 3 minutes
+	if len(user.latest_nonce) > 0 and (datetime.now(timezone.utc) - user.nonce_timestamp).total_seconds() <= 180:
 		nonce = user.latest_nonce
 	else:
 		# if somehow bypassed login
@@ -222,6 +210,9 @@ def researcher_qr(request, researcher_id):
 	if form.is_valid():
 		cd = form.cleaned_data
 		otp = cd.get('otp')
+		# timeout, nonce expires
+		if (datetime.now(timezone.utc) - user.nonce_timestamp).total_seconds() > 180:
+			return redirect('patient_login')
 		if otp == '1234':
 		# if user.hashed_last_six == recovered_value(user.hashed_id, nonce, otp):
 			# given HttpResponse only or render page you need to load on success
@@ -265,6 +256,7 @@ def researcher_token_register(request, researcher_id):
 
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/researcher/login/')
 def researcher_dashboard(request, researcher_id):
 	# Checks if logged in researcher has the same id as in the URL
 	if (request.user.researcher_username.id != researcher_id):
@@ -273,10 +265,6 @@ def researcher_dashboard(request, researcher_id):
 
 	researcher = researcher_does_not_exists(researcher_id)
 	user = researcher.username
-
-	# the action has not gone through QR verification
-	if len(user.latest_nonce) > 0:
-		return redirect('researcher_login')
 
 	Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Dashboard')
 

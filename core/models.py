@@ -28,6 +28,12 @@ class User(AbstractUser):
     self.age = compute_age
     return super(User, self).save(*args, **kwargs)
 
+  def pass_2fa(self):
+    if len(self.latest_nonce) > 0:
+      return False
+    else:
+      return True
+
   def is_patient(self):
     """
     Checks if user is a patient.
@@ -135,7 +141,7 @@ class Researcher(models.Model):
   	return self.id
 
   def get_diagnosis_perm(self):
-    return self.diagnosis;
+    return self.diagnosis
 
   def get_bp_reading_perm(self):
     return self.bp_reading

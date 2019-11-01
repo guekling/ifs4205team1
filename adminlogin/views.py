@@ -19,8 +19,7 @@ from core.models import User, Admin, Researcher
 from userlogs.models import Logs
 from adminlogin.anonymise import anonymise_and_store
 
-import hashlib
-import qrcode
+from datetime import datetime, timezone
 
 class AdminLogin(LoginView):
   """
@@ -44,6 +43,7 @@ class AdminLogin(LoginView):
       user = admin.username
       # if len(user.hashed_last_six) > 0 and len(user.hashed_id) > 0:
       user.latest_nonce = nonce  # change field
+      user.nonce_timestamp = datetime.now()
       user.save()  # this will update only
       Logs.objects.create(type='LOGIN', user_id=user.uid, interface='ADMIN', status=STATUS_OK, details='Admin Login')
       return redirect('admin_qr', admin_id=admin.id)
@@ -66,6 +66,7 @@ class AdminLogout(LogoutView):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def admin_settings(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -74,10 +75,6 @@ def admin_settings(request, admin_id):
 
   admin = admin_does_not_exists(admin_id)
   user = admin.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('admin_login')
 
   Logs.objects.create(type='READ', user_id=user.uid, interface='ADMIN', status=STATUS_OK, details='Settings')
 
@@ -90,6 +87,7 @@ def admin_settings(request, admin_id):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def admin_edit_settings(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -98,10 +96,6 @@ def admin_edit_settings(request, admin_id):
 
   admin = admin_does_not_exists(admin_id)
   user = admin.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('admin_login')
 
   form = UserEditForm(request.POST or None, instance=user)
 
@@ -119,7 +113,7 @@ def admin_edit_settings(request, admin_id):
       }
       return render(request, 'admin_edit_settings.html', context)
 
-    Logs.objects.create(type='READ', user_id=user.uid, interface='ADMIN', status=STATUS_OK, details='[Edit Settings] Render Settings Form')
+  Logs.objects.create(type='READ', user_id=user.uid, interface='ADMIN', status=STATUS_OK, details='[Edit Settings] Render Settings Form')
 
   context = {
     'form': form,
@@ -146,7 +140,8 @@ def admin_qr(request, admin_id):
   # if len(user.hashed_last_six) == 0 and len(user.hashed_id) == 0:
   #   return redirect("admin_token_register", admin_id=admin.id)
 
-  if len(user.latest_nonce) > 0:
+  # require a valid nonce (exists and not expired). a nonce expires after 3 minutes
+  if len(user.latest_nonce) > 0 and (datetime.now(timezone.utc) - user.nonce_timestamp).total_seconds() <= 180:
     nonce = user.latest_nonce
   else:
     # if somehow bypassed login
@@ -157,6 +152,9 @@ def admin_qr(request, admin_id):
   if form.is_valid():
     cd = form.cleaned_data
     otp = cd.get('otp')
+    # timeout, nonce expires
+    if (datetime.now(timezone.utc) - user.nonce_timestamp).total_seconds() > 180:
+      return redirect('patient_login')
     if otp == '1234':
     # if user.hashed_last_six == recovered_value(user.hashed_id, nonce, otp):
       # give HttpResponse only or render page you need to load on success
@@ -177,6 +175,7 @@ def admin_qr(request, admin_id):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def admin_dashboard(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -185,10 +184,6 @@ def admin_dashboard(request, admin_id):
 
   admin = admin_does_not_exists(admin_id)
   user = admin.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('admin_login')
 
   Logs.objects.create(type='READ', user_id=user.uid, interface='ADMIN', status=STATUS_OK, details='Dashboard')
 
@@ -200,6 +195,7 @@ def admin_dashboard(request, admin_id):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def show_all_logs(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -208,10 +204,6 @@ def show_all_logs(request, admin_id):
 
   admin = admin_does_not_exists(admin_id)
   user = admin.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('admin_login')
   
   logs_list = Logs.objects.all().order_by('-timestamp')
 
@@ -235,6 +227,7 @@ def show_all_logs(request, admin_id):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def anonymise_records(request, admin_id):
   # Checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -243,10 +236,6 @@ def anonymise_records(request, admin_id):
 
   admin = admin_does_not_exists(admin_id)
   user = admin.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('admin_login')
 
   context = {
     'admin': admin
@@ -266,6 +255,7 @@ def anonymise_records(request, admin_id):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def show_all_researchers(request, admin_id):
   # Checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -274,10 +264,6 @@ def show_all_researchers(request, admin_id):
 
   admin = admin_does_not_exists(admin_id)
   user = admin.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('admin_login')
 
   # UNDONE: ADD in logic
   researchers = Researcher.objects.all().order_by('username')
@@ -294,6 +280,7 @@ def show_all_researchers(request, admin_id):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def edit_recordtypes_perm(request, admin_id, researcher_id):
   # Checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -303,10 +290,6 @@ def edit_recordtypes_perm(request, admin_id, researcher_id):
   admin = admin_does_not_exists(admin_id)
   user = admin.username
   researcher = check_researcher_exists(researcher_id)
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('admin_login')
 
   recordtypes_choices = get_recordtypes_choices()
   recordtypes_perm = get_recordtypes_perm(researcher)

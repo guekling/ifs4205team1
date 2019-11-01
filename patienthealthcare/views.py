@@ -12,6 +12,7 @@ from mimetypes import guess_type
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def show_all_notes(request, patient_id):
   """
   List all healthcare professional notes written about the patient
@@ -37,6 +38,7 @@ def show_all_notes(request, patient_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def show_note(request, patient_id, note_id):
   """
   Show information of a single healthcare professional note
@@ -69,6 +71,7 @@ def show_note(request, patient_id, note_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def download_note(request, patient_id, note_id):
   """
   Downloads a single healthcare professional note

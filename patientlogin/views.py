@@ -19,7 +19,7 @@ from userlogs.models import Logs
 
 import hashlib
 import qrcode
-import datetime
+from datetime import datetime, timezone
 
 class PatientLogin(LoginView):
   """
@@ -43,7 +43,7 @@ class PatientLogin(LoginView):
       user = patient.username
       # if len(user.hashed_last_six) > 0 and len(user.hashed_id) > 0:
       user.latest_nonce = nonce  # change field
-      user.nonce_timestamp = datetime.datetime.now()
+      user.nonce_timestamp = datetime.now()
       user.save()  # this will update only
       Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='[LOGIN] User(' + str(user.uid) + ') Patient Login')
       return redirect('patient_qr', patient_id=patient.id)
@@ -84,6 +84,7 @@ class PatientChangePasswordComplete(PasswordChangeDoneView):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def patient_notifications(request, patient_id):
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
@@ -92,10 +93,6 @@ def patient_notifications(request, patient_id):
 
   patient = patient_does_not_exists(patient_id)
   user = patient.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('patient_login')
 
   Logs.objects.create(type='READ', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Notifications')
 
@@ -116,6 +113,7 @@ def patient_notifications(request, patient_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def patient_settings(request, patient_id):
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
@@ -124,10 +122,6 @@ def patient_settings(request, patient_id):
 
   patient = patient_does_not_exists(patient_id)
   user = patient.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('patient_login')
 
   Logs.objects.create(type='READ', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Settings')
 
@@ -140,6 +134,7 @@ def patient_settings(request, patient_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def patient_edit_settings(request, patient_id):
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
@@ -148,10 +143,6 @@ def patient_edit_settings(request, patient_id):
 
   patient = patient_does_not_exists(patient_id)
   user = patient.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('patient_login')
 
   form = UserEditForm(request.POST or None, instance=user)
 
@@ -181,6 +172,7 @@ def patient_edit_settings(request, patient_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def patient_change_password(request, patient_id):
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
@@ -189,10 +181,6 @@ def patient_change_password(request, patient_id):
 
   patient = patient_does_not_exists(patient_id)
   user = patient.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('patient_login')
 
   change_password = PatientChangePassword.as_view(
     extra_context={'patient': patient}
@@ -204,6 +192,7 @@ def patient_change_password(request, patient_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def patient_change_password_complete(request, patient_id):
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
@@ -212,10 +201,6 @@ def patient_change_password_complete(request, patient_id):
 
   patient = patient_does_not_exists(patient_id)
   user = patient.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('patient_login')
 
   change_password_complete = PatientChangePasswordComplete.as_view(
     extra_context={'patient': patient}
@@ -242,8 +227,8 @@ def patient_qr(request, patient_id):
   #   Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_ERROR, details='[2FA] URL traversal. Not Registered yet.')
   #   return redirect("patient_token_register", patient_id=patient.id)
 
-  # require a valid nonce (exists and not expired)
-  if len(user.latest_nonce) > 0:
+  # require a valid nonce (exists and not expired). a nonce expires after 3 minutes
+  if len(user.latest_nonce) > 0 and (datetime.now(timezone.utc) - user.nonce_timestamp).total_seconds() <= 180:
     nonce = user.latest_nonce
   else:
     # if somehow bypassed login
@@ -255,6 +240,9 @@ def patient_qr(request, patient_id):
   if form.is_valid():
     cd = form.cleaned_data
     otp = cd.get('otp')
+    # timeout, nonce expires
+    if (datetime.now(timezone.utc) - user.nonce_timestamp).total_seconds() > 180:
+      return redirect('patient_login')
     if otp == '1234':
     # if user.hashed_last_six == recovered_value(user.hashed_id, nonce, otp):
       # give HttpResponse only or render page you need to load on success
@@ -298,6 +286,7 @@ def patient_token_register(request, patient_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/patient/login/')
 def patient_dashboard(request, patient_id):
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
@@ -306,10 +295,6 @@ def patient_dashboard(request, patient_id):
 
   patient = patient_does_not_exists(patient_id)
   user = patient.username
-
-  # the action has not gone through QR verification
-  if len(user.latest_nonce) > 0:
-    return redirect('patient_login')
 
   Logs.objects.create(type='READ', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='Dashboard')
 

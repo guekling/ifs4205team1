@@ -1,4 +1,4 @@
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 from django.conf import settings
 from django.http import HttpResponse
@@ -19,6 +19,7 @@ def home(request):
   return render(request, 'home.html', context)
 
 @login_required(login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def protected_record(request, record_id):
   """
   Show information of a single medical record.
@@ -58,6 +59,7 @@ def protected_record(request, record_id):
   return render(request, 'protected_record.html', context)
 
 @login_required(login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def download_protected_record(request, record_id):
   """
   Download a single medical record
@@ -102,6 +104,8 @@ def download_protected_record(request, record_id):
 
     return response  
 
+@login_required(login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def protected_media(request, record_id):
   """
   Serves a single medical record file.
@@ -112,6 +116,8 @@ def protected_media(request, record_id):
   except IndexError:
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[View Protected Media] Record ID is invalid.')
     return redirect('home')
+
+  model = get_model(record)
 
   # Checks if user has permission to view this record
   if (User.is_healthcare(request.user)):

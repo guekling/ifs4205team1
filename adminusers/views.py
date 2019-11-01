@@ -10,6 +10,7 @@ from userlogs.models import Logs
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def admin_show_all_users(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -39,6 +40,7 @@ def admin_show_all_users(request, admin_id):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def admin_show_user(request, admin_id, user_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -65,6 +67,7 @@ def admin_show_user(request, admin_id, user_id):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def admin_show_all_patients(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -94,6 +97,7 @@ def admin_show_all_patients(request, admin_id):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def admin_show_patient(request, admin_id, patient_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -120,6 +124,7 @@ def admin_show_patient(request, admin_id, patient_id):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def admin_new_patient(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -160,6 +165,7 @@ def admin_new_patient(request, admin_id):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def admin_show_all_healthcare(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -189,6 +195,7 @@ def admin_show_all_healthcare(request, admin_id):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def admin_show_healthcare(request, admin_id, healthcare_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -215,6 +222,7 @@ def admin_show_healthcare(request, admin_id, healthcare_id):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def admin_new_healthcare(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -260,6 +268,7 @@ def admin_new_healthcare(request, admin_id):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def admin_show_all_researchers(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -289,6 +298,7 @@ def admin_show_all_researchers(request, admin_id):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def admin_show_researcher(request, admin_id, researcher_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -315,6 +325,7 @@ def admin_show_researcher(request, admin_id, researcher_id):
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/')
 def admin_new_researcher(request, admin_id):
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
