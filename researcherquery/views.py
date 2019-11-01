@@ -17,12 +17,6 @@ import xlwt
 import json
 import re
 
-from core.models import Patient
-from patientrecords.models import Diagnosis, Readings, Images, Videos
-from django.utils import timezone
-from datetime import timedelta
-import pytz
-
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
 @user_passes_test(lambda u: u.pass_2fa(), login_url='/researcher/login/')
@@ -77,8 +71,7 @@ def search_records(request, researcher_id):
 
 				# ages contain at least 1 digit string and postalcodes contain at least 1 valid postalcode
 				if (all(x.isdigit() for x in ages)) and (len(ages) != 0) and (len(postalcodes) != 0):
-					users = get_original_users()
-					# users = process_age_postalcode(combi_age, combi_postalcode, ages, postalcodes)
+					users = process_age_postalcode(combi_age, combi_postalcode, ages, postalcodes)
 					users_list = list(users)
 					request.session['users_list'] = serializers.serialize("json", users_list)
 					process_recordtypes(recordtypes_selected, recordtypes_perm_list)
@@ -106,7 +99,7 @@ def search_records(request, researcher_id):
 					}
 					return render(request, 'search_records.html', context)
 				else:
-					Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Search Records] Invalid form')
+					Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='[Search Records] Invalid form')
 					form.add_error(None, 'Invalid form')
 					context = {
 						'form': form,
@@ -140,66 +133,13 @@ def search_records(request, researcher_id):
 		}
 		return render(request, 'search_records.html', context)
 
-def get_original_users():
-	ages = list(range(0, 11))
-	postalcode = '11'
-	users = User.objects.filter(age__in=ages, postalcode__startswith=postalcode).order_by('age', 'postalcode')
-	return users
-
-def generalise_date():
-	duration = timezone.now()
-	duration = duration - timedelta(days=30)
-	return duration
-
-def get_records_in_range(recordtype, patient):
-	duration = generalise_date()
-
-	if recordtype == DIAGNOSIS_NAME:
-		diagnosis = patient.diagnosis_patient.filter(time_start__gte=duration)
-		return diagnosis
-
-	if recordtype == BP_READING_NAME:
-		readings = patient.readings_patient.filter(type__in=['Blood Pressure'], timestamp__gte=duration)
-		return readings
-
-	if recordtype == HR_READING_NAME:
-		readings = patient.readings_patient.filter(type__in=['Heart Rate'], timestamp__gte=duration)
-		return readings
-
-	if recordtype == TEMP_READING_NAME:
-		readings = patient.readings_patient.filter(type__in=['Temperature'], timestamp__gte=duration)
-		return readings
-
-	if recordtype == CANCER_IMG_NAME:
-		images = patient.images_patient.filter(type__in=['Cancer'], timestamp__gte=duration)
-		return images
-
-	if recordtype == MRI_IMG_NAME:
-		images = patient.images_patient.filter(type__in=['MRI'], timestamp__gte=duration)
-		return images
-
-	if recordtype == ULTRASOUND_IMG_NAME:
-		images = patient.images_patient.filter(type__in=['Ultrasound'], timestamp__gte=duration)
-		return images
-
-	if recordtype == XRAY_IMG_NAME:
-		images = patient.images_patient.filter(type__in=['Xray'], timestamp__gte=duration)
-		return images
-
-	if recordtype == GASTROSCOPE_VID_NAME:
-		videos = patient.videos_patient.filter(type__in=['Gastroscope'], timestamp__gte=duration)
-		return videos
-
-	if recordtype == GAIT_VID_NAME:
-		videos = patient.videos_patient.filter(type__in=['Gait'], timestamp__gte=duration)
-		return videos
-
 @login_required(login_url='researcher_login')
 @user_passes_test(lambda u: u.is_researcher(), login_url='researcher_login')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/researcher/login/')
 def download_records_csv(request, researcher_id):
 	# Checks if logged in researcher has the same id as in the URL
 	if (request.user.researcher_username.id != researcher_id):
-		# Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Download Anonymised Records (CSV)] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
+		Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Download Anonymised Records (CSV)] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
 		return redirect('researcher_login')
 
 	researcher = check_researcher_exists(researcher_id)
@@ -210,75 +150,76 @@ def download_records_csv(request, researcher_id):
 		return redirect('researcher_login')
 
 	response = HttpResponse(content_type='text/csv')
-	response['Content-Disposition'] = 'attachment; filename="original_records.csv"'
+	response['Content-Disposition'] = 'attachment; filename="anonymised_records.csv"'
 
 	writer = csv.writer(response)
-	writer.writerow(['Patient', 'Age', 'Postal Code', 'Diagnosis Date', 'Diagnosis', 'BP Date', 'BP Readings', 'HR Date', 'HR Readings', 'TEMP date', 'TEMP Readings'])
+	writer.writerow(['Patient', 'Age', 'Postal Code', 'Date', 'Diagnosis', 'BP Readings', 'HR Readings', 'TEMP Readings'])
+
+	qiinfo_combi_date = QiInfo.objects.all().first().get_combi_date()
+	date = process_date(qiinfo_combi_date)
 
 	users_list = request.session.get('users_list', None)
-	users = json.loads(users_list)
+	safeusers = json.loads(users_list)
 
-	for user in users:
-		user_list = []
+	for safeuser in safeusers:
+		safeuser_list = []
 
-		username = user['pk']
-		user_obj = User.objects.get(username=username)
+		uid = safeuser['pk']
+		age = safeuser['fields']['age']
+		postalcode = safeuser['fields']['postalcode']
 
-		if user_obj.is_patient():
-			username = user['pk']
-			uid = user['fields']['uid']
-			age = user['fields']['age']
-			postalcode = user['fields']['postalcode']
+		safeuser_list.append(uid)
+		safeuser_list.append(age)
+		safeuser_list.append(postalcode)
+		safeuser_list.append(date)
 
-			user_list.append(uid)
-			user_list.append(age)
-			user_list.append(postalcode)
+		safeuser_obj = SafeUsers.objects.get(pk=uid)
 
-			patient_obj = Patient.objects.get(username=username)
-
-			diagnosis_date_list = []
+		if recordtypes_state[DIAGNOSIS_NAME]:
 			diagnosis_list = []
-			diagnosis_obj = get_records_in_range(DIAGNOSIS_NAME, patient_obj)
+			diagnosis_obj = safeuser_obj.get_diagnosis()
 			for diag in diagnosis_obj:
-				diagnosis_date_list.append(str(diag.time_start.date()))
-				diagnosis_list.append(diag.title)
-			user_list.append(str(diagnosis_date_list))
-			user_list.append(str(diagnosis_list))
+				diagnosis_list.append(diag.value)
+			safeuser_list.append(str(diagnosis_list))
+		else:
+			safeuser_list.append('')
 
-			bp_date_list = []
-			bp_list = []
-			bp_obj = get_records_in_range(BP_READING_NAME, patient_obj)
-			for bp in bp_obj:
-				bp_date_list.append(str(bp.timestamp.date()))
-				bp_list.append(bp.data)
-			user_list.append(str(bp_date_list))
-			user_list.append(str(bp_list))
+		if recordtypes_state[BP_READING_NAME]:
+			bp_readings_list = []
+			bp_reading_obj = safeuser_obj.get_bp_readings()
+			for bp_reading in bp_reading_obj:
+				bp_readings_list.append(bp_reading.value)
+			safeuser_list.append(str(bp_readings_list))
+		else:
+			safeuser_list.append('')
 
-			hr_date_list = []
-			hr_list = []
-			hr_obj = get_records_in_range(HR_READING_NAME, patient_obj)
-			for hr in hr_obj:
-				hr_date_list.append(str(hr.timestamp.date()))
-				hr_list.append(hr.data)
-			user_list.append(str(hr_date_list))
-			user_list.append(str(hr_list))
+		
+		if recordtypes_state[HR_READING_NAME]:
+			hr_readings_list = []
+			hr_reading_obj = safeuser_obj.get_hr_readings()
+			for hr_reading in hr_reading_obj:
+				hr_readings_list.append(hr_reading.value)
+			safeuser_list.append(str(hr_readings_list))
+		else:
+			safeuser_list.append('')
 
-			temp_date_list = []
-			temp_list = []
-			temp_obj = get_records_in_range(TEMP_READING_NAME, patient_obj)
-			for temp in temp_obj:
-				temp_date_list.append(str(temp.timestamp.date()))
-				temp_list.append(temp.data)
-			user_list.append(str(temp_date_list))
-			user_list.append(str(temp_list))
+		if recordtypes_state[TEMP_READING_NAME]:
+			temp_readings_list = []
+			temp_reading_obj = safeuser_obj.get_temp_readings()
+			for temp_reading in temp_reading_obj:
+					temp_readings_list.append(temp_reading.value)
+			safeuser_list.append(str(temp_readings_list))
+		else:
+			safeuser_list.append('')
 
-			writer.writerow(user_list)
+		writer.writerow(safeuser_list)
 
-	# Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Download Anonymised Records (CSV)')
+	Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Download Anonymised Records (CSV)')
 	return response
 
 @login_required(login_url='researcher_login')
 @user_passes_test(lambda u: u.is_researcher(), login_url='researcher_login')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/researcher/login/')
 def download_records_xls(request, researcher_id):
 	# Checks if logged in researcher has the same id as in the URL
 	if (request.user.researcher_username.id != researcher_id):
@@ -294,10 +235,10 @@ def download_records_xls(request, researcher_id):
 
 
 	response = HttpResponse(content_type='application/ms-excel')
-	response['Content-Disposition'] = 'attachment; filename="original_records.xls"'
+	response['Content-Disposition'] = 'attachment; filename="anonymised_records.xls"'
 
 	wb = xlwt.Workbook(encoding='utf-8')
-	ws = wb.add_sheet('Original Records')
+	ws = wb.add_sheet('Anonymised Records')
 
 	# Sheet header, first row
 	row_num = 0
@@ -305,254 +246,73 @@ def download_records_xls(request, researcher_id):
 	font_style = xlwt.XFStyle()
 	font_style.font.bold = True
 
-	columns = ['Patient', 'Age', 'Postal Code', 'Diagnosis Date', 'Diagnosis', 'BP Date', 'BP Readings', 'HR Date', 'HR Readings', 'TEMP date', 'TEMP Readings']
+	columns = ['Patient', 'Age', 'Postal Code', 'Date', 'Diagnosis', 'BP Readings', 'HR Readings', 'TEMP Readings']
 	for col_num in range(len(columns)):
 		ws.write(row_num, col_num, columns[col_num], font_style)
 
 	# Sheet body, remaining rows
 	font_style = xlwt.XFStyle()
 
+	qiinfo_combi_date = QiInfo.objects.all().first().get_combi_date()
+	date = process_date(qiinfo_combi_date)
+
 	users_list = request.session.get('users_list', None)
-	users = json.loads(users_list)
+	safeusers = json.loads(users_list)
 
-	for user in users:
-		user_list = []
+	for safeuser in safeusers:
+		row_num += 1
 
-		username = user['pk']
-		user_obj = User.objects.get(username=username)
+		uid = safeuser['pk']
+		age = safeuser['fields']['age']
+		postalcode = safeuser['fields']['postalcode']
 
-		if user_obj.is_patient():
-			row_num += 1
-			username = user['pk']
-			uid = user['fields']['uid']
-			age = user['fields']['age']
-			postalcode = user['fields']['postalcode']
+		ws.write(row_num, 0, uid, font_style)
+		ws.write(row_num, 1, age, font_style)
+		ws.write(row_num, 2, postalcode, font_style)
+		ws.write(row_num, 3, date, font_style)
 
-			ws.write(row_num, 0, uid, font_style)
-			ws.write(row_num, 1, age, font_style)
-			ws.write(row_num, 2, postalcode, font_style)
+		safeuser_obj = SafeUsers.objects.get(pk=uid)
 
-			patient_obj = Patient.objects.get(username=username)
-
-			diagnosis_date_list = []
+		if recordtypes_state[DIAGNOSIS_NAME]:
 			diagnosis_list = []
-			diagnosis_obj = get_records_in_range(DIAGNOSIS_NAME, patient_obj)
+			diagnosis_obj = safeuser_obj.get_diagnosis()
 			for diag in diagnosis_obj:
-				diagnosis_date_list.append(str(diag.time_start.date()))
-				diagnosis_list.append(diag.title)
-			ws.write(row_num, 3, str(diagnosis_date_list), font_style)
+				diagnosis_list.append(diag.value)
 			ws.write(row_num, 4, str(diagnosis_list), font_style)
+		else:
+			ws.write(row_num, 4, '', font_style)
 
-			bp_date_list = []
-			bp_list = []
-			bp_obj = get_records_in_range(BP_READING_NAME, patient_obj)
-			for bp in bp_obj:
-				bp_date_list.append(str(bp.timestamp.date()))
-				bp_list.append(bp.data)
-			ws.write(row_num, 5, str(bp_date_list), font_style)
-			ws.write(row_num, 6, str(bp_list), font_style)
+		if recordtypes_state[BP_READING_NAME]:
+			bp_readings_list = []
+			bp_reading_obj = safeuser_obj.get_bp_readings()
+			for bp_reading in bp_reading_obj:
+				bp_readings_list.append(bp_reading.value)
+			ws.write(row_num, 5, str(bp_readings_list), font_style)
+		else:
+			ws.write(row_num, 5, '', font_style)
 
-			hr_date_list = []
-			hr_list = []
-			hr_obj = get_records_in_range(HR_READING_NAME, patient_obj)
-			for hr in hr_obj:
-				hr_date_list.append(str(hr.timestamp.date()))
-				hr_list.append(hr.data)
-			ws.write(row_num, 7, str(hr_date_list), font_style)
-			ws.write(row_num, 8, str(hr_list), font_style)
+		if recordtypes_state[HR_READING_NAME]:
+			hr_readings_list = []
+			hr_reading_obj = safeuser_obj.get_hr_readings()
+			for hr_reading in hr_reading_obj:
+				hr_readings_list.append(hr_reading.value)
+			ws.write(row_num, 6, str(hr_readings_list), font_style)
+		else:
+			ws.write(row_num, 6, '', font_style)
 
-			temp_date_list = []
-			temp_list = []
-			temp_obj = get_records_in_range(TEMP_READING_NAME, patient_obj)
-			for temp in temp_obj:
-				temp_date_list.append(str(temp.timestamp.date()))
-				temp_list.append(temp.data)
-			ws.write(row_num, 9, str(temp_date_list), font_style)
-			ws.write(row_num, 10, str(temp_list), font_style)
+		if recordtypes_state[TEMP_READING_NAME]:
+			temp_readings_list = []
+			temp_reading_obj = safeuser_obj.get_temp_readings()
+			for temp_reading in temp_reading_obj:
+					temp_readings_list.append(temp_reading.value)
+			ws.write(row_num, 7, str(temp_readings_list), font_style)
+		else:
+			ws.write(row_num, 7, '', font_style)
 
 	wb.save(response)
-	return response
-
-# @login_required(login_url='researcher_login')
-# @user_passes_test(lambda u: u.is_researcher(), login_url='researcher_login')
-# @user_passes_test(lambda u: u.pass_2fa(), login_url='/researcher/login/')
-# def download_records_csv(request, researcher_id):
-# 	# Checks if logged in researcher has the same id as in the URL
-# 	if (request.user.researcher_username.id != researcher_id):
-# 		Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Download Anonymised Records (CSV)] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
-# 		return redirect('researcher_login')
-
-# 	researcher = check_researcher_exists(researcher_id)
-# 	user = researcher.username
-
-# 	# the action has not gone through QR verification
-# 	if len(user.latest_nonce) > 0:
-# 		return redirect('researcher_login')
-
-# 	response = HttpResponse(content_type='text/csv')
-# 	response['Content-Disposition'] = 'attachment; filename="anonymised_records.csv"'
-
-# 	writer = csv.writer(response)
-# 	writer.writerow(['Patient', 'Age', 'Postal Code', 'Date', 'Diagnosis', 'BP Readings', 'HR Readings', 'TEMP Readings'])
-
-# 	qiinfo_combi_date = QiInfo.objects.all().first().get_combi_date()
-# 	date = process_date(qiinfo_combi_date)
-
-# 	users_list = request.session.get('users_list', None)
-# 	safeusers = json.loads(users_list)
-
-# 	for safeuser in safeusers:
-# 		safeuser_list = []
-
-# 		uid = safeuser['pk']
-# 		age = safeuser['fields']['age']
-# 		postalcode = safeuser['fields']['postalcode']
-
-# 		safeuser_list.append(uid)
-# 		safeuser_list.append(age)
-# 		safeuser_list.append(postalcode)
-# 		safeuser_list.append(date)
-
-# 		safeuser_obj = SafeUsers.objects.get(pk=uid)
-
-# 		if recordtypes_state[DIAGNOSIS_NAME]:
-# 			diagnosis_list = []
-# 			diagnosis_obj = safeuser_obj.get_diagnosis()
-# 			for diag in diagnosis_obj:
-# 				diagnosis_list.append(diag.value)
-# 			safeuser_list.append(str(diagnosis_list))
-# 		else:
-# 			safeuser_list.append('')
-
-# 		if recordtypes_state[BP_READING_NAME]:
-# 			bp_readings_list = []
-# 			bp_reading_obj = safeuser_obj.get_bp_readings()
-# 			for bp_reading in bp_reading_obj:
-# 				bp_readings_list.append(bp_reading.value)
-# 			safeuser_list.append(str(bp_readings_list))
-# 		else:
-# 			safeuser_list.append('')
-
-		
-# 		if recordtypes_state[HR_READING_NAME]:
-# 			hr_readings_list = []
-# 			hr_reading_obj = safeuser_obj.get_hr_readings()
-# 			for hr_reading in hr_reading_obj:
-# 				hr_readings_list.append(hr_reading.value)
-# 			safeuser_list.append(str(hr_readings_list))
-# 		else:
-# 			safeuser_list.append('')
-
-# 		if recordtypes_state[TEMP_READING_NAME]:
-# 			temp_readings_list = []
-# 			temp_reading_obj = safeuser_obj.get_temp_readings()
-# 			for temp_reading in temp_reading_obj:
-# 					temp_readings_list.append(temp_reading.value)
-# 			safeuser_list.append(str(temp_readings_list))
-# 		else:
-# 			safeuser_list.append('')
-
-# 		writer.writerow(safeuser_list)
-
-# 	Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Download Anonymised Records (CSV)')
-# 	return response
-
-# @login_required(login_url='researcher_login')
-# @user_passes_test(lambda u: u.is_researcher(), login_url='researcher_login')
-# @user_passes_test(lambda u: u.pass_2fa(), login_url='/researcher/login/')
-# def download_records_xls(request, researcher_id):
-# 	# Checks if logged in researcher has the same id as in the URL
-# 	if (request.user.researcher_username.id != researcher_id):
-# 		Logs.objects.create(type='READ', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Download Anonymised Records (XLS)] Logged in user does not match ID in URL. URL ID: ' + str(researcher_id))
-# 		return redirect('researcher_login')
-
-# 	researcher = check_researcher_exists(researcher_id)
-# 	user = researcher.username
-
-# 	# the action has not gone through QR verification
-# 	if len(user.latest_nonce) > 0:
-# 		return redirect('researcher_login')
-
-
-# 	response = HttpResponse(content_type='application/ms-excel')
-# 	response['Content-Disposition'] = 'attachment; filename="anonymised_records.xls"'
-
-# 	wb = xlwt.Workbook(encoding='utf-8')
-# 	ws = wb.add_sheet('Anonymised Records')
-
-# 	# Sheet header, first row
-# 	row_num = 0
-
-# 	font_style = xlwt.XFStyle()
-# 	font_style.font.bold = True
-
-# 	columns = ['Patient', 'Age', 'Postal Code', 'Date', 'Diagnosis', 'BP Readings', 'HR Readings', 'TEMP Readings']
-# 	for col_num in range(len(columns)):
-# 		ws.write(row_num, col_num, columns[col_num], font_style)
-
-# 	# Sheet body, remaining rows
-# 	font_style = xlwt.XFStyle()
-
-# 	qiinfo_combi_date = QiInfo.objects.all().first().get_combi_date()
-# 	date = process_date(qiinfo_combi_date)
-
-# 	users_list = request.session.get('users_list', None)
-# 	safeusers = json.loads(users_list)
-
-# 	for safeuser in safeusers:
-# 		row_num += 1
-
-# 		uid = safeuser['pk']
-# 		age = safeuser['fields']['age']
-# 		postalcode = safeuser['fields']['postalcode']
-
-# 		ws.write(row_num, 0, uid, font_style)
-# 		ws.write(row_num, 1, age, font_style)
-# 		ws.write(row_num, 2, postalcode, font_style)
-# 		ws.write(row_num, 3, date, font_style)
-
-# 		safeuser_obj = SafeUsers.objects.get(pk=uid)
-
-# 		if recordtypes_state[DIAGNOSIS_NAME]:
-# 			diagnosis_list = []
-# 			diagnosis_obj = safeuser_obj.get_diagnosis()
-# 			for diag in diagnosis_obj:
-# 				diagnosis_list.append(diag.value)
-# 			ws.write(row_num, 4, str(diagnosis_list), font_style)
-# 		else:
-# 			ws.write(row_num, 4, '', font_style)
-
-# 		if recordtypes_state[BP_READING_NAME]:
-# 			bp_readings_list = []
-# 			bp_reading_obj = safeuser_obj.get_bp_readings()
-# 			for bp_reading in bp_reading_obj:
-# 				bp_readings_list.append(bp_reading.value)
-# 			ws.write(row_num, 5, str(bp_readings_list), font_style)
-# 		else:
-# 			ws.write(row_num, 5, '', font_style)
-
-# 		if recordtypes_state[HR_READING_NAME]:
-# 			hr_readings_list = []
-# 			hr_reading_obj = safeuser_obj.get_hr_readings()
-# 			for hr_reading in hr_reading_obj:
-# 				hr_readings_list.append(hr_reading.value)
-# 			ws.write(row_num, 6, str(hr_readings_list), font_style)
-# 		else:
-# 			ws.write(row_num, 6, '', font_style)
-
-# 		if recordtypes_state[TEMP_READING_NAME]:
-# 			temp_readings_list = []
-# 			temp_reading_obj = safeuser_obj.get_temp_readings()
-# 			for temp_reading in temp_reading_obj:
-# 					temp_readings_list.append(temp_reading.value)
-# 			ws.write(row_num, 7, str(temp_readings_list), font_style)
-# 		else:
-# 			ws.write(row_num, 7, '', font_style)
-
-# 	wb.save(response)
 	
-# 	Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Download Anonymised Records (XLS)')
-# 	return response
+	Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Download Anonymised Records (XLS)')
+	return response
 
 ##########################################
 ############ Helper Functions ############
