@@ -5,6 +5,7 @@
 {% block content %}
 <h1>{{ note.title }}</h1>
 
+{% has_note_set_permission note as has_note_set_permission_results %}
 <table class="table text-center">
   <tr>
     <th>Date</th>
@@ -22,6 +23,42 @@
     <th>Note</th>
     <th><a href="{{ note_path }}">View Note</a> | <a href="{% url 'download_note' patient_id=patient.id note_id=note.id %}">Download Note</a></th>
   </tr>
+  <tr>
+    {% if has_note_set_permission_results %}
+      <th>Permission</th>
+      <th><a href="{% url 'add_note_permission' patient_id=patient.id note_id=note.id %}">Add Permission</a></th>
+    {% endif %}
+  </tr>
 </table>
+
+{% if has_note_set_permission_results %}
+  <h1>Permissions</h1>
+
+  <table class="table text-center">
+    <thead>
+    <tr>
+      <th scope="col">Given To</th>
+      <th scope="col">Given By</th>
+      <th scope="col">Given On</th>
+      <th scope="col">Permission</th>
+      <th scope="col"></th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for perm in note_permissions %}
+    <tr>
+      <th scope="row">
+        {% for name in perm.username.all %}
+          {{ name | get_full_name }}
+        {% endfor %}
+      </th>
+      <th>{{ perm.given_by | get_full_name }}</th>
+      <th>{{ perm.timestamp | get_datetime }}</th>
+      <th>{{ perm.perm_value | get_perm }}</th>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
 
 {% endblock %}

@@ -4,26 +4,61 @@ from django.core.validators import RegexValidator
 from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
 
 class ReadingsPermissionEditForm(forms.ModelForm):
+  PERMISSION_CHOICES = [
+    (1, 'No Access'),
+    (2, 'Read Only Access'),
+  ]
+
+  perm_value = forms.ChoiceField(choices=PERMISSION_CHOICES, required=True)
+
   class Meta:
     model = ReadingsPerm
     fields = ['perm_value']
 
 class TimeSeriesPermissionEditForm(forms.ModelForm):
+  PERMISSION_CHOICES = [
+    (1, 'No Access'),
+    (2, 'Read Only Access'),
+  ]
+
+  perm_value = forms.ChoiceField(choices=PERMISSION_CHOICES, required=True)
+
   class Meta:
     model = TimeSeriesPerm
     fields = ['perm_value']
 
 class DocumentsPermissionEditForm(forms.ModelForm):
+  PERMISSION_CHOICES = [
+    (1, 'No Access'),
+    (2, 'Read Only Access'),
+  ]
+
+  perm_value = forms.ChoiceField(choices=PERMISSION_CHOICES, required=True)
+
   class Meta:
     model = DocumentsPerm
     fields = ['perm_value']
 
 class VideosPermissionEditForm(forms.ModelForm):
+  PERMISSION_CHOICES = [
+    (1, 'No Access'),
+    (2, 'Read Only Access'),
+  ]
+
+  perm_value = forms.ChoiceField(choices=PERMISSION_CHOICES, required=True)
+
   class Meta:
     model = VideosPerm
     fields = ['perm_value']
 
 class ImagesPermissionEditForm(forms.ModelForm):
+  PERMISSION_CHOICES = [
+    (1, 'No Access'),
+    (2, 'Read Only Access'),
+  ]
+
+  perm_value = forms.ChoiceField(choices=PERMISSION_CHOICES, required=True)
+  
   class Meta:
     model = ImagesPerm
     fields = ['perm_value']

@@ -25,7 +25,7 @@ class Readings(models.Model):
     Checks if a user has permissions to view the reading.
     """
 
-    reading = ReadingsPerm.objects.filter(readings_id = self, username=healthcare)
+    reading = ReadingsPerm.objects.filter(readings_id = self, username=healthcare, perm_value__in=[2,3])
 
     if (reading.count() == 0):
       return False
@@ -85,7 +85,7 @@ class TimeSeries(models.Model):
     Checks if a user has permissions to view the timeseries.
     """
 
-    timeseries = TimeSeriesPerm.objects.filter(timeseries_id = self, username=healthcare)
+    timeseries = TimeSeriesPerm.objects.filter(timeseries_id = self, username=healthcare, perm_value__in=[2,3])
 
     if (timeseries.count() == 0):
       return False
@@ -147,7 +147,7 @@ class Videos(models.Model):
     Checks if a user has permissions to view the video.
     """
 
-    video = VideosPerm.objects.filter(videos_id = self, username=healthcare)
+    video = VideosPerm.objects.filter(videos_id = self, username=healthcare, perm_value__in=[2,3])
 
     if (video.count() == 0):
       return False
@@ -209,7 +209,7 @@ class Images(models.Model):
     Checks if a user has permissions to view the reading.
     """
 
-    image = ImagesPerm.objects.filter(img_id = self, username=healthcare)
+    image = ImagesPerm.objects.filter(img_id = self, username=healthcare, perm_value__in=[2,3])
 
     if (image.count() == 0):
       return False
@@ -270,7 +270,7 @@ class Diagnosis(models.Model):
     Checks if a user has permissions to view the diagnosis.
     """
 
-    diagnosis = DiagnosisPerm.objects.filter(diag_id = self, username=healthcare)
+    diagnosis = DiagnosisPerm.objects.filter(diag_id = self, username=healthcare, perm_value__in=[2,3])
 
     if (diagnosis.count() == 0):
       return False
@@ -337,7 +337,7 @@ class Documents(models.Model):
     Checks if a user has permissions to view the document.
     """
 
-    document = DocumentsPerm.objects.filter(docs_id = self, username=user)
+    document = DocumentsPerm.objects.filter(docs_id = self, username=user, perm_value__in=[2,3])
 
     if (document.count() == 0):
       return False

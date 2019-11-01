@@ -295,7 +295,7 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
       note.save()
 
       # Set default permissions for note
-      permission = DocumentsPerm.objects.create(docs_id=note, given_by=healthcare.username, perm_value=2)
+      permission = DocumentsPerm.objects.create(docs_id=note, given_by=healthcare.username, perm_value=3)
       permission.username.add(patient.username)
       permissions = DocumentsPerm.objects.filter(docs_id=note) # List all permissions of the note
 
