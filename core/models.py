@@ -1,4 +1,5 @@
 import uuid
+import datetime
 from datetime import date
 
 from django.db import models
@@ -118,6 +119,14 @@ class Patient(models.Model):
   id = models.UUIDField(default=uuid.uuid4, editable=False)
 
 class Healthcare(models.Model):
+  NUM_CHOICES = [
+    (0, 0),
+    (1, 1),
+    (2, 2),
+    (3, 3),
+    (4, 4),
+    (5, 5),
+  ]
   username = models.OneToOneField(
     User,
     on_delete=models.CASCADE,
@@ -129,6 +138,8 @@ class Healthcare(models.Model):
     Patient, 
     related_name='healthcare_patients'
   )
+  date = models.DateField(default=datetime.date.today)  # date of last uploaded file
+  file_count = models.SmallIntegerField(choices=NUM_CHOICES, default=0)
   
 class Researcher(models.Model):
   username = models.OneToOneField(

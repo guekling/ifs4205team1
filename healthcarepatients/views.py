@@ -16,6 +16,7 @@ from userlogs.models import Logs
 import os
 from itertools import chain
 from mimetypes import guess_type
+from datetime import datetime, timezone
 
 
 @login_required(login_url='/healthcare/login/')
@@ -298,6 +299,10 @@ def new_patient_record(request, healthcare_id):
 
   healthcare = healthcare_does_not_exists(healthcare_id)
 
+  # exceeding limit, might be spamming
+  if healthcare.date == datetime.date(datetime.today()) and healthcare.file_count == 5:
+    return redirect('new_patient_record_exceeded', healthcare_id=healthcare_id)
+
   form = CreateNewPatientRecord(request.POST)
 
   if request.method == 'POST':
@@ -337,6 +342,17 @@ def new_patient_record(request, healthcare_id):
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
+def new_patient_record_exceeded(request, healthcare_id):
+  # checks if logged in healthcare professional has the same id as in the URL
+  if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[File Exceed] Logged in user does not match ID in URL. URL ID: ' + str(healthcare_id))
+    return redirect('/healthcare/login/')
+
+  return render(request, "new_patient_record_exceeded.html")
+
+@login_required(login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.pass_2fa(), login_url='/healthcare/login/')
 def new_patient_readings_record(request, healthcare_id, patient_id):
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
@@ -347,7 +363,7 @@ def new_patient_readings_record(request, healthcare_id, patient_id):
   healthcare = healthcare_does_not_exists(healthcare_id)
 
   try:
-    patient = Patient.objects.all().filter(id=patient_id) # Checks if patient exists
+    patient = Patient.objects.all().filter(id=patient_id)  # Checks if patient exists
     patient = patient[0]
   except IndexError:
     Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[New Patient Readings Record] Patient ID is invalid.')
@@ -402,7 +418,22 @@ def new_patient_readings_record(request, healthcare_id, patient_id):
       for healthcare_prof in patient_healthcare:
         permission = ReadingsPerm.objects.create(readings_id=readings, given_by=healthcare_prof.username, perm_value=2)
         permission.username.add(healthcare_prof)
-      
+
+      # exceeding limit, and bypassed the previous check with url
+      if healthcare.date == datetime.date(datetime.today()) and healthcare.file_count == 5:
+        Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE',
+                            status=STATUS_ERROR,
+                            details='[New Patient Readings Record] Limit exceeded, URL traversal, vadilation bypass.')
+        return redirect('/healthcare/login/')
+
+      if healthcare.date != datetime.date(datetime.today()):
+        healthcare.file_count = 1
+        healthcare.date = datetime.date(datetime.today())
+        healthcare.save()
+      else:
+        healthcare.file_count += 1
+        healthcare.save()
+
       Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='New Patient Readings Record')
       return redirect('show_patient_record', healthcare_id=healthcare_id, patient_id=patient_id, record_id=readings.id)
     else:
@@ -491,7 +522,21 @@ def new_patient_timeseries_record(request, healthcare_id, patient_id):
       for healthcare_prof in patient_healthcare:
         permission = TimeSeriesPerm.objects.create(timeseries_id=timeseries, given_by=healthcare_prof.username, perm_value=2)
         permission.username.add(healthcare_prof)
-      
+
+      # exceeding limit, and bypassed the previous check with url
+      if healthcare.date == datetime.date(datetime.today()) and healthcare.file_count == 5:
+        Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR,
+                            details='[New Patient TimeSeries Record] Limit exceeded, URL traversal, vadilation bypass.')
+        return redirect('/healthcare/login/')
+
+      if healthcare.date != datetime.date(datetime.today()):
+        healthcare.file_count = 1
+        healthcare.date = datetime.date(datetime.today())
+        healthcare.save()
+      else:
+        healthcare.file_count += 1
+        healthcare.save()
+
       Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='New Patient TimeSeries Record')
       return redirect('show_patient_record', healthcare_id=healthcare_id, patient_id=patient_id, record_id=timeseries.id)
     else:
@@ -583,6 +628,21 @@ def new_patient_images_record(request, healthcare_id, patient_id):
       for healthcare_prof in patient_healthcare:
         permission = ImagesPerm.objects.create(img_id=images, given_by=healthcare_prof.username, perm_value=2)
         permission.username.add(healthcare_prof)
+
+      # exceeding limit, and bypassed the previous check with url
+      if healthcare.date == datetime.date(datetime.today()) and healthcare.file_count == 5:
+        Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE',
+                            status=STATUS_ERROR,
+                            details='[New Patient Images Record] Limit exceeded, URL traversal, vadilation bypass.')
+        return redirect('/healthcare/login/')
+
+      if healthcare.date != datetime.date(datetime.today()):
+        healthcare.file_count = 1
+        healthcare.date = datetime.date(datetime.today())
+        healthcare.save()
+      else:
+        healthcare.file_count += 1
+        healthcare.save()
       
       Logs.objects.create(type='UPDATE', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='New Patient Images Record')
       return redirect('show_patient_record', healthcare_id=healthcare.id, patient_id=patient_id, record_id=images.id)
@@ -675,6 +735,21 @@ def new_patient_videos_record(request, healthcare_id, patient_id):
       for healthcare_prof in patient_healthcare:
         permission = VideosPerm.objects.create(videos_id=videos, given_by=healthcare_prof.username, perm_value=2)
         permission.username.add(healthcare_prof)
+
+      # exceeding limit, and bypassed the previous check with url
+      if healthcare.date == datetime.date(datetime.today()) and healthcare.file_count == 5:
+        Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE',
+                            status=STATUS_ERROR,
+                            details='[New Patient Video Record] Limit exceeded, URL traversal, vadilation bypass.')
+        return redirect('/healthcare/login/')
+
+      if healthcare.date != datetime.date(datetime.today()):
+        healthcare.file_count = 1
+        healthcare.date = datetime.date(datetime.today())
+        healthcare.save()
+      else:
+        healthcare.file_count += 1
+        healthcare.save()
       
       Logs.objects.create(type='UPDATE', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='New Patient Videos Record')
       return redirect('show_patient_record', healthcare_id=healthcare.id, patient_id=patient_id, record_id=videos.id)
