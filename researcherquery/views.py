@@ -1,21 +1,20 @@
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.forms.forms import NON_FIELD_ERRORS
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from django.core import serializers
-
-from core.models import User, Researcher
-from researcherquery.models import QiInfo, SafeUsers, SafeDiagnosis, SafeReadings, SafeImages, SafeVideos
-from userlogs.models import Logs
-
-from researcherquery.forms import SearchRecordsForm
-
-import bleach
-import datetime
 import csv
-import xlwt
+import datetime
 import json
 import re
+
+import bleach
+import xlwt
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core import serializers
+from django.http import HttpResponse
+from django.shortcuts import render, redirect
+
+from core.models import Researcher
+from researcherquery.forms import SearchRecordsForm
+from researcherquery.models import QiInfo, SafeUsers
+from userlogs.models import Logs
+
 
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')

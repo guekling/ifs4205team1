@@ -1,22 +1,19 @@
-from typing import Union
-from uuid import UUID
+import os
+from datetime import datetime
+from itertools import chain
+from mimetypes import guess_type
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.db.models import UUIDField
-from django.shortcuts import render, redirect
 from django.http import HttpResponse
+from django.shortcuts import render, redirect
 
-from healthcarepatients.forms import TransferPatientForm, CreateNewPatientRecord, CreatePatientReadingsRecord, CreatePatientTimeSeriesRecord, CreatePatientImagesRecord, CreatePatientVideosRecord
-
-from core.models import Healthcare, Patient, User
-from patientrecords.models import Notifications, Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
+from core.models import Healthcare, Patient
+from healthcarepatients.forms import TransferPatientForm, CreateNewPatientRecord, CreatePatientReadingsRecord, \
+  CreatePatientTimeSeriesRecord, CreatePatientImagesRecord, CreatePatientVideosRecord
+from patientrecords.models import Notifications, Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, \
+  TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
 from userlogs.models import Logs
-
-import os
-from itertools import chain
-from mimetypes import guess_type
-from datetime import datetime, timezone
 
 
 @login_required(login_url='/healthcare/login/')

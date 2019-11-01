@@ -1,26 +1,23 @@
-from django.shortcuts import render, redirect
-from django.template import RequestContext
-from django.urls import reverse_lazy
+import hashlib
+from datetime import datetime, timezone
 
-from django.utils.crypto import get_random_string
-
+import qrcode
 from django.contrib.auth import (
-    REDIRECT_FIELD_NAME, get_user_model, login as auth_login
+  login as auth_login
 )
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordChangeDoneView
+from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
+from django.utils.crypto import get_random_string
+from ratelimit.decorators import ratelimit
 
+from core.models import Patient
 from patientlogin.forms import UserEditForm, UserQrForm
-
-from core.models import User, Patient
 from patientrecords.models import Notifications
 from userlogs.models import Logs
 
-import hashlib
-import qrcode
-from datetime import datetime, timezone
-from ratelimit.decorators import ratelimit
 
 class PatientLogin(LoginView):
   """

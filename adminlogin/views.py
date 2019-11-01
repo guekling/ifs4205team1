@@ -1,25 +1,20 @@
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.forms.forms import NON_FIELD_ERRORS
-from django.shortcuts import render, redirect
-from django.template import RequestContext
-from django.urls import reverse_lazy
-
-from django.utils.crypto import get_random_string
+from datetime import datetime, timezone
 
 from django.contrib.auth import (
-    REDIRECT_FIELD_NAME, get_user_model, login as auth_login
+  login as auth_login
 )
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
-from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordChangeDoneView
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.views import LoginView, LogoutView
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.shortcuts import render, redirect
+from django.utils.crypto import get_random_string
 
-from adminlogin.forms import UserEditForm, UserQrForm, EditRecordTypesPermForm
-
-from core.models import User, Admin, Researcher
-from userlogs.models import Logs
 from adminlogin.anonymise import anonymise_and_store
+from adminlogin.forms import UserEditForm, UserQrForm, EditRecordTypesPermForm
+from core.models import Admin, Researcher
+from userlogs.models import Logs
 
-from datetime import datetime, timezone
 
 class AdminLogin(LoginView):
   """

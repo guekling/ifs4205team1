@@ -1,19 +1,14 @@
-from django.shortcuts import render, redirect
-from django.template import RequestContext
-from django.urls import reverse_lazy
-
-from django.utils.crypto import get_random_string
-
 from django.contrib.auth import (
-    REDIRECT_FIELD_NAME, get_user_model, login as auth_login
+  login as auth_login
 )
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
-from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordChangeDoneView
-
-from mobileregister.forms import DeviceInforForm
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.views import LoginView
+from django.shortcuts import render, redirect
 
 from core.models import User
+from mobileregister.forms import DeviceInforForm
+
 
 class UserLogin(LoginView):
   """

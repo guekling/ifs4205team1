@@ -1,16 +1,16 @@
+import os
+from mimetypes import guess_type
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.shortcuts import render, redirect
 from django.http import HttpResponse
+from django.shortcuts import render, redirect
 
-from core.models import User, Patient, Healthcare
+from core.models import User, Patient
+from patienthealthcare.forms import AddNotePermission
 from patientrecords.models import Documents, DocumentsPerm
 from userlogs.models import Logs
 
-from patienthealthcare.forms import AddNotePermission
-
-import os
-from mimetypes import guess_type
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')

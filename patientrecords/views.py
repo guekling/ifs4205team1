@@ -1,18 +1,21 @@
-from django.conf import settings
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
-
-from patientrecords.forms import ReadingsPermissionEditForm, TimeSeriesPermissionEditForm, DocumentsPermissionEditForm, VideosPermissionEditForm, ImagesPermissionEditForm, CreateNewRecord, CreateReadingsRecord, CreateTimeSeriesRecord, CreateImagesRecord, CreateVideosRecord, CreateDocumentsRecord
-
-from core.models import Patient
-from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, DocumentsPerm, ImagesPerm, VideosPerm
-from userlogs.models import Logs
-
 import os
-import bleach
 from itertools import chain
 from mimetypes import guess_type
+
+import bleach
+from django.conf import settings
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.http import HttpResponse
+from django.shortcuts import render, redirect
+
+from core.models import Patient
+from patientrecords.forms import ReadingsPermissionEditForm, TimeSeriesPermissionEditForm, DocumentsPermissionEditForm, \
+  VideosPermissionEditForm, ImagesPermissionEditForm, CreateNewRecord, CreateReadingsRecord, CreateTimeSeriesRecord, \
+  CreateImagesRecord, CreateVideosRecord, CreateDocumentsRecord
+from patientrecords.models import Readings, TimeSeries, Documents, Images, Videos, ReadingsPerm, TimeSeriesPerm, \
+  DocumentsPerm, ImagesPerm, VideosPerm
+from userlogs.models import Logs
+
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')

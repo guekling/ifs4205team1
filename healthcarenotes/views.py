@@ -1,22 +1,22 @@
-from __future__ import division, unicode_literals 
+from __future__ import division, unicode_literals
 
-from django.conf import settings
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.shortcuts import render, redirect
-from django.core.files import File
-from django.http import HttpResponse
-
-from healthcarenotes.forms import DocumentsPermissionEditForm, AddHealthcareNote, AddHealthcareNoteForPatient, EditHealthcareNote
-
-from core.models import Healthcare
-from patientrecords.models import Readings, Images, TimeSeries, Videos, Documents, DocumentsPerm
-from userlogs.models import Logs
+import codecs
+import os
+from mimetypes import guess_type
 
 import bleach
-import os
-import codecs
 from bs4 import BeautifulSoup
-from mimetypes import guess_type
+from django.conf import settings
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.http import HttpResponse
+from django.shortcuts import render, redirect
+
+from core.models import Healthcare
+from healthcarenotes.forms import DocumentsPermissionEditForm, AddHealthcareNote, AddHealthcareNoteForPatient, \
+  EditHealthcareNote
+from patientrecords.models import Documents, DocumentsPerm
+from userlogs.models import Logs
+
 
 @login_required(login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
