@@ -244,9 +244,9 @@ def patient_qr(request, patient_id):
   user = patient.username
 
   # when user purposefully try to traverse to this url but they haven't registered
-  # if len(user.hashed_last_six) == 0 and len(user.hashed_id) == 0:
-  #   Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_ERROR, details='[2FA] URL traversal. Not Registered yet.')
-  #   return redirect("patient_token_register", patient_id=patient.id)
+  if len(user.hashed_last_six) == 0 and len(user.hashed_id) == 0:
+    Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_ERROR, details='[2FA] URL traversal. Not Registered yet.')
+    return redirect("patient_token_register", patient_id=patient.id)
 
   # require a valid nonce (exists and not expired). a nonce expires after 3 minutes
   if len(user.latest_nonce) > 0 and (datetime.now(timezone.utc) - user.nonce_timestamp).total_seconds() <= 180:

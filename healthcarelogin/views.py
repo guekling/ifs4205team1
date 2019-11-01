@@ -214,9 +214,9 @@ def healthcare_qr(request, healthcare_id):
   user = healthcare.username
 
   # when user purposefully try to traverse to this url but they haven't registered
-  # if len(user.hashed_last_six) == 0 and len(user.hashed_id) == 0:
-  #   Logs.objects.create(type='LOGIN', user_id=user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[2FA] URL traversal. Not Registered yet.')
-  #   return redirect("healthcare_token_register", healthcare_id=healthcare.id)
+  if len(user.hashed_last_six) == 0 and len(user.hashed_id) == 0:
+    Logs.objects.create(type='LOGIN', user_id=user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[2FA] URL traversal. Not Registered yet.')
+    return redirect("healthcare_token_register", healthcare_id=healthcare.id)
 
   # require a valid nonce (exists and not expired). a nonce expires after 3 minutes
   if len(user.latest_nonce) > 0 and (datetime.now(timezone.utc) - user.nonce_timestamp).total_seconds() <= 180:
