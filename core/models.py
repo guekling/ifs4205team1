@@ -6,16 +6,30 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
   username = models.CharField(primary_key=True, max_length=64, unique=True)
-  gender = models.CharField(max_length=1) # only allow M/F
+  gender = models.CharField(max_length=1)  # only allow M/F
   dob = models.DateField()
   age = models.PositiveIntegerField(default=None, blank=True, null=True) # max digits = 3
   address = models.CharField(max_length=150)
   postalcode = models.CharField(max_length=6)
-  contactnumber = models.PositiveIntegerField() # max digits = 8
+  contactnumber = models.PositiveIntegerField()  # max digits = 8
   hashed_id = models.CharField(max_length=64)
   hashed_last_six = models.CharField(max_length=64)
-  latest_nonce = models.CharField(max_length=64)
+  latest_nonce = models.CharField(max_length=64, default="")
   nonce_timestamp = models.DateTimeField(default=None, blank=True, null=True)
+  latest_nonce2 = models.CharField(max_length=64, default="")
+  nonce2_timestamp = models.DateTimeField(default=None, blank=True, null=True)
+  login1 = models.DateTimeField(default=None, blank=True, null=True)  # this login
+  login2 = models.DateTimeField(default=None, blank=True, null=True)  # last login
+  login3 = models.DateTimeField(default=None, blank=True, null=True)
+  login4 = models.DateTimeField(default=None, blank=True, null=True)
+  login5 = models.DateTimeField(default=None, blank=True, null=True)
+  login6 = models.DateTimeField(default=None, blank=True, null=True)
+  ip1 = models.GenericIPAddressField(default=None, blank=True, null=True)
+  ip2 = models.GenericIPAddressField(default=None, blank=True, null=True)
+  ip3 = models.GenericIPAddressField(default=None, blank=True, null=True)
+  ip4 = models.GenericIPAddressField(default=None, blank=True, null=True)
+  ip5 = models.GenericIPAddressField(default=None, blank=True, null=True)
+  ip6 = models.GenericIPAddressField(default=None, blank=True, null=True)
   uid = models.UUIDField(default=uuid.uuid4, editable=False)
 
   USERNAME_FIELD = 'username'
