@@ -42,7 +42,7 @@ class ResearcherLogin(LoginView):
 			user = researcher.username
 			# if len(user.hashed_last_six) > 0 and len(user.hashed_id) > 0:
 			user.latest_nonce = nonce # change field
-			user.nonce_timestamp = datetime.datetime.now()
+			user.nonce_timestamp = datetime.now()
 			user.save() # this will update only
 			Logs.objects.create(type='LOGIN', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Researcher Login')
 			return redirect('researcher_qr', researcher_id=researcher.id)
