@@ -295,7 +295,8 @@
 						{% if cancer_img %}
 							{% if user.get_cancer_images.count != 0 %}
 								{% for cancer_image in user.get_cancer_images %}
-									<a href={{ cancer_image.id | get_image_path }}>{{ cancer_image.value | linebreaks }}</a>
+									{{ cancer_image.value | linebreaks }}
+									{# <a href={{ cancer_image.id | get_image_path }}>{{ cancer_image.value | linebreaks }}</a> #}
 								{% endfor %}
 							{% else %}
 								-
@@ -307,7 +308,8 @@
 						{% if mri_img %}
 							{% if user.get_mri_images.count != 0 %}
 								{% for mri_image in user.get_mri_images %}
-									<a href={{ mri_image.id | get_image_path }}>{{ mri_image.value | linebreaks }}</a>
+									{{ mri_image.value | linebreaks }}
+									{# <a href={{ mri_image.id | get_image_path }}>{{ mri_image.value | linebreaks }}</a> #}
 								{% endfor %}
 							{% else %}
 								-
@@ -319,7 +321,8 @@
 						{% if ultrasound_img %}
 							{% if user.get_ultrasound_images.count != 0 %}
 								{% for ultrasound_image in user.get_ultrasound_images %}
-									<a href={{ ultrasound_image.id | get_image_path }}>{{ ultrasound_image.value | linebreaks }}</a>
+									{{ ultrasound_image.value | linebreaks }}
+									{# <a href={{ ultrasound_image.id | get_image_path }}>{{ ultrasound_image.value | linebreaks }}</a> #}
 								{% endfor %}
 							{% else %}
 								-
@@ -331,7 +334,8 @@
 						{% if xray_img %}
 							{% if user.get_xray_images.count != 0 %}
 								{% for xray_image in user.get_xray_images %}
-									<a href={{ xray_image.id | get_image_path }}>{{ xray_image.value | linebreaks }}</a>
+									{{ xray_image.value | linebreaks }}
+									{# <a href={{ xray_image.id | get_image_path }}>{{ xray_image.value | linebreaks }}</a> #}
 								{% endfor %}
 							{% else %}
 								-
@@ -343,7 +347,8 @@
 						{% if gastroscope_vid %}
 							{% if user.get_gastroscope_videos.count != 0 %}
 								{% for gastroscope_video in user.get_gastroscope_videos %}
-									<a href={{ gastroscope_video.id | get_image_path }}>{{ gastroscope_video.value | linebreaks }}</a>
+									{{ gastroscope_video.value | linebreaks }}
+									{# <a href={{ gastroscope_video.id | get_image_path }}>{{ gastroscope_video.value | linebreaks }}</a> #}
 								{% endfor %}
 							{% else %}
 								-
@@ -355,7 +360,8 @@
 						{% if gait_vid %}
 							{% if user.get_gait_videos.count != 0 %}
 								{% for gait_video in user.get_gait_videos %}
-									<a href={{ gait_video.id | get_image_path }}>{{ gait_video.value | linebreaks }}</a>
+									{{ gait_video.value | linebreaks }}
+									{# <a href={{ gait_video.id | get_image_path }}>{{ gait_video.value | linebreaks }}</a> #}
 								{% endfor %}
 							{% else %}
 								-
