@@ -8,6 +8,7 @@ django-axes==5.0.18
 django-bleach==0.6.0
 django-ipware==2.1.0
 django-qr-code==1.0.0
+django-ratelimit
 django-select2==7.1.1
 django-session-timeout==0.0.4
 django-widget-tweaks==1.4.5

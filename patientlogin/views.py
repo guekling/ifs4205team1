@@ -20,6 +20,7 @@ from userlogs.models import Logs
 import hashlib
 import qrcode
 from datetime import datetime, timezone
+from ratelimit.decorators import ratelimit
 
 class PatientLogin(LoginView):
   """
@@ -231,6 +232,7 @@ def patient_change_password_complete(request, patient_id):
 
 @login_required(login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
+@ratelimit(key='ip', rate='100/m')
 def patient_qr(request, patient_id):
   # the session will expire 15 minutes after inactivity, and will require log in again.
   request.session.set_expiry(900)
