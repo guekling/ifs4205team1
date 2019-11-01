@@ -41,14 +41,14 @@ class PatientLogin(LoginView):
       auth_login(self.request, form.get_user())
       nonce = get_random_string(length=16, allowed_chars=u'abcdefghijklmnopqrstuvwxyz0123456789')
       user = patient.username
-      # if len(user.hashed_last_six) > 0 and len(user.hashed_id) > 0:
-      user.latest_nonce = nonce  # change field
-      user.nonce_timestamp = datetime.now()
-      user.save()  # this will update only
-      Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='[LOGIN] User(' + str(user.uid) + ') Patient Login')
-      return redirect('patient_qr', patient_id=patient.id)
-      # else:
-      #   return redirect('patient_token_register', patient_id=patient.id)
+      if len(user.hashed_last_six) > 0 and len(user.hashed_id) > 0:
+        user.latest_nonce = nonce  # change field
+        user.nonce_timestamp = datetime.now()
+        user.save()  # this will update only
+        Logs.objects.create(type='LOGIN', user_id=user.uid, interface='PATIENT', status=STATUS_OK, details='[LOGIN] User(' + str(user.uid) + ') Patient Login')
+        return redirect('patient_qr', patient_id=patient.id)
+      else:
+        return redirect('patient_token_register', patient_id=patient.id)
     else:
       form = AuthenticationForm
 
@@ -264,8 +264,7 @@ def patient_qr(request, patient_id):
     # timeout, nonce expires
     if (datetime.now(timezone.utc) - user.nonce_timestamp).total_seconds() > 180:
       return redirect('patient_login')
-    if otp == '1234':
-    # if user.hashed_last_six == recovered_value(user.hashed_id, nonce, otp):
+    if user.hashed_last_six == recovered_value(user.hashed_id, nonce, otp):
       # give HttpResponse only or render page you need to load on success
       # delete the nonce
       user.latest_nonce = ""
