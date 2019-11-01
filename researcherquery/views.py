@@ -106,7 +106,7 @@ def search_records(request, researcher_id):
 					}
 					return render(request, 'search_records.html', context)
 				else:
-					Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='[Search Records] Invalid form')
+					Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Search Records] Invalid form')
 					form.add_error(None, 'Invalid form')
 					context = {
 						'form': form,
