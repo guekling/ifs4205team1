@@ -232,7 +232,7 @@ def transfer_patient(request, healthcare_id, patient_id):
       patient.healthcare_patients.add(transfer_healthcare) # Does not do anything even if healthcare professional chosen is already tagged to patient
 
       # Set default permissions for patient's medical records for new Healthcare
-      healthcare_user = healthcare.username
+      healthcare_user = healthcare
       records = get_records(patient)
 
       for record in records:
