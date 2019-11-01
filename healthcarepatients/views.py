@@ -717,11 +717,11 @@ def get_records(patient):
   """
   Retrieve all records of a single patient
   """
-  readings = Readings.objects.filter(patient_id=patient)
-  timeseries = TimeSeries.objects.filter(patient_id=patient)
-  documents = Documents.objects.filter(patient_id=patient)
-  images = Images.objects.filter(patient_id=patient)
-  videos = Videos.objects.filter(patient_id=patient)
+  readings = Readings.objects.filter(patient_id=patient).exclude(readingsperm_reading__perm_value=1)
+  timeseries = TimeSeries.objects.filter(patient_id=patient).exclude(timeseriesperm_timeseries__perm_value=1)
+  documents = Documents.objects.filter(patient_id=patient).exclude(documentsperm_documents__perm_value=1)
+  images = Images.objects.filter(patient_id=patient).exclude(imagesperm_images__perm_value=1)
+  videos = Videos.objects.filter(patient_id=patient).exclude(videosperm_videos__perm_value=1)
 
   return list(chain(readings, timeseries, documents, images, videos))
 
