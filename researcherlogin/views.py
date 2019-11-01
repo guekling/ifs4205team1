@@ -251,7 +251,7 @@ def researcher_token_register(request, researcher_id):
     Logs.objects.create(type='LOGIN', user_id=user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[2FA_Reminder] URL traversal. Already registered.')
     return redirect("repeat_register", user_id=user.uid)
 
-  return redirect(request, "researcher_token_register.html")
+  return render(request, "researcher_token_register.html")
 
 @login_required(login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')

@@ -488,11 +488,10 @@ def new_patient_timeseries_record(request, healthcare_id, patient_id):
       patient_healthcare = patient.healthcare_patients.all()
 
       if (healthcare not in patient_healthcare):
-        healthcare.patients.add(patient)  # Tag patient (that record belongs to) to current healthcare
+        healthcare.patients.add(patient) # Tag patient (that record belongs to) to current healthcare
 
         from_healthcare = healthcare.username  # a User object
-        notification1 = Notifications(type=3, from_user=from_healthcare, to_healthcare=healthcare,
-                                      patient=patient, content="", status=1)
+        notification1 = Notifications(type=3, from_user=from_healthcare, to_healthcare=healthcare, patient=patient, content="", status=1)
         notification1.save()
 
         records = get_records(patient)
@@ -515,8 +514,7 @@ def new_patient_timeseries_record(request, healthcare_id, patient_id):
             permission.username.add(healthcare)
 
       from_healthcare = healthcare.username  # a User object
-      notification2 = Notifications(type=2, from_user=from_healthcare, to_healthcare=healthcare,
-                                   patient=patient, content="a time series", status=1)
+      notification2 = Notifications(type=2, from_user=from_healthcare, to_healthcare=healthcare, patient=patient, content="a time series", status=1)
       notification2.save()
 
       for healthcare_prof in patient_healthcare:
