@@ -9,6 +9,7 @@ urlpatterns = [
   path("<uuid:healthcare_id>/patients/<uuid:patient_id>/records/<uuid:record_id>/download", views.download_patient_record, name="download_patient_record"),
   path("<uuid:healthcare_id>/patients/<uuid:patient_id>/transfer", views.transfer_patient, name="transfer_patient"),
   path("<uuid:healthcare_id>/patients/new_record", views.new_patient_record, name="new_patient_record"),
+  path("<uuid:healthcare_id>/patients/new_record/exceeded", views.new_patient_record_exceeded, name="new_patient_record_exceeded"),
   path("<uuid:healthcare_id>/patients/new_record/<uuid:patient_id>/readings", views.new_patient_readings_record, name="new_patient_readings_record"),
   path("<uuid:healthcare_id>/patients/new_record/<uuid:patient_id>/timeseries", views.new_patient_timeseries_record, name="new_patient_timeseries_record"),
   path("<uuid:healthcare_id>/patients/new_record/<uuid:patient_id>/images", views.new_patient_images_record, name="new_patient_images_record"),
