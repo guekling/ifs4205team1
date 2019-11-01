@@ -233,7 +233,7 @@ def transfer_patient(request, healthcare_id, patient_id):
       patient.healthcare_patients.add(transfer_healthcare) # Does not do anything even if healthcare professional chosen is already tagged to patient
 
       # Set default permissions for patient's medical records for new Healthcare
-      healthcare_user = healthcare.username
+      healthcare_user = healthcare
       records = get_records(patient)
 
       for record in records:
@@ -248,7 +248,7 @@ def transfer_patient(request, healthcare_id, patient_id):
             permission = TimeSeriesPerm.objects.create(timeseries_id=record, given_by=healthcare_user, perm_value=2)
             permission.username.add(transfer_healthcare)
         elif (model == "Documents"):
-          if (DocumentsPerm.objects.filter(docs_id=record, username=healthcare_user).count() > 0):
+          if (DocumentsPerm.objects.filter(docs_id=record, username=healthcare_user).exclude(docs_id__type='Healthcare Professional Note').count() > 0): # Patient Documents Records
             permission = DocumentsPerm.objects.create(docs_id=record, given_by=healthcare_user, perm_value=2)
             permission.username.add(transfer_healthcare.username)
         elif (model == "Videos"):
