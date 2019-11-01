@@ -61,52 +61,61 @@ def search_records(request, researcher_id):
 
 			# Get current QI combi from DB (always 1st entry as only store 1)
 			qiinfo = QiInfo.objects.all().first()
-			combi_age = qiinfo.get_combi_age()
-			combi_postalcode = qiinfo.get_combi_postalcode()
-			combi_date = qiinfo.get_combi_date()
+			if qiinfo: 
+				combi_age = qiinfo.get_combi_age()
+				combi_postalcode = qiinfo.get_combi_postalcode()
+				combi_date = qiinfo.get_combi_date()
 
-			# Process the QIs & Record Types
-			postalcodes = []
-			if check_postalcode(postalcode1):
-				postalcodes.append(postalcode1)
-			if check_postalcode(postalcode2):
-				postalcodes.append(postalcode2)
-			if check_postalcode(postalcode3):
-				postalcodes.append(postalcode3)
+				# Process the QIs & Record Types
+				postalcodes = []
+				if check_postalcode(postalcode1):
+					postalcodes.append(postalcode1)
+				if check_postalcode(postalcode2):
+					postalcodes.append(postalcode2)
+				if check_postalcode(postalcode3):
+					postalcodes.append(postalcode3)
 
-			# ages contain at least 1 digit string and postalcodes contain at least 1 valid postalcode
-			if (all(x.isdigit() for x in ages)) and (len(ages) != 0) and (len(postalcodes) != 0):
-				users = get_original_users()
-				# users = process_age_postalcode(combi_age, combi_postalcode, ages, postalcodes)
-				users_list = list(users)
-				request.session['users_list'] = serializers.serialize("json", users_list)
-				process_recordtypes(recordtypes_selected, recordtypes_perm_list)
+				# ages contain at least 1 digit string and postalcodes contain at least 1 valid postalcode
+				if (all(x.isdigit() for x in ages)) and (len(ages) != 0) and (len(postalcodes) != 0):
+					users = get_original_users()
+					# users = process_age_postalcode(combi_age, combi_postalcode, ages, postalcodes)
+					users_list = list(users)
+					request.session['users_list'] = serializers.serialize("json", users_list)
+					process_recordtypes(recordtypes_selected, recordtypes_perm_list)
 
-				Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Search Records')
+					Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='Search Records')
 
-				context = {
-					'form': form,
-					'researcher': researcher,
-					'qiinfo': qiinfo,
-					'users': users,
-					'count': users.count(),
-					'date': process_date(combi_date),
-					'submitted': submitted,
-					DIAGNOSIS_NAME: recordtypes_state[DIAGNOSIS_NAME],
-					BP_READING_NAME: recordtypes_state[BP_READING_NAME],
-					HR_READING_NAME: recordtypes_state[HR_READING_NAME],
-					TEMP_READING_NAME: recordtypes_state[TEMP_READING_NAME],
-					CANCER_IMG_NAME: recordtypes_state[CANCER_IMG_NAME],
-					MRI_IMG_NAME: recordtypes_state[MRI_IMG_NAME],
-					ULTRASOUND_IMG_NAME: recordtypes_state[ULTRASOUND_IMG_NAME],
-					XRAY_IMG_NAME: recordtypes_state[XRAY_IMG_NAME],
-					GASTROSCOPE_VID_NAME: recordtypes_state[GASTROSCOPE_VID_NAME],
-					GAIT_VID_NAME: recordtypes_state[GAIT_VID_NAME]
-				}
-				return render(request, 'search_records.html', context)
+					context = {
+						'form': form,
+						'researcher': researcher,
+						'qiinfo': qiinfo,
+						'users': users,
+						'count': users.count(),
+						'date': process_date(combi_date),
+						'submitted': submitted,
+						DIAGNOSIS_NAME: recordtypes_state[DIAGNOSIS_NAME],
+						BP_READING_NAME: recordtypes_state[BP_READING_NAME],
+						HR_READING_NAME: recordtypes_state[HR_READING_NAME],
+						TEMP_READING_NAME: recordtypes_state[TEMP_READING_NAME],
+						CANCER_IMG_NAME: recordtypes_state[CANCER_IMG_NAME],
+						MRI_IMG_NAME: recordtypes_state[MRI_IMG_NAME],
+						ULTRASOUND_IMG_NAME: recordtypes_state[ULTRASOUND_IMG_NAME],
+						XRAY_IMG_NAME: recordtypes_state[XRAY_IMG_NAME],
+						GASTROSCOPE_VID_NAME: recordtypes_state[GASTROSCOPE_VID_NAME],
+						GAIT_VID_NAME: recordtypes_state[GAIT_VID_NAME]
+					}
+					return render(request, 'search_records.html', context)
+				else:
+					Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='[Search Records] Invalid form')
+					form.add_error(None, 'Invalid form')
+					context = {
+						'form': form,
+						'researcher': researcher
+					}
+					return render(request, 'search_records.html', context)
 			else:
-				Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='[Search Records] Invalid form')
-				form.add_error(None, 'Invalid form')
+				Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Search Records] No anonymised records')
+				form.add_error(None, 'No anonymised records')
 				context = {
 					'form': form,
 					'researcher': researcher
@@ -114,7 +123,7 @@ def search_records(request, researcher_id):
 				return render(request, 'search_records.html', context)
 
 		else: # POST - Handle invalid form
-			Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_OK, details='[Search Records] Invalid form')
+			Logs.objects.create(type='READ', user_id=user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[Search Records] Invalid form')
 			form.add_error(None, 'Invalid form')
 			context = {
 				'form': form,
