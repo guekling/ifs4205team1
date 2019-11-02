@@ -5,6 +5,8 @@ import qrcode
 from django.contrib.auth import (
   login as auth_login
 )
+from django.dispatch import receiver
+from django.contrib.auth.signals import user_logged_in, user_logged_out, user_login_failed
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordChangeDoneView
@@ -13,7 +15,7 @@ from django.urls import reverse_lazy
 from django.utils.crypto import get_random_string
 from ratelimit.decorators import ratelimit
 
-from core.models import Healthcare
+from core.models import User, Healthcare, Locked
 from patientlogin.forms import UserEditForm, UserQrForm
 from userlogs.models import Logs
 
@@ -54,6 +56,32 @@ class HealthcareLogin(LoginView):
       }
 
       return render(self.request, 'healthcare_login.html', context)
+
+@receiver(user_login_failed)
+def user_logged_in_failed(sender, credentials, request, **kwargs):
+  # Checks if user is a valid user
+  try:
+    user = User.objects.filter(username=credentials['username'])
+    user = user[0]
+    user.loginattempts = user.loginattempts + 1
+    user.save()
+    Logs.objects.create(type='LOGIN', interface='HEALTHCARE', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') Failed Login. Failed Attempt ' + str(user.loginattempts))
+  except IndexError:
+    Logs.objects.create(type='LOGIN', interface='HEALTHCARE', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') Not Found')
+
+  # Checks if login attempts more than 3
+  if user.pass_login_attempts() == False:
+    user.locked = True
+    user.save()
+    ipaddr = visitor_ip_address(request)
+    Locked.objects.create(lockedipaddr=ipaddr, lockeduser=user) # save the locked user's ip address
+    Logs.objects.create(type='LOGIN', interface='HEALTHCARE', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') is locked out.')
+
+@receiver(user_logged_in)
+def user_logged_in_success(sender, user, request, **kwargs):
+  if user.loginattempts > 0:
+    user.loginattempts = 0 # reset failed login attempts
+    user.save()
 
 class HealthcareLogout(LogoutView):
   """
@@ -199,11 +227,25 @@ def healthcare_change_password_complete(request, healthcare_id):
   return change_password_complete(request)
 
 @login_required(login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.is_not_locked(), login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
 @ratelimit(key='ip', rate='100/m')
 def healthcare_qr(request, healthcare_id):
   # the session will expire 15 minutes after inactivity, and will require log in again.
   request.session.set_expiry(900)
+
+  ipaddr = visitor_ip_address(request)
+
+  # Checks if IP address is on list of locked IP addressesi
+  for locked in Locked.objects.all():
+    if locked.lockedipaddr == ipaddr:
+      Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[2FA] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
+      request.session.flush()
+
+  # checks if logged in healthcare professional has the same id as in the URL
+  if (request.user.healthcare_username.id != healthcare_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[2FA] Logged in user does not match ID in URL. URL ID: ' + str(healthcare_id))
+    return redirect('/healthcare/login/')
 
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
@@ -233,7 +275,7 @@ def healthcare_qr(request, healthcare_id):
     otp = cd.get('otp')
     # timeout, nonce expires
     if (datetime.now(timezone.utc) - user.nonce_timestamp).total_seconds() > 180:
-      return redirect('patient_login')
+      return redirect('healthcare_login')
     if user.hashed_last_six == recovered_value(user.hashed_id, nonce, otp):
       # give HttpResponse only or render page you need to load on success
       # delete the nonce
@@ -266,10 +308,19 @@ def healthcare_qr(request, healthcare_id):
     return render(request, "healthcare_qr.html", context)
 
 @login_required(login_url='/healthcare/login/')
+@user_passes_test(lambda u: u.is_not_locked(), login_url='/healthcare/login/')
 @user_passes_test(lambda u: u.is_healthcare(), login_url='/healthcare/login/')
 def healthcare_token_register(request, healthcare_id):
   # the session will expire 15 minutes after inactivity, and will require log in again.
   request.session.set_expiry(900)
+
+  ipaddr = visitor_ip_address(request)
+
+  # Checks if IP address is on list of locked IP addressesi
+  for locked in Locked.objects.all():
+    if locked.lockedipaddr == ipaddr:
+      Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[LOGIN] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
+      request.session.flush()
 
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):

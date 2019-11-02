@@ -5,6 +5,8 @@ import qrcode
 from django.contrib.auth import (
   login as auth_login
 )
+from django.dispatch import receiver
+from django.contrib.auth.signals import user_logged_in, user_logged_out, user_login_failed
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordChangeDoneView
@@ -13,7 +15,7 @@ from django.urls import reverse_lazy
 from django.utils.crypto import get_random_string
 from ratelimit.decorators import ratelimit
 
-from core.models import Patient
+from core.models import User, Patient, Locked
 from patientlogin.forms import UserEditForm, UserQrForm
 from patientrecords.models import Notifications
 from userlogs.models import Logs
@@ -55,6 +57,32 @@ class PatientLogin(LoginView):
       }
 
       return render(self.request, 'patient_login.html', context)
+
+@receiver(user_login_failed)
+def user_logged_in_failed(sender, credentials, request, **kwargs):
+  # Checks if user is a valid user
+  try:
+    user= User.objects.filter(username=credentials['username'])
+    user = user[0]
+    user.loginattempts = user.loginattempts + 1
+    user.save()
+    Logs.objects.create(type='LOGIN', interface='PATIENT', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') Failed Login. Failed Attempt ' + str(user.loginattempts))
+  except IndexError:
+    Logs.objects.create(type='LOGIN', interface='PATIENT', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') Not Found')
+
+  # Checks if login attempts more than 3
+  if user.pass_login_attempts() == False:
+    user.locked = True
+    user.save()
+    ipaddr = visitor_ip_address(request)
+    Locked.objects.create(lockedipaddr=ipaddr, lockeduser=user) # save the locked user's ip address
+    Logs.objects.create(type='LOGIN', interface='PATIENT', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') is locked out.')
+
+@receiver(user_logged_in)
+def user_logged_in_success(sender, user, request, **kwargs):
+  if user.loginattempts > 0:
+    user.loginattempts = 0 # reset failed login attempts
+    user.save()
 
 class PatientLogout(LogoutView):
   """
@@ -228,11 +256,20 @@ def patient_change_password_complete(request, patient_id):
   return change_password_complete(request)
 
 @login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_not_locked(), login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
 @ratelimit(key='ip', rate='100/m')
 def patient_qr(request, patient_id):
   # the session will expire 15 minutes after inactivity, and will require log in again.
   request.session.set_expiry(900)
+
+  ipaddr = visitor_ip_address(request)
+
+  # Checks if IP address is on list of locked IP addressesi
+  for locked in Locked.objects.all():
+    if locked.lockedipaddr == ipaddr:
+      Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[PATIENT_QR] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
+      request.session.flush()
 
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
@@ -295,10 +332,19 @@ def patient_qr(request, patient_id):
     return render(request, "patient_qr.html", context)
 
 @login_required(login_url='/patient/login/')
+@user_passes_test(lambda u: u.is_not_locked(), login_url='/patient/login/')
 @user_passes_test(lambda u: u.is_patient(), login_url='/patient/login/')
 def patient_token_register(request, patient_id):
   # the session will expire 15 minutes after inactivity, and will require log in again.
   request.session.set_expiry(900)
+
+  ipaddr = visitor_ip_address(request)
+
+  # Checks if IP address is on list of locked IP addressesi
+  for locked in Locked.objects.all():
+    if locked.lockedipaddr == ipaddr:
+      Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[2FA Reminder] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
+      request.session.flush()
 
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):

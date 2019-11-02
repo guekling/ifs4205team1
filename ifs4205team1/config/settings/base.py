@@ -180,4 +180,5 @@ ADMIN_URL = os.environ.get("ADMIN_URL")
 HOSTED_SITE_URL = 'https://ifs4205team1-3.comp.nus.edu.sg'
 
 # Axes Configuration
-AXES_FAILURE_LIMIT = 500
+AXES_FAILURE_LIMIT = 100000
+# AXES_ONLY_USER_FAILURES = True

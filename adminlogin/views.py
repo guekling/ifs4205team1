@@ -5,6 +5,8 @@ import qrcode
 from django.contrib.auth import (
   login as auth_login
 )
+from django.dispatch import receiver
+from django.contrib.auth.signals import user_logged_in, user_logged_out, user_login_failed
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import LoginView, LogoutView
@@ -14,7 +16,7 @@ from django.utils.crypto import get_random_string
 
 from adminlogin.anonymise import anonymise_and_store
 from adminlogin.forms import UserEditForm, UserQrForm, EditRecordTypesPermForm
-from core.models import Admin, Researcher
+from core.models import Admin, Researcher, User, Locked
 from userlogs.models import Logs
 
 
@@ -54,6 +56,32 @@ class AdminLogin(LoginView):
       }
 
       return render(self.request, 'admin_login.html', context)
+
+@receiver(user_login_failed)
+def user_logged_in_failed(sender, credentials, request, **kwargs):
+  # Checks if user is a valid user
+  try:
+    user= User.objects.filter(username=credentials['username'])
+    user = user[0]
+    user.loginattempts = user.loginattempts + 1
+    user.save()
+    Logs.objects.create(type='LOGIN', interface='ADMIN', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') Failed Login. Failed Attempt ' + str(user.loginattempts))
+  except IndexError:
+    Logs.objects.create(type='LOGIN', interface='ADMIN', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') Not Found')
+
+  # Checks if login attempts more than 3
+  if user.pass_login_attempts() == False:
+    user.locked = True
+    user.save()
+    ipaddr = visitor_ip_address(request)
+    Locked.objects.create(lockedipaddr=ipaddr, lockeduser=user) # save the locked user's ip address
+    Logs.objects.create(type='LOGIN', interface='ADMIN', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') is locked out.')
+
+@receiver(user_logged_in)
+def user_logged_in_success(sender, user, request, **kwargs):
+  if user.loginattempts > 0:
+    user.loginattempts = 0 # reset failed login attempts
+    user.save()
 
 class AdminLogout(LogoutView):
   """
@@ -121,10 +149,19 @@ def admin_edit_settings(request, admin_id):
   return render(request, 'admin_edit_settings.html', context)
 
 @login_required(login_url='/')
+@user_passes_test(lambda u: u.is_not_locked(), login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
 def admin_qr(request, admin_id):
   # the session will expire 15 minutes after inactivity, and will require log in again.
   request.session.set_expiry(900)
+
+  ipaddr = visitor_ip_address(request)
+
+  # Checks if IP address is on list of locked IP addressesi
+  for locked in Locked.objects.all():
+    if locked.lockedipaddr == ipaddr:
+      Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[2FA] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
+      request.session.flush()
 
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -170,10 +207,19 @@ def admin_qr(request, admin_id):
     return render(request, "admin_qr.html", context)
 
 @login_required(login_url='/')
+@user_passes_test(lambda u: u.is_not_locked(), login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
 def admin_token_register(request, admin_id):
   # the session will expire 15 minutes after inactivity, and will require log in again.
   request.session.set_expiry(900)
+
+  ipaddr = visitor_ip_address(request)
+
+  # Checks if IP address is on list of locked IP addressesi
+  for locked in Locked.objects.all():
+    if locked.lockedipaddr == ipaddr:
+      Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[LOGIN] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
+      request.session.flush()
 
   # checks if logged in admin has the same id as in the URL
   if (request.user.admin_username.id != admin_id):
@@ -539,3 +585,13 @@ def check_researcher_exists(researcher_id):
     return Researcher.objects.get(id=researcher_id)
   except Researcher.DoesNotExist:
     redirect('show_all_researchers')
+
+def visitor_ip_address(request):
+
+  x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+
+  if x_forwarded_for:
+    ip = x_forwarded_for.split(',')[0]
+  else:
+    ip = request.META.get('REMOTE_ADDR')
+  return ip
