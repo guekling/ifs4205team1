@@ -392,6 +392,12 @@ XRAY_IMG_DISPLAY_NAME = 'Xray Images'
 GASTROSCOPE_VID_DISPLAY_NAME = 'Gastroscope Videos'
 GAIT_VID_DISPLAY_NAME = 'Gait Videos'
 
+def recovered_value(hash_id, nonce, otp):
+  x = hashlib.sha256((hash_id + nonce).encode()).hexdigest()
+  xor = '{:x}'.format(int(x[-6:], 16) ^ int(otp, 16))
+
+  return hashlib.sha256((xor).encode()).hexdigest()
+
 def get_recordtypes_choices():
   recordtypes_choices = []
 
