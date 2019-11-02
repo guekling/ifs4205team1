@@ -212,13 +212,13 @@ def researcher_qr(request, researcher_id):
   # the session will expire 15 minutes after inactivity, and will require log in again
   request.session.set_expiry(900)
 
-  ipaddr = visitor_ip_address(request)
+  # ipaddr = visitor_ip_address(request)
 
   # Checks if IP address is on list of locked IP addressesi
-  for locked in Locked.objects.all():
-    if locked.lockedipaddr == ipaddr:
-      Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[2FA] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
-      request.session.flush()
+  # for locked in Locked.objects.all():
+  #   if locked.lockedipaddr == ipaddr:
+  #     Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[2FA] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
+  #     request.session.flush()
 
   # Checks if logged in researcher has the same id as in the URL
   if (request.user.researcher_username.id != researcher_id):
@@ -275,13 +275,13 @@ def researcher_token_register(request, researcher_id):
   # the session will expire 15 minutes after inactivity, and will require log in again
   request.session.set_expiry(900)
 
-  ipaddr = visitor_ip_address(request)
+  # ipaddr = visitor_ip_address(request)
 
   # Checks if IP address is on list of locked IP addressesi
-  for locked in Locked.objects.all():
-    if locked.lockedipaddr == ipaddr:
-      Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[2FA Reminder] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
-      request.session.flush()
+  # for locked in Locked.objects.all():
+  #   if locked.lockedipaddr == ipaddr:
+  #     Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[2FA Reminder] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
+  #     request.session.flush()
 
   # Checks if logged in researcher has the same id as in the URL
   if (request.user.researcher_username.id != researcher_id):

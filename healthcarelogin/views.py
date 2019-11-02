@@ -234,13 +234,13 @@ def healthcare_qr(request, healthcare_id):
   # the session will expire 15 minutes after inactivity, and will require log in again.
   request.session.set_expiry(900)
 
-  ipaddr = visitor_ip_address(request)
+  # ipaddr = visitor_ip_address(request)
 
   # Checks if IP address is on list of locked IP addressesi
-  for locked in Locked.objects.all():
-    if locked.lockedipaddr == ipaddr:
-      Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[2FA] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
-      request.session.flush()
+  # for locked in Locked.objects.all():
+  #   if locked.lockedipaddr == ipaddr:
+  #     Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[2FA] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
+  #     request.session.flush()
 
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
@@ -314,13 +314,13 @@ def healthcare_token_register(request, healthcare_id):
   # the session will expire 15 minutes after inactivity, and will require log in again.
   request.session.set_expiry(900)
 
-  ipaddr = visitor_ip_address(request)
+  # ipaddr = visitor_ip_address(request)
 
   # Checks if IP address is on list of locked IP addressesi
-  for locked in Locked.objects.all():
-    if locked.lockedipaddr == ipaddr:
-      Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[LOGIN] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
-      request.session.flush()
+  # for locked in Locked.objects.all():
+  #   if locked.lockedipaddr == ipaddr:
+  #     Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[LOGIN] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
+  #     request.session.flush()
 
   # checks if logged in healthcare professional has the same id as in the URL
   if (request.user.healthcare_username.id != healthcare_id):
