@@ -67,8 +67,6 @@ def user_logged_in_failed(sender, credentials, request, **kwargs):
     user.loginattempts = user.loginattempts + 1
     user.save()
     Logs.objects.create(type='LOGIN', interface='PATIENT', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') Failed Login. Failed Attempt ' + str(user.loginattempts))
-    print("log in failure")
-    print(user.loginattempts)
   except IndexError:
     Logs.objects.create(type='LOGIN', interface='PATIENT', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') Not Found')
 
@@ -77,7 +75,7 @@ def user_logged_in_failed(sender, credentials, request, **kwargs):
     user.locked = True
     user.save()
     ipaddr = visitor_ip_address(request)
-    Locked.objects.create(lockedipaddr=ipaddr) # save the locked user's ip address
+    Locked.objects.create(lockedipaddr=ipaddr, lockeduser=user) # save the locked user's ip address
     Logs.objects.create(type='LOGIN', interface='PATIENT', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') is locked out.')
 
 @receiver(user_logged_in)
@@ -265,6 +263,14 @@ def patient_qr(request, patient_id):
   # the session will expire 15 minutes after inactivity, and will require log in again.
   request.session.set_expiry(900)
 
+  ipaddr = visitor_ip_address(request)
+
+  # Checks if IP address is on list of locked IP addressesi
+  for locked in Locked.objects.all():
+    if locked.lockedipaddr == ipaddr:
+      Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[PATIENT_QR] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
+      request.session.flush()
+
   # checks if logged in patient has the same id as in the URL
   if (request.user.patient_username.id != patient_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[2FA] Logged in user does not match ID in URL. URL ID: ' + str(patient_id))
@@ -334,9 +340,10 @@ def patient_token_register(request, patient_id):
 
   ipaddr = visitor_ip_address(request)
 
+  # Checks if IP address is on list of locked IP addressesi
   for locked in Locked.objects.all():
     if locked.lockedipaddr == ipaddr:
-      print("here")
+      Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='PATIENT', status=STATUS_ERROR, details='[2FA Reminder] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
       request.session.flush()
 
   # checks if logged in patient has the same id as in the URL

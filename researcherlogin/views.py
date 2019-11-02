@@ -5,6 +5,8 @@ import qrcode
 from django.contrib.auth import (
   login as auth_login
 )
+from django.dispatch import receiver
+from django.contrib.auth.signals import user_logged_in, user_logged_out, user_login_failed
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordChangeDoneView
@@ -54,6 +56,32 @@ class ResearcherLogin(LoginView):
       }
 
       return render(self.request, 'researcher_login.html', context)
+
+@receiver(user_login_failed)
+def user_logged_in_failed(sender, credentials, request, **kwargs):
+  # Checks if user is a valid user
+  try:
+    user= User.objects.filter(username=credentials['username'])
+    user = user[0]
+    user.loginattempts = user.loginattempts + 1
+    user.save()
+    Logs.objects.create(type='LOGIN', interface='RESEARCHER', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') Failed Login. Failed Attempt ' + str(user.loginattempts))
+  except IndexError:
+    Logs.objects.create(type='LOGIN', interface='RESEARCHER', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') Not Found')
+
+  # Checks if login attempts more than 3
+  if user.pass_login_attempts() == False:
+    user.locked = True
+    user.save()
+    ipaddr = visitor_ip_address(request)
+    Locked.objects.create(lockedipaddr=ipaddr, lockeduser=user) # save the locked user's ip address
+    Logs.objects.create(type='LOGIN', interface='RESEARCHER', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') is locked out.')
+
+@receiver(user_logged_in)
+def user_logged_in_success(sender, user, request, **kwargs):
+  if user.loginattempts > 0:
+    user.loginattempts = 0 # reset failed login attempts
+    user.save()
 
 class ResearcherLogout(LogoutView):
   """
@@ -177,11 +205,20 @@ def researcher_change_password_complete(request, researcher_id):
   return change_password_complete(request)
 
 @login_required(login_url='/researcher/login/')
+@user_passes_test(lambda u: u.is_not_locked(), login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
 @ratelimit(key='ip', rate='100/m')
 def researcher_qr(request, researcher_id):
   # the session will expire 15 minutes after inactivity, and will require log in again
   request.session.set_expiry(900)
+
+  ipaddr = visitor_ip_address(request)
+
+  # Checks if IP address is on list of locked IP addressesi
+  for locked in Locked.objects.all():
+    if locked.lockedipaddr == ipaddr:
+      Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[2FA] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
+      request.session.flush()
 
   # Checks if logged in researcher has the same id as in the URL
   if (request.user.researcher_username.id != researcher_id):
@@ -232,10 +269,19 @@ def researcher_qr(request, researcher_id):
     return render(request, 'researcher_qr.html', context)
 
 @login_required(login_url='/researcher/login/')
+@user_passes_test(lambda u: u.is_not_locked(), login_url='/researcher/login/')
 @user_passes_test(lambda u: u.is_researcher(), login_url='/researcher/login/')
 def researcher_token_register(request, researcher_id):
   # the session will expire 15 minutes after inactivity, and will require log in again
   request.session.set_expiry(900)
+
+  ipaddr = visitor_ip_address(request)
+
+  # Checks if IP address is on list of locked IP addressesi
+  for locked in Locked.objects.all():
+    if locked.lockedipaddr == ipaddr:
+      Logs.objects.create(type='LOGIN', user_id=request.user.uid, interface='RESEARCHER', status=STATUS_ERROR, details='[2FA Reminder] User(' + str(request.user.uid) + ') of IP Address ' + str(ipaddr) + ' is using a locked IP address.')
+      request.session.flush()
 
   # Checks if logged in researcher has the same id as in the URL
   if (request.user.researcher_username.id != researcher_id):
@@ -306,3 +352,13 @@ def make_qr(nonce):
   img = qr.make_image(fill='black', back_color='white')
 
   return img
+
+def visitor_ip_address(request):
+
+  x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+
+  if x_forwarded_for:
+    ip = x_forwarded_for.split(',')[0]
+  else:
+    ip = request.META.get('REMOTE_ADDR')
+  return ip
