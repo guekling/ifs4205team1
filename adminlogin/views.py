@@ -1,5 +1,7 @@
+import hashlib
 from datetime import datetime, timezone
 
+import qrcode
 from django.contrib.auth import (
   login as auth_login
 )
