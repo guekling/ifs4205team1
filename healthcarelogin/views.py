@@ -233,7 +233,7 @@ def healthcare_qr(request, healthcare_id):
     otp = cd.get('otp')
     # timeout, nonce expires
     if (datetime.now(timezone.utc) - user.nonce_timestamp).total_seconds() > 180:
-      return redirect('patient_login')
+      return redirect('healthcare_login')
     if user.hashed_last_six == recovered_value(user.hashed_id, nonce, otp):
       # give HttpResponse only or render page you need to load on success
       # delete the nonce

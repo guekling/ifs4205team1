@@ -31,6 +31,8 @@ class User(AbstractUser):
   ip4 = models.GenericIPAddressField(default=None, blank=True, null=True)
   ip5 = models.GenericIPAddressField(default=None, blank=True, null=True)
   ip6 = models.GenericIPAddressField(default=None, blank=True, null=True)
+  loginattempts = models.PositiveIntegerField(default=0) # Failed login attempts
+  locked = models.BooleanField(default=False)
   uid = models.UUIDField(default=uuid.uuid4, editable=False)
 
   USERNAME_FIELD = 'username'
@@ -45,6 +47,18 @@ class User(AbstractUser):
 
   def pass_2fa(self):
     if len(self.latest_nonce) > 0:
+      return False
+    else:
+      return True
+
+  def pass_login_attempts(self):
+    if self.loginattempts < 3:
+      return True
+    else:
+      return False
+
+  def is_not_locked(self):
+    if self.locked == True:
       return False
     else:
       return True
@@ -194,3 +208,6 @@ class Researcher(models.Model):
 
   def get_gait_vid_perm(self):
     return self.gait_vid
+
+class Locked(models.Model):
+  lockedipaddr = models.GenericIPAddressField(default=None, blank=True, null=True)
