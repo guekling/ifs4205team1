@@ -15,7 +15,7 @@ from django.urls import reverse_lazy
 from django.utils.crypto import get_random_string
 from ratelimit.decorators import ratelimit
 
-from core.models import Researcher
+from core.models import Researcher, User, Locked
 from researcherlogin.forms import UserEditForm, UserQrForm
 from userlogs.models import Logs
 

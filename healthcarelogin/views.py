@@ -15,7 +15,7 @@ from django.urls import reverse_lazy
 from django.utils.crypto import get_random_string
 from ratelimit.decorators import ratelimit
 
-from core.models import Healthcare, Locked, User
+from core.models import User, Healthcare, Locked
 from patientlogin.forms import UserEditForm, UserQrForm
 from userlogs.models import Logs
 
@@ -61,7 +61,7 @@ class HealthcareLogin(LoginView):
 def user_logged_in_failed(sender, credentials, request, **kwargs):
   # Checks if user is a valid user
   try:
-    user= User.objects.filter(username=credentials['username'])
+    user = User.objects.filter(username=credentials['username'])
     user = user[0]
     user.loginattempts = user.loginattempts + 1
     user.save()

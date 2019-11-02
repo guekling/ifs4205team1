@@ -16,7 +16,7 @@ from django.utils.crypto import get_random_string
 
 from adminlogin.anonymise import anonymise_and_store
 from adminlogin.forms import UserEditForm, UserQrForm, EditRecordTypesPermForm
-from core.models import Admin, Researcher
+from core.models import Admin, Researcher, User, Locked
 from userlogs.models import Logs
 
 
