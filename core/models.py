@@ -211,4 +211,4 @@ class Researcher(models.Model):
 
 class Locked(models.Model):
   lockedipaddr = models.GenericIPAddressField(default=None, blank=True, null=True)
-  lockeduser = models.models.CharField(max_length=64, null=True)
+  lockeduser = models.CharField(max_length=64, null=True)
