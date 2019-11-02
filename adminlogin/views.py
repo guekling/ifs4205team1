@@ -132,8 +132,8 @@ def admin_qr(request, admin_id):
   user = admin.username
 
   # when user purposefully try to traverse to this url but they haven't registered
-  # if len(user.hashed_last_six) == 0 and len(user.hashed_id) == 0:
-  #   return redirect("admin_token_register", admin_id=admin.id)
+  if len(user.hashed_last_six) == 0 and len(user.hashed_id) == 0:
+    return redirect("admin_token_register", admin_id=admin.id)
 
   # require a valid nonce (exists and not expired). a nonce expires after 3 minutes
   if len(user.latest_nonce) > 0 and (datetime.now(timezone.utc) - user.nonce_timestamp).total_seconds() <= 180:
@@ -166,6 +166,27 @@ def admin_qr(request, admin_id):
       'nonce': nonce,
     }
     return render(request, "admin_qr.html", context)
+
+@login_required(login_url='/')
+@user_passes_test(lambda u: u.is_admin(), login_url='/')
+def admin_token_register(request, admin_id):
+  # the session will expire 15 minutes after inactivity, and will require log in again.
+  request.session.set_expiry(900)
+
+  # checks if logged in admin has the same id as in the URL
+  if (request.user.admin_username.id != admin_id):
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='ADMIN', status=STATUS_ERROR, details='[Dashboard] Logged in user does not match ID in URL. URL ID: ' + str(admin_id))
+    return redirect('/')
+
+  admin = admin_does_not_exists(admin_id)
+  user = admin.username
+
+  # device already linked
+  if len(user.hashed_last_six) > 0 and len(user.hashed_id) > 0:
+    Logs.objects.create(type='ADMIN', user_id=user.uid, interface='ADMIN', status=STATUS_ERROR, details='[2FA_Reminder] URL traversal. Already registered.')
+    return redirect("repeat_register", user_id=user.uid)
+
+  return render(request, "admin_token_register.html")
 
 @login_required(login_url='/')
 @user_passes_test(lambda u: u.is_admin(), login_url='/')
