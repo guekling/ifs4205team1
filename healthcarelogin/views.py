@@ -57,31 +57,31 @@ class HealthcareLogin(LoginView):
 
       return render(self.request, 'healthcare_login.html', context)
 
-@receiver(user_login_failed)
-def user_logged_in_failed(sender, credentials, request, **kwargs):
-  # Checks if user is a valid user
-  try:
-    user = User.objects.filter(username=credentials['username'])
-    user = user[0]
-    user.loginattempts = user.loginattempts + 1
-    user.save()
-    Logs.objects.create(type='LOGIN', interface='HEALTHCARE', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') Failed Login. Failed Attempt ' + str(user.loginattempts))
-  except IndexError:
-    Logs.objects.create(type='LOGIN', interface='HEALTHCARE', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') Not Found')
+# @receiver(user_login_failed)
+# def user_logged_in_failed(sender, credentials, request, **kwargs):
+#   # Checks if user is a valid user
+#   try:
+#     user = User.objects.filter(username=credentials['username'])
+#     user = user[0]
+#     user.loginattempts = user.loginattempts + 1
+#     user.save()
+#     Logs.objects.create(type='LOGIN', interface='HEALTHCARE', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') Failed Login. Failed Attempt ' + str(user.loginattempts))
+#   except IndexError:
+#     Logs.objects.create(type='LOGIN', interface='HEALTHCARE', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') Not Found')
 
-  # Checks if login attempts more than 3
-  if user.pass_login_attempts() == False:
-    user.locked = True
-    user.save()
-    ipaddr = visitor_ip_address(request)
-    Locked.objects.create(lockedipaddr=ipaddr, lockeduser=user) # save the locked user's ip address
-    Logs.objects.create(type='LOGIN', interface='HEALTHCARE', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') is locked out.')
+#   # Checks if login attempts more than 3
+#   if user.pass_login_attempts() == False:
+#     user.locked = True
+#     user.save()
+#     ipaddr = visitor_ip_address(request)
+#     Locked.objects.create(lockedipaddr=ipaddr, lockeduser=user) # save the locked user's ip address
+#     Logs.objects.create(type='LOGIN', interface='HEALTHCARE', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') is locked out.')
 
-@receiver(user_logged_in)
-def user_logged_in_success(sender, user, request, **kwargs):
-  if user.loginattempts > 0:
-    user.loginattempts = 0 # reset failed login attempts
-    user.save()
+# @receiver(user_logged_in)
+# def user_logged_in_success(sender, user, request, **kwargs):
+#   if user.loginattempts > 0:
+#     user.loginattempts = 0 # reset failed login attempts
+#     user.save()
 
 class HealthcareLogout(LogoutView):
   """

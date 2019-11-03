@@ -58,7 +58,7 @@ class User(AbstractUser):
       return False
 
   def is_not_locked(self):
-    if self.locked == True:
+    if self.locked:
       return False
     else:
       return True
