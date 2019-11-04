@@ -37,8 +37,8 @@
   <tr>
 </table>
 
-<a href="{% url 'show_patient_records' healthcare_id=healthcare.id patient_id=patient.id %}"><button type="buton" class="btn btn-primary">View Medical Records</button></a>
-<a href="{% url 'transfer_patient' healthcare_id=healthcare.id patient_id=patient.id %}"><button type="buton" class="btn btn-primary">Transfer Patient</button></a>
-<a href="{% url 'show_all_patients' healthcare_id=healthcare.id %}"><button type="buton" class="btn btn-secondary">Back</button></a>
+<a href="{% url 'show_patient_records' healthcare_id=healthcare.id patient_id=patient.id %}"><button type="button" class="btn btn-primary">View Medical Records</button></a>
+<a href="{% url 'transfer_patient' healthcare_id=healthcare.id patient_id=patient.id %}"><button type="button" class="btn btn-primary">Transfer Patient</button></a>
+<a href="{% url 'show_all_patients' healthcare_id=healthcare.id %}"><button type="button" class="btn btn-secondary">Back</button></a>
 
 {% endblock %}
