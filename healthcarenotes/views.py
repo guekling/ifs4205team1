@@ -61,7 +61,12 @@ def show_healthcare_note(request, healthcare_id, note_id):
     note = Documents.objects.filter(id=note_id)
     note = note[0]
   except IndexError:
-    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Note] Note ID is invalid. Invalid ID: ' + str(note_id))
+    Logs.objects.create(type='READ', interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Note] Note ID is invalid. Invalid ID: ' + str(note_id))
+    return redirect('show_all_healthcare_notes', healthcare_id=healthcare_id)
+
+  # Checks if healthcare has permission to view note
+  if not note.is_owner_healthcare_note(healthcare.username):
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Note] Permission Denied.')
     return redirect('show_all_healthcare_notes', healthcare_id=healthcare_id)
 
   # Path to view restricted record
@@ -98,7 +103,12 @@ def download_healthcare_note(request, healthcare_id, note_id):
     note = Documents.objects.filter(id=note_id)
     note = note[0]
   except IndexError:
-    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Note] Note ID is invalid. Invalid ID: ' + str(note_id))
+    Logs.objects.create(type='READ', interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Note] Note ID is invalid. Invalid ID: ' + str(note_id))
+    return redirect('show_all_healthcare_notes', healthcare_id=healthcare_id)
+
+  # Checks if healthcare has permission to download note
+  if not note.is_owner_healthcare_note(healthcare.username):
+    Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Note] Permission Denied.')
     return redirect('show_all_healthcare_notes', healthcare_id=healthcare_id)
 
   try:
