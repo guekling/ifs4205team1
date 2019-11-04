@@ -49,6 +49,7 @@ def protected_record(request, record_id):
     # Checks if record belongs to the patient
     if (not record.is_patient(request.user.patient_username)):
       Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.') 
+      return redirect('home')
 
   Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_OK, details='View Protected Record ' + str(record_id))
 
@@ -88,7 +89,8 @@ def download_protected_record(request, record_id):
   elif (User.is_patient(request.user)):
     # Checks if record belongs to the patient
     if (not record.is_patient(request.user.patient_username)):
-      Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.') 
+      Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.')
+      return redirect('home')
 
   Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_OK, details='View Protected Record ' + str(record_id)) 
   file_path = record.data.path
