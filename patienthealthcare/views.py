@@ -63,6 +63,7 @@ def show_note(request, patient_id, note_id):
     permission = DocumentsPerm.objects.filter(docs_id=note.id, username=patient.username, perm_value__in=[2,3])
     permission = permission[0]
   except IndexError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Show Note] Permission Denied.')
     return redirect('show_all_notes', patient_id=patient_id)
 
   note_permissions = DocumentsPerm.objects.filter(docs_id=note, given_by=patient.username)
@@ -171,6 +172,7 @@ def download_note(request, patient_id, note_id):
     permission = DocumentsPerm.objects.filter(docs_id=note.id, username=patient.username, perm_value__in=[2,3])
     permission = permission[0]
   except IndexError:
+    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Note] Permission Denied.')
     return redirect('show_all_notes', patient_id=patient_id)
 
   try:
