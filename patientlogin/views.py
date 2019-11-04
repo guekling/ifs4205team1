@@ -67,16 +67,16 @@ def user_logged_in_failed(sender, credentials, request, **kwargs):
     user.loginattempts = user.loginattempts + 1
     user.save()
     Logs.objects.create(type='LOGIN', interface='PATIENT', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') Failed Login. Failed Attempt ' + str(user.loginattempts))
+
+    # Checks if login attempts more than 3
+    if user.pass_login_attempts() == False:
+      user.locked = True
+      user.save()
+      ipaddr = visitor_ip_address(request)
+      Locked.objects.create(lockedipaddr=ipaddr, lockeduser=user) # save the locked user's ip address
+      Logs.objects.create(type='LOGIN', interface='PATIENT', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') is locked out.')
   except IndexError:
     Logs.objects.create(type='LOGIN', interface='PATIENT', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') Not Found')
-
-  # Checks if login attempts more than 3
-  if user.pass_login_attempts() == False:
-    user.locked = True
-    user.save()
-    ipaddr = visitor_ip_address(request)
-    Locked.objects.create(lockedipaddr=ipaddr, lockeduser=user) # save the locked user's ip address
-    Logs.objects.create(type='LOGIN', interface='PATIENT', status=STATUS_ERROR, details='[LOGIN] User(' + credentials['username'] + ') is locked out.')
 
 @receiver(user_logged_in)
 def user_logged_in_success(sender, user, request, **kwargs):
