@@ -59,7 +59,7 @@ def show_patient(request, healthcare_id, patient_id):
     patient = healthcare.patients.all().filter(id=patient_id)
     patient = patient[0]
   except IndexError:
-    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient] Patient ID is invalid.')
+    Logs.objects.create(type='READ', interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient] Patient ID is invalid.')
     return redirect('show_all_patients', healthcare_id=healthcare_id)
 
   Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Show Patient ' + str(patient_id))
@@ -133,29 +133,68 @@ def show_patient_record(request, healthcare_id, patient_id, record_id):
     Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient Record] Record ID is invalid.')
     return redirect('show_patient_records', healthcare_id=healthcare_id, patient_id=patient_id)
 
+  model = get_model(record)
+
+  # Check if healthcare has permissions to view this record
+
+  if (model == "Readings"):
+    try:
+      permission = ReadingsPerm.objects.filter(readings_id=record.id, username=healthcare, perm_value__in=[2,3])
+      permission = permission[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient Record] Healthcare does not have permission access to record.')
+      return redirect('show_patient_records', healthcare_id=healthcare_id, patient_id=patient_id)
+  elif (model == "TimeSeries"):
+    try:
+      permission = TimeSeriesPerm.objects.filter(timeseries_id=record.id, username=healthcare, perm_value__in=[2,3])
+      permission = permission[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient Record] Healthcare does not have permission access to record.')
+      return redirect('show_patient_records', healthcare_id=healthcare_id, patient_id=patient_id)
+  elif (model == "Documents"):
+    try:
+      permission = DocumentsPerm.objects.filter(docs_id=record.id, username=healthcare.username, perm_value__in=[2,3])
+      permission = permission[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient Record] Healthcare does not have permission access to record.')
+      return redirect('show_patient_records', healthcare_id=healthcare_id, patient_id=patient_id)
+  elif (model == "Videos"):
+    try:
+      permission = VideosPerm.objects.filter(videos_id=record.id, username=healthcare, perm_value__in=[2,3])
+      permission = permission[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient Record] Healthcare does not have permission access to record.')
+      return redirect('show_patient_records', healthcare_id=healthcare_id, patient_id=patient_id)
+  elif (model == "Images"):
+    try:
+      permission = ImagesPerm.objects.filter(img_id=record.id, username=healthcare, perm_value__in=[2,3])
+      permission = permission[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient Record] Healthcare does not have permission access to record.')
+      return redirect('show_patient_records', healthcare_id=healthcare_id, patient_id=patient_id)
+
+
   # Path to view restricted record
   record_path = os.path.join(settings.PROTECTED_MEDIA_PATH, str(record_id))
 
-  model = get_model(record)
-
-  if (model == "Readings"):
-    permissions = ReadingsPerm.objects.filter(readings_id=record_id)
-  elif (model == "TimeSeries"):
-    permissions = TimeSeriesPerm.objects.filter(timeseries_id=record_id)
-  elif (model == "Documents"):
-    permissions = DocumentsPerm.objects.filter(docs_id=record_id)
-  elif (model == "Videos"):
-    permissions = VideosPerm.objects.filter(videos_id=record_id)
-  elif (model == "Images"):
-    permissions = ImagesPerm.objects.filter(img_id=record_id)
-  else:
-    permissions = ReadingsPerm.objects.none()
+  # if (model == "Readings"):
+  #   permissions = ReadingsPerm.objects.filter(readings_id=record_id)
+  # elif (model == "TimeSeries"):
+  #   permissions = TimeSeriesPerm.objects.filter(timeseries_id=record_id)
+  # elif (model == "Documents"):
+  #   permissions = DocumentsPerm.objects.filter(docs_id=record_id)
+  # elif (model == "Videos"):
+  #   permissions = VideosPerm.objects.filter(videos_id=record_id)
+  # elif (model == "Images"):
+  #   permissions = ImagesPerm.objects.filter(img_id=record_id)
+  # else:
+  #   permissions = ReadingsPerm.objects.none()
 
   context = {
     'healthcare': healthcare,
     'patient': patient,
     'record': record,
-    'permissions': permissions,
+    # 'permissions': permissions,
     'record_path': record_path,
   }
 
@@ -189,6 +228,44 @@ def download_patient_record(request, healthcare_id, patient_id, record_id):
   except IndexError:
     Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Patient Record] Record ID is invalid.')
     return redirect('show_patient_records', healthcare_id=healthcare_id, patient_id=patient_id)
+
+  model = get_model(record)
+
+  if (model == "Readings"):
+    try:
+      permission = ReadingsPerm.objects.filter(readings_id=record.id, username=healthcare, perm_value__in=[2,3])
+      permission = permission[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Patient Record] Patient does not have permission access to record.')
+      return redirect('show_patient_records', healthcare_id=healthcare_id, patient_id=patient_id)
+  elif (model == "TimeSeries"):
+    try:
+      permission = TimeSeriesPerm.objects.filter(timeseries_id=record.id, username=healthcare, perm_value__in=[2,3])
+      permission = permission[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Patient Record] Patient does not have permission access to record.')
+      return redirect('show_patient_records', healthcare_id=healthcare_id, patient_id=patient_id)
+  elif (model == "Documents"):
+    try:
+      permission = DocumentsPerm.objects.filter(docs_id=record.id, username=healthcare.username, perm_value__in=[2,3])
+      permission = permission[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Patient Record] Patient does not have permission access to record.')
+      return redirect('show_patient_records', healthcare_id=healthcare_id, patient_id=patient_id)
+  elif (model == "Videos"):
+    try:
+      permission = VideosPerm.objects.filter(videos_id=record.id, username=healthcare, perm_value__in=[2,3])
+      permission = permission[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Patient Record] Patient does not have permission access to record.')
+      return redirect('show_patient_records', healthcare_id=healthcare_id, patient_id=patient_id)
+  elif (model == "Images"):
+    try:
+      permission = ImagesPerm.objects.filter(img_id=record.id, username=healthcare, perm_value__in=[2,3])
+      permission = permission[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Download Patient Record] Patient does not have permission access to record.')
+      return redirect('show_patient_records', healthcare_id=healthcare_id, patient_id=patient_id)
 
   file_path = record.data.path
   file_name = record.data.name.split('/', 1)[1]
@@ -789,7 +866,7 @@ def get_records(patient):
   """
   readings = Readings.objects.filter(patient_id=patient).exclude(readingsperm_reading__perm_value=1)
   timeseries = TimeSeries.objects.filter(patient_id=patient).exclude(timeseriesperm_timeseries__perm_value=1)
-  documents = Documents.objects.filter(patient_id=patient).exclude(documentsperm_documents__perm_value=1)
+  documents = Documents.objects.filter(patient_id=patient).exclude(documentsperm_documents__perm_value=1).exclude(type="Healthcare Professional Note")
   images = Images.objects.filter(patient_id=patient).exclude(imagesperm_images__perm_value=1)
   videos = Videos.objects.filter(patient_id=patient).exclude(videosperm_videos__perm_value=1)
 
@@ -799,11 +876,11 @@ def get_record(record_id):
   """
   Retrieve a single record
   """
-  readings = Readings.objects.filter(id=record_id)
-  timeseries = TimeSeries.objects.filter(id=record_id)
-  documents = Documents.objects.filter(id=record_id)
-  images = Images.objects.filter(id=record_id)
-  videos = Videos.objects.filter(id=record_id)
+  readings = Readings.objects.filter(id=record_id).exclude(readingsperm_reading__perm_value=1)
+  timeseries = TimeSeries.objects.filter(id=record_id).exclude(timeseriesperm_timeseries__perm_value=1)
+  documents = Documents.objects.filter(id=record_id).exclude(type="Healthcare Professional Note").exclude(documentsperm_documents__perm_value=1)
+  images = Images.objects.filter(id=record_id).exclude(imagesperm_images__perm_value=1)
+  videos = Videos.objects.filter(id=record_id).exclude(videosperm_videos__perm_value=1)
 
   return list(chain(readings, timeseries, documents, images, videos))
 

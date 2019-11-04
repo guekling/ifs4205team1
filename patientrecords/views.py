@@ -73,19 +73,52 @@ def show_record(request, patient_id, record_id):
 
   model = get_model(record)
 
+  # Check permissions to view the record (i.e. if record is owned by patient)
   # Retrieve permissions of the record
   if (model == "Readings"):
+    try:
+      is_owner = Readings.objects.filter(patient_id=patient, id=record.id)
+      is_owner = is_owner[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Show Record] Patient does not have permission to view this record.')
+      return redirect('show_all_records', patient_id=patient_id)
+
     permissions = ReadingsPerm.objects.filter(readings_id=record_id)
   elif (model == "TimeSeries"):
+    try:
+      is_owner = TimeSeries.objects.filter(patient_id=patient, id=record.id)
+      is_owner = is_owner[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Show Record] Patient does not have permission to view this record.')
+      return redirect('show_all_records', patient_id=patient_id)
+
     permissions = TimeSeriesPerm.objects.filter(timeseries_id=record_id)
   elif (model == "Documents"):
+    try:
+      is_owner = Documents.objects.filter(patient_id=patient, id=record.id)
+      is_owner = is_owner[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Show Record] Patient does not have permission to view this record.')
+      return redirect('show_all_records', patient_id=patient_id)
+
     permissions = DocumentsPerm.objects.filter(docs_id=record_id)
   elif (model == "Videos"):
+    try:
+      is_owner = Videos.objects.filter(patient_id=patient, id=record.id)
+      is_owner = is_owner[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Show Record] Patient does not have permission to view this record.')
+      return redirect('show_all_records', patient_id=patient_id)
+
     permissions = VideosPerm.objects.filter(videos_id=record_id)
   elif (model == "Images"):
+    try:
+      is_owner = Images.objects.filter(patient_id=patient, id=record.id)
+      is_owner = is_owner[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Show Record] Patient does not have permission to view this record.')
+      return redirect('show_all_records', patient_id=patient_id)
     permissions = ImagesPerm.objects.filter(img_id=record_id)
-  else:
-    permissions = ReadingsPerm.objects.none()
 
   Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_OK, details='[Show Record] Show Record ' + str(record_id))
 
@@ -117,6 +150,45 @@ def download_record(request, patient_id, record_id):
   except IndexError:
     Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Record] Record ID is invalid. Invalid ID: ' + str(record_id))
     return redirect('show_all_records', patient_id=patient_id)
+
+  model = get_model(record)
+
+  # Check permissions to download the record (i.e. if record is owned by patient)
+  if (model == "Readings"):
+    try:
+      is_owner = Readings.objects.filter(patient_id=patient, id=record.id)
+      is_owner = is_owner[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Record] Patient does not have permission to view this record.')
+      return redirect('show_all_records', patient_id=patient_id)
+  elif (model == "TimeSeries"):
+    try:
+      is_owner = TimeSeries.objects.filter(patient_id=patient, id=record.id)
+      is_owner = is_owner[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Record] Patient does not have permission to view this record.')
+      return redirect('show_all_records', patient_id=patient_id)
+  elif (model == "Documents"):
+    try:
+      is_owner = Documents.objects.filter(patient_id=patient, id=record.id)
+      is_owner = is_owner[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Record] Patient does not have permission to view this record.')
+      return redirect('show_all_records', patient_id=patient_id)
+  elif (model == "Videos"):
+    try:
+      is_owner = Videos.objects.filter(patient_id=patient, id=record.id)
+      is_owner = is_owner[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Record] Patient does not have permission to view this record.')
+      return redirect('show_all_records', patient_id=patient_id)
+  elif (model == "Images"):
+    try:
+      is_owner = Images.objects.filter(patient_id=patient, id=record.id)
+      is_owner = is_owner[0]
+    except IndexError:
+      Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Record] Patient does not have permission to view this record.')
+      return redirect('show_all_records', patient_id=patient_id)
 
   try:
     file_path = record.data.path
@@ -597,7 +669,7 @@ def patient_does_not_exists(patient_id):
 def get_record(record_id):
   readings = Readings.objects.filter(id=record_id)
   timeseries = TimeSeries.objects.filter(id=record_id)
-  documents = Documents.objects.filter(id=record_id)
+  documents = Documents.objects.filter(id=record_id).exclude(type="Healthcare Professional Note")
   images = Images.objects.filter(id=record_id)
   videos = Videos.objects.filter(id=record_id)
 

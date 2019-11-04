@@ -12,8 +12,8 @@ def to_model_name(value):
   return value._meta.object_name
 
 @register.simple_tag
-def has_note_set_permission(note):
-  if note.documentsperm_documents.all()[0].perm_value == 3:
+def has_note_set_permission(note, patient):
+  if note.documentsperm_documents.filter(username=patient.username)[0].perm_value == 3:
     return True
   else:
     return False

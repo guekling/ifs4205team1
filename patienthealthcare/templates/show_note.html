@@ -5,7 +5,7 @@
 {% block content %}
 <h1>{{ note.title }}</h1>
 
-{% has_note_set_permission note as has_note_set_permission_results %}
+{% has_note_set_permission note patient as has_note_set_permission_results %}
 <table class="table text-center">
   <tr>
     <th>Date</th>
