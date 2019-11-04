@@ -59,7 +59,7 @@ def show_patient(request, healthcare_id, patient_id):
     patient = healthcare.patients.all().filter(id=patient_id)
     patient = patient[0]
   except IndexError:
-    Logs.objects.create(type='READ', user_id=patient.username.uid, interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient] Patient ID is invalid.')
+    Logs.objects.create(type='READ', interface='HEALTHCARE', status=STATUS_ERROR, details='[Show Patient] Patient ID is invalid.')
     return redirect('show_all_patients', healthcare_id=healthcare_id)
 
   Logs.objects.create(type='READ', user_id=healthcare.username.uid, interface='HEALTHCARE', status=STATUS_OK, details='Show Patient ' + str(patient_id))
