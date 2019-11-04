@@ -58,6 +58,13 @@ def show_note(request, patient_id, note_id):
     Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Show Note] Note ID is invalid.')
     return redirect('show_all_notes', patient_id=patient_id)
 
+  # Checks if patient has permission to view the note
+  try:
+    permission = DocumentsPerm.objects.filter(docs_id=note.id, username=patient.username, perm_value__in=[2,3])
+    permission = permission[0]
+  except IndexError:
+    return redirect('show_all_notes', patient_id=patient_id)
+
   note_permissions = DocumentsPerm.objects.filter(docs_id=note, given_by=patient.username)
 
   # Path to view restricted record
@@ -157,6 +164,13 @@ def download_note(request, patient_id, note_id):
     note = note[0]
   except IndexError:
     Logs.objects.create(type='READ', user_id=patient.username.uid, interface='PATIENT', status=STATUS_ERROR, details='[Download Note] Note ID is invalid.')
+    return redirect('show_all_notes', patient_id=patient_id)
+
+  # Checks if patient has permissions to view note
+  try:
+    permission = DocumentsPerm.objects.filter(docs_id=note.id, username=patient.username, perm_value__in=[2,3])
+    permission = permission[0]
+  except IndexError:
     return redirect('show_all_notes', patient_id=patient_id)
 
   try:
