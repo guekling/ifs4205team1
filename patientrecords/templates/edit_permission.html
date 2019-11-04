@@ -6,6 +6,7 @@
 {% block content %}
 <h1> Edit Permission </h1>
 
+{% to_model_name permission as to_model_name_result %}
 <div>
   <label>Record Type: {{ record.type }}</label>
 </div>
@@ -15,9 +16,15 @@
 </div>
 
 <div>
-  {% for name in permission.username.all %}
-     <label>Permission Given To: {{ name.username | get_full_name }}</label>
-  {% endfor %}
+  {% if to_model_name_result == "DocumentsPerm" %}
+    {% for name in permission.username.all %}
+       <label>Permission Given To: {{ name | get_full_name }}</label>
+    {% endfor %}
+  {% else %}
+    {% for name in permission.username.all %}
+       <label>Permission Given To: {{ name.username | get_full_name }}</label>
+    {% endfor %}
+  {% endif %}
 </div>
 
 <div>
