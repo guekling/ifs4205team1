@@ -36,7 +36,7 @@ def protected_record(request, record_id):
   model = get_model(record)
 
   # Checks if user has permission to view this record
-  if (User.is_healthcare(request.user) and request.user.interface == 'healthcare'):
+  if (User.is_healthcare(request.user)):
     if (model == 'Documents'): 
       # Checks if healthcare has permission to view doc OR if user is owner of healthcare prof note
       if ((not record.has_permission(request.user)) and (not record.is_owner_healthcare_note(request.user))):
@@ -47,7 +47,7 @@ def protected_record(request, record_id):
       if (not record.has_permission(request.user.healthcare_username)):
         Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.')
         return redirect('home')
-  elif (User.is_patient(request.user) and request.user.interface == 'patient'):
+  elif (User.is_patient(request.user)):
     # Checks if record belongs to the patient
     if (not record.is_patient(request.user.patient_username)):
       Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.') 
@@ -77,7 +77,7 @@ def download_protected_record(request, record_id):
   model = get_model(record)
 
   # Checks if user has permission to download this record
-  if (User.is_healthcare(request.user) and request.user.interface == 'healthcare'):
+  if (User.is_healthcare(request.user)):
     if (model == 'Documents'): 
       # Checks if healthcare has permission to view doc OR if user is owner of healthcare prof note
       if ((not record.has_permission(request.user)) and (not record.is_owner_healthcare_note(request.user))):
@@ -88,7 +88,7 @@ def download_protected_record(request, record_id):
       if (not record.has_permission(request.user.healthcare_username)):
         Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.')
         return redirect('home')
-  elif (User.is_patient(request.user) and request.user.interface == 'patient'):
+  elif (User.is_patient(request.user)):
     # Checks if record belongs to the patient
     if (not record.is_patient(request.user.patient_username)):
       Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.')
@@ -124,7 +124,7 @@ def protected_media(request, record_id):
   model = get_model(record)
 
   # Checks if user has permission to view this record
-  if (User.is_healthcare(request.user) and request.user.interface == 'healthcare'):
+  if (User.is_healthcare(request.user)):
     if (model == 'Documents'): 
       # Checks if healthcare has permission to view doc OR if user is owner of healthcare prof note
       if ((not record.has_permission(request.user)) and (not record.is_owner_healthcare_note(request.user))):
@@ -135,7 +135,7 @@ def protected_media(request, record_id):
       if (not record.has_permission(request.user.healthcare_username)):
         Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.')
         return redirect('home')
-  elif (User.is_patient(request.user) and request.user.interface == 'patient'):
+  elif (User.is_patient(request.user)):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] record ' + str(record))
 
     # Checks if record belongs to the patient
