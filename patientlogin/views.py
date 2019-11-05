@@ -80,9 +80,17 @@ def user_logged_in_failed(sender, credentials, request, **kwargs):
 
 @receiver(user_logged_in)
 def user_logged_in_success(sender, user, request, **kwargs):
+  user.interface = request.path.split('/', 2)[1]
+  user.save()
+
   if user.loginattempts > 0:
     user.loginattempts = 0 # reset failed login attempts
     user.save()
+
+@receiver(user_logged_out)
+def user_logged_out_success(sender, request, user, **kwargs):
+  user.interface = ''
+  user.save()
 
 class PatientLogout(LogoutView):
   """
