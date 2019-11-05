@@ -31,13 +31,15 @@ def protected_record(request, record_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Record ID is invalid.')
     return redirect('home')
 
+  record_path = os.path.join(settings.PROTECTED_MEDIA_PATH, str(record.id))
+
   model = get_model(record)
 
   # Checks if user has permission to view this record
   if (User.is_healthcare(request.user)):
     if (model == 'Documents'): 
       # Checks if healthcare has permission to view doc OR if user is owner of healthcare prof note
-      if ((not record.has_permission(request.user)) or (not record.is_owner_healthcare_note(request.user))):
+      if ((not record.has_permission(request.user)) and (not record.is_owner_healthcare_note(request.user))):
         Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.')
         return redirect('home')
     else:
@@ -78,7 +80,7 @@ def download_protected_record(request, record_id):
   if (User.is_healthcare(request.user)):
     if (model == 'Documents'): 
       # Checks if healthcare has permission to view doc OR if user is owner of healthcare prof note
-      if ((not record.has_permission(request.user)) or (not record.is_owner_healthcare_note(request.user))):
+      if ((not record.has_permission(request.user)) and (not record.is_owner_healthcare_note(request.user))):
         Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.')
         return redirect('home')
     else:
