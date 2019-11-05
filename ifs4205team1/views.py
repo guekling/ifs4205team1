@@ -31,8 +31,6 @@ def protected_record(request, record_id):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Record ID is invalid.')
     return redirect('home')
 
-  record_path = os.path.join(settings.PROTECTED_MEDIA_PATH, str(record.id))
-
   model = get_model(record)
 
   # Checks if user has permission to view this record
