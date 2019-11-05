@@ -32,7 +32,8 @@ class User(AbstractUser):
   ip5 = models.GenericIPAddressField(default=None, blank=True, null=True)
   ip6 = models.GenericIPAddressField(default=None, blank=True, null=True)
   loginattempts = models.PositiveIntegerField(default=0) # Failed login attempts
-  locked = models.BooleanField(default=False)
+  locked = models.BooleanField(default=False) # Checks if account is locked
+  interface = models.CharField(max_length=11, default=None, blank=True, null=True)
   uid = models.UUIDField(default=uuid.uuid4, editable=False)
 
   USERNAME_FIELD = 'username'

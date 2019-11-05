@@ -34,10 +34,9 @@ def protected_record(request, record_id):
   record_path = os.path.join(settings.PROTECTED_MEDIA_PATH, str(record.id))
 
   model = get_model(record)
-  interface_name = request.path.split('/', 2)[1]
 
   # Checks if user has permission to view this record
-  if (User.is_healthcare(request.user) and interface_name == 'healthcare'):
+  if (User.is_healthcare(request.user) and request.user.interface == 'healthcare'):
     if (model == 'Documents'): 
       # Checks if healthcare has permission to view doc OR if user is owner of healthcare prof note
       if ((not record.has_permission(request.user)) and (not record.is_owner_healthcare_note(request.user))):
@@ -48,7 +47,7 @@ def protected_record(request, record_id):
       if (not record.has_permission(request.user.healthcare_username)):
         Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.')
         return redirect('home')
-  elif (User.is_patient(request.user) and interface_name == 'patient'):
+  elif (User.is_patient(request.user) and request.user.interface == 'patient'):
     # Checks if record belongs to the patient
     if (not record.is_patient(request.user.patient_username)):
       Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.') 
@@ -76,10 +75,9 @@ def download_protected_record(request, record_id):
     return redirect('home')
 
   model = get_model(record)
-  interface_name = request.path.split('/', 2)[1]
 
   # Checks if user has permission to download this record
-  if (User.is_healthcare(request.user) and interface_name == 'healthcare'):
+  if (User.is_healthcare(request.user) and request.user.interface == 'healthcare'):
     if (model == 'Documents'): 
       # Checks if healthcare has permission to view doc OR if user is owner of healthcare prof note
       if ((not record.has_permission(request.user)) and (not record.is_owner_healthcare_note(request.user))):
@@ -90,7 +88,7 @@ def download_protected_record(request, record_id):
       if (not record.has_permission(request.user.healthcare_username)):
         Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.')
         return redirect('home')
-  elif (User.is_patient(request.user) and interface_name == 'patient'):
+  elif (User.is_patient(request.user) and request.user.interface == 'patient'):
     # Checks if record belongs to the patient
     if (not record.is_patient(request.user.patient_username)):
       Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.')
@@ -124,10 +122,9 @@ def protected_media(request, record_id):
     return redirect('home')
 
   model = get_model(record)
-  interface_name = request.path.split('/', 2)[1]
 
   # Checks if user has permission to view this record
-  if (User.is_healthcare(request.user) and interface_name == 'healthcare'):
+  if (User.is_healthcare(request.user) and request.user.interface == 'healthcare'):
     if (model == 'Documents'): 
       # Checks if healthcare has permission to view doc OR if user is owner of healthcare prof note
       if ((not record.has_permission(request.user)) and (not record.is_owner_healthcare_note(request.user))):
@@ -138,7 +135,7 @@ def protected_media(request, record_id):
       if (not record.has_permission(request.user.healthcare_username)):
         Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.')
         return redirect('home')
-  elif (User.is_patient(request.user) and interface_name == 'patient'):
+  elif (User.is_patient(request.user) and request.user.interface == 'patient'):
     # Checks if record belongs to the patient
     if (not record.is_patient(request.user.patient_username)):
       Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.')
