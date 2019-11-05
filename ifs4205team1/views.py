@@ -141,6 +141,13 @@ def protected_media(request, record_id):
         return redirect('home')
   elif (User.is_patient(request.user) and request.user.interface == 'patient'):
     Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Inside patient loop')
+
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] requested user patient ' + str(request.user.patient_username))
+
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] record is patient ' + str(record.is_patient(request.user.patient_username)))
+
+    Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] record ' + str(record))
+
     # Checks if record belongs to the patient
     if (not record.is_patient(request.user.patient_username)):
       Logs.objects.create(type='READ', user_id=request.user.uid, interface='USER', status=STATUS_ERROR, details='[Protected Record] Permission Denied.')
