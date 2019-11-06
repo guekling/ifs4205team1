@@ -132,8 +132,10 @@ def store_anonymised_records(qi_combi, patients):
 
 	# print("STORE_ANONYMISED_RECORDS")
 
+	patient_num = 0
 	for patient in patients:
 		user = User.objects.get(username=patient.username)
+		patient_num += 1
 
 		# Convert age & postalcode based on current QI combi
 		if qi_combi[AGE_NAME] == COMBI_AGE_DECADE:
@@ -146,7 +148,7 @@ def store_anonymised_records(qi_combi, patients):
 		if qi_combi[POSTALCODE_NAME] == COMBI_POSTALCODE_ALL:
 			user.postalcode = '*'
 
-		safeusers_obj = SafeUsers.objects.create(uid=user.uid, age=user.age, postalcode=user.postalcode)
+		safeusers_obj = SafeUsers.objects.create(id=patient_num, age=user.age, postalcode=user.postalcode)
 
 		# Get all diagnosis associated with current patient in range
 		diagnosis = get_records_in_range(qi_combi[DATE_NAME], DIAGNOSIS_NAME, patient)

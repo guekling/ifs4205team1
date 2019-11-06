@@ -24,12 +24,12 @@ class QiInfo(models.Model):
 		return self.suppression_rate
 
 class SafeUsers(models.Model): 
-	uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+	id = models.PositiveIntegerField(primary_key=True)
 	age = models.CharField(max_length=8)
 	postalcode = models.CharField(max_length=6)
 
 	def get_uid(self):
-		return self.uid
+		return self.id
 
 	def get_age(self):
 		return self.age
