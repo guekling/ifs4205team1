@@ -3,6 +3,8 @@ from __future__ import division, unicode_literals
 import codecs
 import os
 from mimetypes import guess_type
+import random
+import string
 
 import bleach
 from bs4 import BeautifulSoup
@@ -290,8 +292,10 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
         new_note = new_note + "<p><a href=" + url + ">" + datetime + " Type: " + video.type + " Title: " + video.title + "</a></p>"
         note.attach_videos.add(video)
 
+      random_str = generate_random_string()
+
       base_dir = settings.BASE_DIR
-      note_path = os.path.join(base_dir, 'media', 'documents', title + ".html") # directory to save new note in
+      note_path = os.path.join(base_dir, 'media', 'documents', title + "_" + random_str + ".html") # directory to save new note in
       data_path = os.path.join("documents", title + ".html") # directory to save into data value
 
       # Create HTML file for new note
@@ -300,7 +304,7 @@ def create_healthcare_note_for_patient(request, healthcare_id, patient_id):
       save_note.close()
 
       # Add data into new note
-      note_title = title + ".html"
+      note_title = title + "_" + random_str + ".html"
       note.data = "{}{}".format("documents/", note_title)
       note.save()
 
@@ -425,6 +429,7 @@ def edit_healthcare_note(request, healthcare_id, note_id):
         note.attach_videos.add(video) # Saved attachment to database
 
       note_path = note.data.path
+      note_name = note.data.name # e.g. documents/testnote.html
 
       # Create HTML file for edited note
       save_note = open(note_path,"w")
@@ -432,8 +437,7 @@ def edit_healthcare_note(request, healthcare_id, note_id):
       save_note.close()
 
       # Add data into edited note
-      new_note_title = title + ".html"
-      note.data = "{}{}".format("documents/", new_note_title)
+      note.data = note_name
 
       # Update note title
       note.title = title
@@ -487,3 +491,7 @@ def healthcare_does_not_exists(healthcare_id):
   except Healthcare.DoesNotExist:
     Logs.objects.create(type='READ', user_id=healthcare_id, interface='HEALTHCARE', status=STATUS_ERROR, details='[HealthcareNotes] Healthcare ID is invalid ' + str(healthcare_id))
     redirect('healthcare_login')
+
+def generate_random_string(stringLength=20):
+  letters = string.ascii_lowercase
+  return ''.join(random.choice(letters) for i in range(stringLength))
